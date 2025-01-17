@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: chesscom_web
+    volumes:
+      - ./chesscom_helper:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    container_name: chesscom_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hunter2
+      POSTGRES_DB: chesscom_helper
+    ports:
+      - "5432:5432"
