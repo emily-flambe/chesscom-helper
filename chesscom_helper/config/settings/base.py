@@ -72,7 +72,7 @@ INSTALLED_APPS = [
     #"rest_framework",
     #"django_vite",
     # Apps in this project
-    "notify_me",
+    "chesscom_app",
 ]
 
 MIDDLEWARE = [

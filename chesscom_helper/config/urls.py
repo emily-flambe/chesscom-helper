@@ -25,7 +25,7 @@ admin.autodiscover()
 
 urlpatterns = [
     path("", homepage, name="homepage"),
-    path("notify-me/", include("notify_me.urls")),
+    path("chesscom-app/", include("chesscom_app.urls")),
     path("admin/", admin.site.urls),
 ]
 

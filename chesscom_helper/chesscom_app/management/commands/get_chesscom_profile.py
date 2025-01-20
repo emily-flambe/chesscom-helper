@@ -1,6 +1,6 @@
 import requests
 from django.core.management.base import BaseCommand
-from notify_me.models import User
+from chesscom_app.models import User
 
 CHESS_API_URL = "https://api.chess.com/pub/player/{username}"
 HEADERS = {

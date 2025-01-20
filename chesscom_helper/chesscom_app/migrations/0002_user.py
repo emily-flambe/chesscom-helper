@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('notify_me', '0001_initial'),
+        ('chesscom_app', '0001_initial'),
     ]
 
     operations = [

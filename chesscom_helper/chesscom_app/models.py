@@ -1,4 +1,4 @@
-# notify_me/models.py
+# chesscom_app/models.py
 from django.db import models
 
 class Dummy(models.Model):

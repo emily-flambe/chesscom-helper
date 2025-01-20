@@ -1,5 +1,5 @@
 """
-URL configuration for notify_me project.
+URL configuration for chesscom_app project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
@@ -16,8 +16,8 @@ Including another URLconf
 """
 
 from django.urls import path
-from notify_me.views import notify_me_home
+from chesscom_app.views import chesscom_app_home
 
 urlpatterns = [
-    path("", notify_me_home, name="notify_me_home"),
+    path("", chesscom_app_home, name="chesscom_app_home"),
 ]

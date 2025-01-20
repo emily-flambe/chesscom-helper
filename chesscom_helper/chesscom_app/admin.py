@@ -1,5 +1,5 @@
 from django.contrib import admin
-from notify_me.models import Dummy, User
+from chesscom_app.models import Dummy, User
 
 class DummyAdmin(admin.ModelAdmin):
     pass
