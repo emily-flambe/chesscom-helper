@@ -27,7 +27,7 @@ class Command(BaseCommand):
                 "player_id": data.get("player_id"),
                 "url": data.get("url"),
                 "name": data.get("name"),
-                "username": data.get("username"),
+                "username": data.get("username").lower(),
                 "followers": data.get("followers", 0),
                 "country": data.get("country"),
                 "location": data.get("location"),

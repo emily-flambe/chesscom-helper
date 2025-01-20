@@ -16,8 +16,9 @@ Including another URLconf
 """
 
 from django.urls import path
-from chesscom_app.views import chesscom_app_home
+from chesscom_app.views import chesscom_app_home, get_chesscom_user
 
 urlpatterns = [
     path("", chesscom_app_home, name="chesscom_app_home"),
+    path("user/<str:username>/", get_chesscom_user, name="get_chesscom_user"),
 ]
