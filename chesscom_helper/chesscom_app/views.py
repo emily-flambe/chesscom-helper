@@ -11,7 +11,6 @@ def chesscom_app_home(request):
     html = "<html><body><div>Notify Me about things</div></body></html>"
     return HttpResponse(html)
 
-
 def get_chesscom_user(request, username):
     try:
         # username should be lowercase
@@ -30,3 +29,10 @@ def get_chesscom_user(request, username):
         return JsonResponse(data)
     except User.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=404)
+
+
+def get_chesscom_users(request):
+    users = User.objects.all().values(
+        'player_id', 'username', 'name', 'followers', 'league', 'status', 'last_online'
+    )
+    return JsonResponse(list(users), safe=False)

@@ -1,0 +1,106 @@
+/* App.css - Dark theme styling for chess.com users table */
+
+.app-container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #161b22;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+  border: 1px solid var(--border-color);
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* Table styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--table-row-bg);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th, td {
+  padding: 15px 20px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+th {
+  background-color: var(--table-header-bg);
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  text-transform: uppercase;
+}
+
+td {
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+tr:nth-child(even) {
+  background-color: var(--table-header-bg);
+}
+
+tr:hover {
+  background-color: var(--table-hover-bg);
+  cursor: pointer;
+}
+
+/* Loader and error messages */
+.loading, .error {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-top: 20px;
+}
+
+.loading {
+  color: var(--primary-color);
+}
+
+.error {
+  color: #ff4d4d;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead tr {
+    display: none;
+  }
+
+  tr {
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  td {
+    padding: 15px;
+    border-bottom: none;
+    position: relative;
+  }
+
+  td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    text-transform: uppercase;
+    color: var(--primary-color);
+    display: block;
+  }
+}
