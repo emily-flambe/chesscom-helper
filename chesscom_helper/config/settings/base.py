@@ -68,7 +68,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     ## Third-party apps
     #"django_extensions",
-    #"adminplus",
+    "adminplus",
     #"rest_framework",
     #"django_vite",
     # Apps in this project

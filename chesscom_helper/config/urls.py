@@ -15,16 +15,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-#from adminplus.sites import AdminSitePlus
+from adminplus.sites import AdminSitePlus
 from django.contrib import admin
 from django.urls import include, path
 from config.views import homepage
 
-#admin.site = AdminSitePlus()
-#admin.autodiscover()
+admin.site = AdminSitePlus()
+admin.autodiscover()
 
 urlpatterns = [
     path("", homepage, name="homepage"),
     path("notify-me/", include("notify_me.urls")),
+    path("admin/", admin.site.urls),
 ]
 

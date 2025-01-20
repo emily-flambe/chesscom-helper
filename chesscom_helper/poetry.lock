@@ -37,6 +37,18 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-adminplus"
+version = "0.6"
+description = "Add new pages to the Django admin."
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "django-adminplus-0.6.tar.gz", hash = "sha256:509635d3bc974c1cf1d2d151d5c690b81619a927eb431d758886cb52140b5eb9"},
+    {file = "django_adminplus-0.6-py2.py3-none-any.whl", hash = "sha256:4d1b201454feeea76a74d781d8ca69bcd6d0066399325ef63433e273e1f51882"},
+]
+
+[[package]]
 name = "gunicorn"
 version = "23.0.0"
 description = "WSGI HTTP Server for UNIX"
@@ -195,4 +207,4 @@ brotli = ["brotli"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "7ac245b24e0dfb638f0364eafac7100959d4f5c624cd44545e8ac0039ff3def7"
+content-hash = "044722253f4b13b19840542cc3a156e0afadc11afb2a3786f03bdd32ef445c66"

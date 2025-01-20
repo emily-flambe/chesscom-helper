@@ -13,6 +13,7 @@ services:
       - ./chesscom_helper:/app
     ports:
       - "8000:8000"
+      - "80:8000"
     depends_on:
       - db
     command: ["sh", "-c", "/app/scripts/cmd-web.sh --init-db"]
