@@ -19,10 +19,9 @@ class Command(BaseCommand):
 
         try:
             response = requests.get(url, headers=HEADERS)
-            response.raise_for_status()  # Raise error for bad status codes
+            response.raise_for_status()
             data = response.json()
 
-            # Prepare data to be saved to the database
             user_data = {
                 "player_id": data.get("player_id"),
                 "url": data.get("url"),
@@ -40,7 +39,6 @@ class Command(BaseCommand):
                 "streaming_platforms": data.get("streaming_platforms", []),
             }
 
-            # Upsert (update or create) the record
             user, created = User.objects.update_or_create(
                 player_id=user_data["player_id"],
                 defaults=user_data
