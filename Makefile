@@ -60,7 +60,10 @@ web:
 
 # Get a shell to the DB container. PW will be in the .env file
 db:
-	docker compose -f docker-compose.yml exec web-db psql -Upostgres
+	docker compose -f docker-compose.yml exec db psql -Upostgres
 
 black:
 	docker compose -f docker-compose.yml exec web poetry run black --config pyproject.toml . $(c)
+
+frontend:
+	docker compose -f docker-compose.yml exec web bash -c "cd /app/frontend && npm run dev"
