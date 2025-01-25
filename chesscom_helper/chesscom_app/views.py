@@ -3,8 +3,8 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-import requests
 from django.http import JsonResponse
+from chesscom_app.models import User
 
 
 def chesscom_app_home(request):
@@ -13,27 +13,28 @@ def chesscom_app_home(request):
     return HttpResponse(html)
 
 
-CHESS_API_URL = "https://api.chess.com/pub/player/{username}"
-
-def get_chesscom_profile(request, username):
-    """
-    View to fetch and display Chess.com player profile.
-    """
-    url = CHESS_API_URL.format(username=username)
-
+def get_chesscom_user(request, username):
     try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
-        
-        # Send JSON response to frontend
-        return JsonResponse({
-            "username": data.get("username", "N/A"),
-            "name": data.get("name", "N/A"),
-            "title": data.get("title", "N/A"),
-            "country": data.get("country", "N/A"),
-            "joined": data.get("joined", "N/A"),
-            "avatar": data.get("avatar", None),
-        })
-    except requests.exceptions.RequestException as e:
-        return JsonResponse({"error": f"Failed to fetch data: {str(e)}"}, status=500)
+        # username should be lowercase
+        username = username.lower()
+        user = User.objects.get(username=username)
+        data = {
+            "player_id": user.player_id,
+            "username": user.username,
+            "name": user.name,
+            "followers": user.followers,
+            "country": user.country,
+            "league": user.league,
+            "last_online": user.last_online,
+            "is_streamer": user.is_streamer,
+        }
+        return JsonResponse(data)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+
+
+def get_chesscom_users(request):
+    users = User.objects.all().values(
+        "player_id", "username", "name", "followers", "league", "status", "last_online"
+    )
+    return JsonResponse(list(users), safe=False)

@@ -48,7 +48,7 @@ def get_release_sha():
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-b48ta14-l45z4q$4sqarf(@5&^5xojsku0t85x0!af6+@f=bbj'
+SECRET_KEY = "django-insecure-b48ta14-l45z4q$4sqarf(@5&^5xojsku0t85x0!af6+@f=bbj"
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -67,15 +67,16 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     ## Third-party apps
-    #"django_extensions",
+    # "django_extensions",
     "adminplus",
-    #"rest_framework",
-    #"django_vite",
+    # "rest_framework",
+    "django_vite",
     # Apps in this project
     "chesscom_app",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",

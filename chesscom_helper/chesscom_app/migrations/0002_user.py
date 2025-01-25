@@ -6,27 +6,32 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('chesscom_app', '0001_initial'),
+        ("chesscom_app", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='User',
+            name="User",
             fields=[
-                ('player_id', models.BigIntegerField(primary_key=True, serialize=False, unique=True)),
-                ('url', models.URLField()),
-                ('name', models.CharField(blank=True, max_length=255, null=True)),
-                ('username', models.CharField(max_length=150, unique=True)),
-                ('followers', models.IntegerField(default=0)),
-                ('country', models.URLField(blank=True, null=True)),
-                ('location', models.CharField(blank=True, max_length=255, null=True)),
-                ('last_online', models.BigIntegerField()),
-                ('joined', models.BigIntegerField()),
-                ('status', models.CharField(max_length=50)),
-                ('is_streamer', models.BooleanField(default=False)),
-                ('verified', models.BooleanField(default=False)),
-                ('league', models.CharField(blank=True, max_length=50, null=True)),
-                ('streaming_platforms', models.JSONField(blank=True, default=list)),
+                (
+                    "player_id",
+                    models.BigIntegerField(
+                        primary_key=True, serialize=False, unique=True
+                    ),
+                ),
+                ("url", models.URLField()),
+                ("name", models.CharField(blank=True, max_length=255, null=True)),
+                ("username", models.CharField(max_length=150, unique=True)),
+                ("followers", models.IntegerField(default=0)),
+                ("country", models.URLField(blank=True, null=True)),
+                ("location", models.CharField(blank=True, max_length=255, null=True)),
+                ("last_online", models.BigIntegerField()),
+                ("joined", models.BigIntegerField()),
+                ("status", models.CharField(max_length=50)),
+                ("is_streamer", models.BooleanField(default=False)),
+                ("verified", models.BooleanField(default=False)),
+                ("league", models.CharField(blank=True, max_length=50, null=True)),
+                ("streaming_platforms", models.JSONField(blank=True, default=list)),
             ],
         ),
     ]

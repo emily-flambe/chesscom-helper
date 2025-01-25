@@ -25,7 +25,6 @@ admin.autodiscover()
 
 urlpatterns = [
     path("", homepage, name="homepage"),
-    path("chesscom-app/", include("chesscom_app.urls")),
+    path("api/chesscom-app/", include("chesscom_app.urls")),  # Add API prefix here
     path("admin/", admin.site.urls),
 ]
-

@@ -7,21 +7,23 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Dummy',
+            name="Dummy",
             fields=[
-                ('id', models.TextField(primary_key=True, serialize=False, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('text', models.TextField()),
+                (
+                    "id",
+                    models.TextField(primary_key=True, serialize=False, unique=True),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("text", models.TextField()),
             ],
             options={
-                'verbose_name': 'Dummy',
-                'verbose_name_plural': 'Dumdums',
-                'ordering': ('created_at',),
+                "verbose_name": "Dummy",
+                "verbose_name_plural": "Dumdums",
+                "ordering": ("created_at",),
             },
         ),
     ]

@@ -6,6 +6,6 @@ from django.urls import reverse_lazy
 
 
 def homepage(request):
-    
+
     html = "<html><body><div>Chesscom Helper Thingy</div></body></html>"
     return HttpResponse(html)

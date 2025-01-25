@@ -7,27 +7,27 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 }
 
+
 class Command(BaseCommand):
     help = "Fetches and upserts a Chess.com player's profile"
 
     def add_arguments(self, parser):
-        parser.add_argument('username', type=str, help="Chess.com username to fetch")
+        parser.add_argument("username", type=str, help="Chess.com username to fetch")
 
     def handle(self, *args, **options):
-        username = options['username']
+        username = options["username"]
         url = CHESS_API_URL.format(username=username)
 
         try:
             response = requests.get(url, headers=HEADERS)
-            response.raise_for_status()  # Raise error for bad status codes
+            response.raise_for_status()
             data = response.json()
 
-            # Prepare data to be saved to the database
             user_data = {
                 "player_id": data.get("player_id"),
                 "url": data.get("url"),
                 "name": data.get("name"),
-                "username": data.get("username"),
+                "username": data.get("username").lower(),
                 "followers": data.get("followers", 0),
                 "country": data.get("country"),
                 "location": data.get("location"),
@@ -40,10 +40,8 @@ class Command(BaseCommand):
                 "streaming_platforms": data.get("streaming_platforms", []),
             }
 
-            # Upsert (update or create) the record
             user, created = User.objects.update_or_create(
-                player_id=user_data["player_id"],
-                defaults=user_data
+                player_id=user_data["player_id"], defaults=user_data
             )
 
             if created:
