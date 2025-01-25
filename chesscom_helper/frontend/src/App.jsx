@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Users from './pages/Users';
 import UserDetail from './pages/UserDetail';
+import AddUser from './pages/AddUser';
 
 function Home() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="users" element={<Users />} />
           <Route path="/user" element={<UserDetail />} />
           <Route path="/user/:username" element={<UserDetail />} />
+          <Route path="/add-user" element={<AddUser />} />
         </Route>
       </Routes>
     </BrowserRouter>

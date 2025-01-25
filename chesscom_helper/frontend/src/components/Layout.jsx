@@ -7,9 +7,9 @@ export default function Layout() {
       <aside style={{ width: '200px', background: '#f0f0f0', padding: '20px' }}>
         <nav style={{ display: 'flex', flexDirection: 'column' }}>
           <Link to="/">Home</Link>
-          <Link to="/users">Chess.com Users</Link>
+          <Link to="/users">Users List</Link>
           <Link to="/user">User Detail</Link>
-          {/* Add more links as needed */}
+          <Link to="/add-user">Add User</Link>
         </nav>
       </aside>
 
