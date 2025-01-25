@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 export default function Users() {
@@ -9,17 +10,14 @@ export default function Users() {
   useEffect(() => {
     axios
       .get('/api/chesscom-app/users/')
-      .then(response => {
-        console.log("API Response:", response.data);
+      .then((response) => {
         if (Array.isArray(response.data)) {
           setUsers(response.data);
         } else {
-          console.warn('Unexpected response format:', response.data);
           setUsers([]);
         }
       })
-      .catch(error => {
-        console.error('Error fetching users:', error);
+      .catch((error) => {
         setError('Failed to fetch users');
       })
       .finally(() => {
@@ -43,6 +41,7 @@ export default function Users() {
             <th>League</th>
             <th>Status</th>
             <th>Last Online</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -55,6 +54,9 @@ export default function Users() {
               <td>{user.league}</td>
               <td>{user.status}</td>
               <td>{new Date(user.last_online * 1000).toLocaleString()}</td>
+              <td>
+                <Link to={`/user/${user.username}`}>View Details</Link>
+              </td>
             </tr>
           ))}
         </tbody>

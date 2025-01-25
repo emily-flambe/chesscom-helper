@@ -3,13 +3,13 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 // Import the layout and pages
 import Layout from './components/Layout';
 import Users from './pages/Users';
-import OtherApp from './pages/OtherApp';
+import UserDetail from './pages/UserDetail';
 
 function Home() {
   return (
     <div>
-      <h1>Welcome Home</h1>
-      <p>Select an app from the sidebar!</p>
+      <h1>Welcome to Chesscom Helper: Your Chesst Friend :)))</h1>
+      <p>Select something from the sidebar!</p>
     </div>
   );
 }
@@ -23,9 +23,8 @@ export default function App() {
           {/* The "index" route means when you visit "/" with no extra path */}
           <Route index element={<Home />} />
           <Route path="users" element={<Users />} />
-          <Route path="other-app" element={<OtherApp />} />
-
-          {/* You can add more routes as needed */}
+          <Route path="/user" element={<UserDetail />} />
+          <Route path="/user/:username" element={<UserDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>

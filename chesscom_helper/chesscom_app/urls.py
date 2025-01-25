@@ -22,5 +22,4 @@ urlpatterns = [
     path("", chesscom_app_home, name="chesscom_app_home"),
     path("user/<str:username>/", get_chesscom_user, name="get_chesscom_user"),
     path("users/", get_chesscom_users, name="get_chesscom_users"),
-    path("api/users/", get_chesscom_users, name="get_users"),
 ]

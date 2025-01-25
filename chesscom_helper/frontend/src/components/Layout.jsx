@@ -8,7 +8,7 @@ export default function Layout() {
         <nav style={{ display: 'flex', flexDirection: 'column' }}>
           <Link to="/">Home</Link>
           <Link to="/users">Chess.com Users</Link>
-          <Link to="/other-app">Other App</Link>
+          <Link to="/user">User Detail</Link>
           {/* Add more links as needed */}
         </nav>
       </aside>
