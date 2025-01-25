@@ -7,14 +7,15 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 }
 
+
 class Command(BaseCommand):
     help = "Fetches and upserts a Chess.com player's profile"
 
     def add_arguments(self, parser):
-        parser.add_argument('username', type=str, help="Chess.com username to fetch")
+        parser.add_argument("username", type=str, help="Chess.com username to fetch")
 
     def handle(self, *args, **options):
-        username = options['username']
+        username = options["username"]
         url = CHESS_API_URL.format(username=username)
 
         try:
@@ -40,8 +41,7 @@ class Command(BaseCommand):
             }
 
             user, created = User.objects.update_or_create(
-                player_id=user_data["player_id"],
-                defaults=user_data
+                player_id=user_data["player_id"], defaults=user_data
             )
 
             if created:

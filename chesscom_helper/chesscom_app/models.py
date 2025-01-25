@@ -1,6 +1,7 @@
 # chesscom_app/models.py
 from django.db import models
-    
+
+
 class User(models.Model):
     player_id = models.BigIntegerField(primary_key=True, unique=True)  # Primary key
     url = models.URLField()

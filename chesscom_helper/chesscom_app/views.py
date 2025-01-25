@@ -6,10 +6,12 @@ from django.urls import reverse_lazy
 from django.http import JsonResponse
 from chesscom_app.models import User
 
+
 def chesscom_app_home(request):
 
     html = "<html><body><div>Notify Me about things</div></body></html>"
     return HttpResponse(html)
+
 
 def get_chesscom_user(request, username):
     try:
@@ -33,6 +35,6 @@ def get_chesscom_user(request, username):
 
 def get_chesscom_users(request):
     users = User.objects.all().values(
-        'player_id', 'username', 'name', 'followers', 'league', 'status', 'last_online'
+        "player_id", "username", "name", "followers", "league", "status", "last_online"
     )
     return JsonResponse(list(users), safe=False)
