@@ -70,7 +70,7 @@ INSTALLED_APPS = [
     # "django_extensions",
     "adminplus",
     # "rest_framework",
-    # "django_vite",
+    "django_vite",
     # Apps in this project
     "chesscom_app",
 ]
