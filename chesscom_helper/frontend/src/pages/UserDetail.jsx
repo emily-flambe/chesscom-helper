@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
 import {
   Box,
   Typography,
@@ -17,21 +16,24 @@ import {
 } from '@mui/material';
 
 export default function UserDetail() {
-  const { username: urlUsername } = useParams(); // from /user/:username
+  const { username: urlUsername } = useParams();
   const [username, setUsername] = useState(urlUsername || '');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // 1) Add a new piece of state for a “just added” message
+  const [addedMessage, setAddedMessage] = useState('');
+
   const navigate = useNavigate();
 
-  // If there's a username in the URL, fetch details on mount
   useEffect(() => {
     if (urlUsername) {
       fetchUser(urlUsername);
     }
   }, [urlUsername]);
 
-  const fetchUser = (searchUsername) => {
+  const fetchUser = async (searchUsername) => {
     if (!searchUsername.trim()) {
       setError('Please enter a username');
       return;
@@ -40,25 +42,43 @@ export default function UserDetail() {
     setLoading(true);
     setError(null);
     setUser(null);
+    setAddedMessage(''); // clear any old success message
 
-    axios
-      .get(`/api/chesscom-app/user/${searchUsername}/`)
-      .then((response) => {
-        setUser(response.data);
-      })
-      .catch((err) => {
+    try {
+      // Attempt to GET existing user
+      const response = await axios.get(`/api/chesscom-app/user/${searchUsername}/`);
+      setUser(response.data);
+    } catch (err) {
+      // If user is not found (404), auto-add them
+      if (err.response && err.response.status === 404) {
+        try {
+          await axios.post('/api/chesscom-app/add-user/', {
+            username: searchUsername,
+          });
+          // 2) Set the message that user was added
+          setAddedMessage(`User "${searchUsername}" was added to your list!`);
+
+          // Re-fetch the newly added user
+          const secondResponse = await axios.get(`/api/chesscom-app/user/${searchUsername}/`);
+          setUser(secondResponse.data);
+        } catch (err2) {
+          console.error('Error adding user or fetching newly added user:', err2);
+          setError('User not found or an error occurred.');
+        }
+      } else {
+        // Some other error (500, network error, etc.)
         console.error('Error fetching user details:', err);
         setError('User not found or an error occurred.');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSearch = (e) => {
-    e.preventDefault(); // Prevent page reload
+    e.preventDefault();
     if (username) {
-      navigate(`/user/${username}`); // Update URL to reflect searched username
+      navigate(`/user/${username}`);
       fetchUser(username);
     }
   };
@@ -86,9 +106,17 @@ export default function UserDetail() {
         </Button>
       </Box>
 
+      {/* If there's a global error */}
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
+        </Alert>
+      )}
+
+      {/* 3) If user was successfully added */}
+      {addedMessage && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {addedMessage}
         </Alert>
       )}
 

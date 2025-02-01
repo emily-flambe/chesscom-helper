@@ -62,3 +62,11 @@ def refresh_all_chesscom_users(request):
     for user in users:
         fetch_and_save_chesscom_user(user.username)
     return JsonResponse({"message": "All users refreshed"}, status=200)
+
+def remove_chesscom_user(request, username):
+    try:
+        user = User.objects.get(username=username)
+        user.delete()
+        return JsonResponse({"message": "User removed"}, status=200)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
