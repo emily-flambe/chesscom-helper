@@ -1,10 +1,10 @@
 from django.http import HttpResponse
-from django.shortcuts import render
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from chesscom_app.models import User
+from chesscom_app.common.chesscom_api import fetch_and_save_chesscom_user
+import json
 
 
 def chesscom_app_home(request):
@@ -38,3 +38,21 @@ def get_chesscom_users(request):
         "player_id", "username", "name", "followers", "league", "status", "last_online"
     )
     return JsonResponse(list(users), safe=False)
+
+def add_chesscom_user(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            username = data.get("username")
+
+            if not username:
+                return JsonResponse({"error": "Username is required"}, status=400)
+
+            result = fetch_and_save_chesscom_user(username)
+
+            return JsonResponse(result, status=result.get("status", 500))
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON input"}, status=400)
+
+    return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
