@@ -1,5 +1,13 @@
+// AddUser.jsx
 import { useState } from 'react';
 import axios from 'axios';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Alert,
+} from '@mui/material';
 
 export default function AddUser() {
   const [username, setUsername] = useState('');
@@ -20,14 +28,15 @@ export default function AddUser() {
     setError(null);
 
     try {
-      // Make a POST request to your Django route:
-      // e.g., /api/chesscom-app/add-user/
+      // Make a POST request to your Django route, e.g.:
+      // /api/chesscom-app/add-user/
       const response = await axios.post('/api/chesscom-app/add-user/', {
         username,
       });
-
-      // If the response is successful, display a success message
+      // If successful, display a success message from the server or a fallback
       setMessage(response.data.message || 'User added!');
+      // Optionally clear the input after success
+      // setUsername('');
     } catch (err) {
       // If the server returns an error response, capture it
       if (err.response && err.response.data) {
@@ -41,22 +50,49 @@ export default function AddUser() {
   };
 
   return (
-    <div>
-      <h2>Add Chess.com User</h2>
-      <form onSubmit={handleAddUser}>
-        <input
-          type="text"
-          placeholder="Enter Chess.com username"
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h4" gutterBottom>
+        Add Chess.com User
+      </Typography>
+
+      <Box
+        component="form"
+        onSubmit={handleAddUser}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+          maxWidth: 400, // limit width so it’s not too wide
+        }}
+      >
+        <TextField
+          label="Enter Chess.com username"
+          variant="outlined"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
+          disabled={loading}
         />
-        <button type="submit" disabled={loading}>
+        <Button
+          variant="contained"
+          type="submit"
+          disabled={loading}
+        >
           {loading ? 'Adding...' : 'Add User'}
-        </button>
-      </form>
-      {message && <p style={{ color: 'green' }}>{message}</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-    </div>
+        </Button>
+      </Box>
+
+      {/* Success or Error Messages */}
+      {message && (
+        <Alert severity="success" sx={{ mt: 2 }}>
+          {message}
+        </Alert>
+      )}
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      )}
+    </Box>
   );
 }

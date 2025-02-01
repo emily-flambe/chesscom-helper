@@ -15,7 +15,6 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   display: flex;
-  align-items: center;
   height: 100vh;
 }
 

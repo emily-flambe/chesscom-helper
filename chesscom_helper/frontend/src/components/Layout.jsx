@@ -1,23 +1,67 @@
-import { Link, Outlet } from 'react-router-dom';
-import './Layout.css';
+// Layout.jsx
+import React from 'react';
+import { Outlet, Link as RouterLink } from 'react-router-dom';
+import { Drawer, List, ListItem, ListItemButton, ListItemText, Toolbar, Box } from '@mui/material';
 
 export default function Layout() {
   return (
-    <div className="layout-container">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <nav>
-          <Link to="/">Home</Link>
-          <Link to="/users">Users List</Link>
-          <Link to="/user">User Detail</Link>
-          <Link to="/add-user">Add User</Link>
-        </nav>
-      </aside>
+    <Box sx={{ display: 'flex' }}>
+      {/* 
+        A permanent Drawer on the left side. 
+        "sx" allows customizing the drawer's Paper background, width, etc.
+      */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: 200,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: 200,
+            boxSizing: 'border-box',
+            backgroundColor: 'var(--table-header-bg)', // optional custom color
+          },
+        }}
+      >
+        {/* 
+          Toolbar adds top spacing so content doesn't flow under an AppBar (if you ever add one).
+          You can remove <Toolbar /> if you don't need that spacing.
+        */}
+        <Toolbar />
+        <List>
+          <ListItem disablePadding>
+            <ListItemButton component={RouterLink} to="/">
+              <ListItemText primary="Home" />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton component={RouterLink} to="/users">
+              <ListItemText primary="Users List" />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton component={RouterLink} to="/user">
+              <ListItemText primary="User Detail" />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton component={RouterLink} to="/add-user">
+              <ListItemText primary="Add User" />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      </Drawer>
 
-      {/* Main Content Area */}
-      <main className="main-content">
+      {/* Main Content */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 2, // material-ui spacing for padding
+        }}
+      >
+        <Toolbar />
         <Outlet />
-      </main>
-    </div>
+      </Box>
+    </Box>
   );
 }
