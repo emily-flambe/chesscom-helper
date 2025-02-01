@@ -80,7 +80,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    #"django.middleware.csrf.CsrfViewMiddleware", -- disabling because the chesscom API is public and none of this is sensitive data, so we don't need to worry about CSRF
+    # "django.middleware.csrf.CsrfViewMiddleware", -- disabling because the chesscom API is public and none of this is sensitive data, so we don't need to worry about CSRF
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -140,12 +140,12 @@ STATICFILES_DIRS = [f"{STATIC_ROOT}/js/app/public/"]
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
     ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',  # Limit 100 requests per hour per IP
-    }
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/hour",  # Limit 100 requests per hour per IP
+    },
 }
 
 CORS_ALLOW_ALL_ORIGINS = True

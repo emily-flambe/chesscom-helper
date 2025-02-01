@@ -63,7 +63,7 @@ db:
 	docker compose -f docker-compose.yml exec db psql -Upostgres
 
 black:
-	docker compose -f docker-compose.yml exec web poetry run black --config pyproject.toml . $(c)
+	docker compose -f docker-compose.yml exec web bash -c "cd .. && poetry run black --config pyproject.toml . $(c)"
 
 frontend:
 	docker compose -f docker-compose.yml exec web bash -c "cd /app/frontend && npm run dev"

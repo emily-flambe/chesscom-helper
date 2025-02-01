@@ -39,6 +39,7 @@ def get_chesscom_users(request):
     )
     return JsonResponse(list(users), safe=False)
 
+
 def add_chesscom_user(request):
     if request.method == "POST":
         try:
@@ -57,11 +58,13 @@ def add_chesscom_user(request):
 
     return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
 
+
 def refresh_all_chesscom_users(request):
     users = User.objects.all()
     for user in users:
         fetch_and_save_chesscom_user(user.username)
     return JsonResponse({"message": "All users refreshed"}, status=200)
+
 
 def remove_chesscom_user(request, username):
     try:
