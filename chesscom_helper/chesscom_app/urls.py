@@ -16,13 +16,26 @@ Including another URLconf
 """
 
 from django.urls import path
-from chesscom_app.views import chesscom_app_home, get_chesscom_user, get_chesscom_users, add_chesscom_user, refresh_all_chesscom_users, remove_chesscom_user
+from chesscom_app.views import (
+    chesscom_app_home,
+    get_chesscom_user,
+    get_chesscom_users,
+    add_chesscom_user,
+    refresh_all_chesscom_users,
+    remove_chesscom_user,
+)
 
 urlpatterns = [
     path("", chesscom_app_home, name="chesscom_app_home"),
     path("user/<str:username>/", get_chesscom_user, name="get_chesscom_user"),
     path("users/", get_chesscom_users, name="get_chesscom_users"),
     path("add-user/", add_chesscom_user, name="add_chesscom_user"),
-    path("refresh-all-users/", refresh_all_chesscom_users, name="refresh_all_chesscom_users"),
-    path("remove-user/<str:username>/", remove_chesscom_user, name="remove_chesscom_user"),
+    path(
+        "refresh-all-users/",
+        refresh_all_chesscom_users,
+        name="refresh_all_chesscom_users",
+    ),
+    path(
+        "remove-user/<str:username>/", remove_chesscom_user, name="remove_chesscom_user"
+    ),
 ]
