@@ -1,0 +1,32 @@
+.layout-container {
+    display: flex;
+    min-height: 100vh;
+    /* You can add any global container styles here */
+  }
+  
+  .sidebar {
+    width: 200px;
+    background-color: var(--table-header-bg); /* or a new var if you want a different shade */
+    padding: 20px;
+  }
+  
+  .sidebar nav {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sidebar nav a {
+    color: var(--primary-color);
+    text-decoration: none;
+    padding: 10px 0;
+  }
+  
+  .sidebar nav a:hover {
+    text-decoration: underline;
+  }
+  
+  .main-content {
+    flex: 1;
+    padding: 20px;
+  }
+  

@@ -1,11 +1,12 @@
 import { Link, Outlet } from 'react-router-dom';
+import './Layout.css';
 
 export default function Layout() {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="layout-container">
       {/* Sidebar */}
-      <aside style={{ width: '200px', background: '#f0f0f0', padding: '20px' }}>
-        <nav style={{ display: 'flex', flexDirection: 'column' }}>
+      <aside className="sidebar">
+        <nav>
           <Link to="/">Home</Link>
           <Link to="/users">Users List</Link>
           <Link to="/user">User Detail</Link>
@@ -14,7 +15,7 @@ export default function Layout() {
       </aside>
 
       {/* Main Content Area */}
-      <main style={{ flex: 1, padding: '20px' }}>
+      <main className="main-content">
         <Outlet />
       </main>
     </div>
