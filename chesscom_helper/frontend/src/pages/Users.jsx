@@ -11,6 +11,8 @@ import {
   TableRow,
   Paper,
   Link,
+  Button,
+  Stack
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 
@@ -19,7 +21,16 @@ export default function Users() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Load initial user list on mount
   useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Helper function to fetch user list
+  const fetchUsers = () => {
+    setLoading(true);
+    setError(null);
+
     axios
       .get('/api/chesscom-app/users/')
       .then((response) => {
@@ -35,8 +46,40 @@ export default function Users() {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  };
 
+  // Refresh a single user
+  const handleRefreshUser = async (username) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await axios.post('/api/chesscom-app/add-user/', { username });
+      fetchUsers();
+    } catch (err) {
+      console.error('Error refreshing user:', err);
+      setError('Failed to refresh user data');
+      setLoading(false);
+    }
+  };
+
+  // Refresh ALL users
+  const handleRefreshAll = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await axios.post('/api/chesscom-app/refresh-all-users/');
+      // or whatever your endpoint is named
+      fetchUsers();
+    } catch (err) {
+      console.error('Error refreshing all users:', err);
+      setError('Failed to refresh all user data');
+      setLoading(false);
+    }
+  };
+
+  // Loading State
   if (loading) {
     return (
       <Box sx={{ p: 2 }}>
@@ -45,6 +88,7 @@ export default function Users() {
     );
   }
 
+  // Error State
   if (error) {
     return (
       <Box sx={{ p: 2 }}>
@@ -61,6 +105,17 @@ export default function Users() {
         Chess.com Users
       </Typography>
 
+      {/* "Refresh All" button row */}
+      <Stack direction="row" sx={{ mb: 2 }} spacing={2}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleRefreshAll}
+        >
+          REFRESH ALL
+        </Button>
+      </Stack>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -73,6 +128,7 @@ export default function Users() {
               <TableCell>Status</TableCell>
               <TableCell>Last Online</TableCell>
               <TableCell>Actions</TableCell>
+              <TableCell>Refresh</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -95,6 +151,15 @@ export default function Users() {
                   >
                     View Details
                   </Link>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => handleRefreshUser(user.username)}
+                  >
+                    Refresh
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
