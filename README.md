@@ -21,3 +21,15 @@ curl -X POST http://localhost:8000/api/chesscom-app/add-user/ \
      -H "Content-Type: application/json" \
      -d '{"username": "magnuscarlsen"}'
 ```
+
+# Frontend
+
+The frontend is a Next.js app that uses the API to fetch data and display it. What it lacks in beauty, it makes up for through the simple miracle of its existence.
+
+```shell
+make web
+cd frontend
+npm run dev
+```
+
+This should start the frontend on http://localhost:5173. Neat!
