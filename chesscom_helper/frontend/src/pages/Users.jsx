@@ -1,6 +1,18 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import {
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Link,
+} from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -17,7 +29,7 @@ export default function Users() {
           setUsers([]);
         }
       })
-      .catch((error) => {
+      .catch((err) => {
         setError('Failed to fetch users');
       })
       .finally(() => {
@@ -25,42 +37,70 @@ export default function Users() {
       });
   }, []);
 
-  if (loading) return <h2>Loading users...</h2>;
-  if (error) return <h2 style={{ color: 'red' }}>{error}</h2>;
+  if (loading) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h6">Loading users...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h6" color="error">
+          {error}
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
-    <div>
-      <h1>Chess.com Users</h1>
-      <table border="1" cellPadding="10" cellSpacing="0">
-        <thead>
-          <tr>
-            <th>Player ID</th>
-            <th>Username</th>
-            <th>Name</th>
-            <th>Followers</th>
-            <th>League</th>
-            <th>Status</th>
-            <th>Last Online</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.player_id}>
-              <td>{user.player_id}</td>
-              <td>{user.username}</td>
-              <td>{user.name || 'N/A'}</td>
-              <td>{user.followers}</td>
-              <td>{user.league}</td>
-              <td>{user.status}</td>
-              <td>{new Date(user.last_online * 1000).toLocaleString()}</td>
-              <td>
-                <Link to={`/user/${user.username}`}>View Details</Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h4" gutterBottom>
+        Chess.com Users
+      </Typography>
+
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Player ID</TableCell>
+              <TableCell>Username</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Followers</TableCell>
+              <TableCell>League</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Last Online</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.player_id}>
+                <TableCell>{user.player_id}</TableCell>
+                <TableCell>{user.username}</TableCell>
+                <TableCell>{user.name || 'N/A'}</TableCell>
+                <TableCell>{user.followers}</TableCell>
+                <TableCell>{user.league}</TableCell>
+                <TableCell>{user.status}</TableCell>
+                <TableCell>
+                  {new Date(user.last_online * 1000).toLocaleString()}
+                </TableCell>
+                <TableCell>
+                  <Link
+                    component={RouterLink}
+                    to={`/user/${user.username}`}
+                    underline="hover"
+                  >
+                    View Details
+                  </Link>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 }
