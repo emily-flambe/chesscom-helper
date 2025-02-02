@@ -6,7 +6,7 @@ Requires=docker.service
 [Service]
 # Optionally set the working directory
 WorkingDirectory=/home/ec2-user/chesscom-helper
-ExecStart=/home/ec2-user/chesscom-helper/deploy/start.sh
+ExecStart=/home/ec2-user/chesscom-helper/chesscom_helper/deploy/start.sh
 Restart=always
 RestartSec=10
 User=ec2-user
