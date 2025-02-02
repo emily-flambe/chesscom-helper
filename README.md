@@ -10,7 +10,7 @@ This project provides a simple way to manage and view basic information about Ch
 
 Backend: A Django (Python) application that fetches data from the Chess.com API and stores a list of tracked users.
 
-Frontend: A Next.js application bundled with Vite and styled with MUI that presents the user list and corresponding Chess.com data in a minimalistic interface.
+Frontend: React application enhanced with Vite, using Material-UI for styling, React Router for navigation, and Axios for communication with the Django backend.
 
 ## Getting Started
 
