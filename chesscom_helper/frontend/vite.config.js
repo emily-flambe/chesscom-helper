@@ -4,11 +4,12 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: '0.0.0.0',  // Ensure Vite binds to all available network interfaces
+    host: '0.0.0.0',
     port: 5173,
     strictPort: true,
+    allowedHosts: ['chesscomhelper.com'],
     watch: {
-      usePolling: true,  // Useful if you're using Docker on macOS/Windows
+      usePolling: true,
     },
     proxy: {
       '/api': {
