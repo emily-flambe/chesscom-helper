@@ -67,9 +67,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     ## Third-party apps
-    # "django_extensions",
     "adminplus",
-    # "rest_framework",
     "django_vite",
     # Apps in this project
     "chesscom_app",
