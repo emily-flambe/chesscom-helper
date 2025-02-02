@@ -19,12 +19,20 @@ from adminplus.sites import AdminSitePlus
 from django.contrib import admin
 from django.urls import include, path
 from config.views import homepage
+from accounts import views as accounts_views
+from django.contrib.auth import views as django_auth_views
 
 admin.site = AdminSitePlus()
 admin.autodiscover()
 
 urlpatterns = [
     path("", homepage, name="homepage"),
-    path("api/chesscom-app/", include("chesscom_app.urls")),  # Add API prefix here
+    path("api/chesscom-app/", include("chesscom_app.urls")),
+    path("api/accounts/", include("accounts.urls")),
     path("admin/", admin.site.urls),
+    path("accounts/register/", accounts_views.register, name="register"),
+    path('accounts/delete/', accounts_views.delete_account, name='delete_account'),
+    path("accounts/login/", django_auth_views.LoginView.as_view(), name="login"),
+    path("accounts/logout/", django_auth_views.LogoutView.as_view(), name="logout"),
+
 ]

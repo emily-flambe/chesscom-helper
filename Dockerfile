@@ -29,7 +29,7 @@ COPY chesscom_helper/poetry.lock .
 # Install Python dependencies
 RUN poetry config virtualenvs.create false && poetry install --no-root
 
-# Copy entire project (including frontend folder)
+# Copy entire project
 COPY chesscom_helper/ /app/
 
 # Install frontend dependencies

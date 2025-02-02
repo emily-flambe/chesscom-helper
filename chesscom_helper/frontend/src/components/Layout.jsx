@@ -29,6 +29,11 @@ export default function Layout() {
         <Toolbar />
         <List>
           <ListItem disablePadding>
+            <ListItemButton component={RouterLink} to="/register">
+              <ListItemText primary="Register" />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
             <ListItemButton component={RouterLink} to="/">
               <ListItemText primary="Home" />
             </ListItemButton>
