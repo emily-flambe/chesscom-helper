@@ -1,5 +1,7 @@
 # Chesscom Helper
 
+https://chesscomhelper.com
+
 A lightweight web application for adding and removing Chess.com users from a display list, powered by the [Chess.com public API](https://www.chess.com/news/view/published-data-api).
 
 (The goal of this project is to add features that are actually useful, like subscribing to notifications about a user's activity - but we aint there yet.)
