@@ -1,19 +1,35 @@
-// src/pages/Home.jsx
+// frontend/src/pages/Home.jsx
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Alert } from '@mui/material';
+import { useLocation } from 'react-router-dom';
 
 export default function Home() {
+  const location = useLocation();
+
+  // Parse query parameters from location.search
+  const params = new URLSearchParams(location.search);
+  const logoutFlag = params.get('logout');
+
   return (
     <Box sx={{ p: 2 }}>
+      {logoutFlag === '1' && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          You have logged out. Thank you for using chesscomhelper.com!
+        </Alert>
+      )}
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
         Welcome to Chesscom Helper
       </Typography>
       <Typography variant="h5" gutterBottom sx={{ mb: 5 }}>
         Your Chesstest Friend :)
       </Typography>
-      <Typography variant="body1">
-        Select something from the sidebar!
-      </Typography>
+      <Box sx={{ my: 2, textAlign: 'center' }}>
+        <img
+          src="/assets/majestic-knight.png"
+          alt="Majestic Knight"
+          style={{ maxWidth: '75%', height: 'auto' }}
+        />
+      </Box>
     </Box>
   );
 }

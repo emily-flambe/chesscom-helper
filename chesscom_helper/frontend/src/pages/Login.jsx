@@ -2,10 +2,12 @@
 import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { Box, Typography, TextField, Button, Alert } from '@mui/material';
+import { Box, Typography, TextField, Button, Alert, Link } from '@mui/material';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const { login } = useContext(AuthContext);
+  const navigate = useNavigate(); // Get the navigate function
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -19,10 +21,9 @@ const Login = () => {
     setLoading(true);
     setError(null);
     try {
-      // Call your login API endpoint
       const response = await axios.post('http://localhost:8000/api/accounts/login/', credentials);
-      // The token is typically in response.data.access (if using JWT)
-      login(response.data.access);
+      login(response.data.access, credentials.username);
+      navigate('/');
     } catch (err) {
       setError('Invalid credentials');
     } finally {
@@ -56,6 +57,12 @@ const Login = () => {
           {loading ? 'Logging in...' : 'Login'}
         </Button>
       </Box>
+      <Typography variant="body2" sx={{ mt: 2 }}>
+        Need to create an account?{' '}
+        <Link component={RouterLink} to="/register">
+          Click here
+        </Link>
+      </Typography>
     </Box>
   );
 };
