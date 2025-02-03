@@ -56,6 +56,11 @@ export default function Layout() {
               <ListItemText primary="Add User" />
             </ListItemButton>
           </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton component={RouterLink} to="/about">
+              <ListItemText primary="About" />
+            </ListItemButton>
+          </ListItem>
         </List>
       </Drawer>
 
