@@ -15,6 +15,7 @@ import Home from './pages/Home';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import LogoutConfirmation from './pages/LogoutConfirmation';
+import About from './pages/About';
 
 // Create your dark theme
 const theme = createTheme({
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/logout-confirmation" element={<LogoutConfirmation />} />
+            <Route path="/about" element={<About />} />
           </Route>
         </Routes>
       </BrowserRouter>
