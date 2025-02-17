@@ -14,6 +14,7 @@ on:
 
 jobs:
   setup-ssh:
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/' + matrix.branch
     runs-on: ubuntu-latest
     # Use matrix to deploy to both dev and prod environments.  All the steps are the same,
     # so we can just run the same job twice.
