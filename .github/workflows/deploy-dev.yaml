@@ -36,7 +36,7 @@ jobs:
             IdentityFile ~/.ssh/id_rsa
 
           Host target
-            HostName "${{ secrets.TARGET_HOST }}"
+            HostName "${{ secrets.DEV_TARGET_HOST }}"
             User ec2-user
             IdentityFile ~/.ssh/id_rsa
             ProxyJump bastion
