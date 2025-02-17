@@ -49,4 +49,4 @@ jobs:
 
       - name: SSH into target host, git pull, and deploy
         run: |
-          ssh target "ls -la"
+          ssh target "cd chesscom-helper && git pull origin dev && ./scripts/deploy.sh"
