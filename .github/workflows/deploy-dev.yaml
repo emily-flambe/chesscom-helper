@@ -9,7 +9,7 @@ on:
       branch:
         description: 'Branch to deploy'
         required: false
-        default: 'main'
+        default: 'dev'
 
 jobs:
   setup-ssh:
@@ -49,4 +49,8 @@ jobs:
 
       - name: SSH into target host, git pull, and deploy
         run: |
-          ssh target "cd chesscom-helper && git pull origin dev && ./scripts/deploy.sh"
+          ssh target "eval \"\$(ssh-agent -s)\" \
+          && ssh-add github \
+          && cd chesscom-helper \
+          && git pull origin dev \
+          && ./scripts/deploy.sh"
