@@ -1,9 +1,6 @@
 #!/bin/bash
 # deploy-dev.sh
 
-echo "Changing to project directory..."
-cd chesscom-helper
-
 if [ "$1" == "true" ]; then
   echo "Changes detected in Dockerfile or docker-compose.yml. Rebuilding Docker container..."
   docker-compose build && docker-compose up -d
