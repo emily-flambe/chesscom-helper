@@ -48,7 +48,7 @@ jobs:
       - name: Validate DEV_TARGET_HOST
         run: |
           echo "Validating connection to DEV_TARGET_HOST..."
-          ssh-keyscan -T 5 -H "${{ secrets.DEV_TARGET_HOST }}" || { echo "DEV_TARGET_HOST not reachable"; exit 1; }
+          ssh-keyscan -T 5 -H "ip-172-31-36-135.us-east-2.compute.internal" || { echo "DEV_TARGET_HOST not reachable"; exit 1; }
 
 
       - name: Preload target host key via bastion
