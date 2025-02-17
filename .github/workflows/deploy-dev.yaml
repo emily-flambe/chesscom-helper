@@ -53,4 +53,5 @@ jobs:
           && ssh-add github \
           && cd chesscom-helper \
           && git fetch origin dev && git reset --hard origin/dev \
+          && ls -la \
           && bash ./scripts/deploy.sh"
