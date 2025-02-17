@@ -38,7 +38,7 @@ jobs:
             User ec2-user
             IdentityFile ~/.ssh/id_rsa
             ProxyJump bastion
-            EOF
+          EOF
 
       - name: Preload known hosts
         run: |
