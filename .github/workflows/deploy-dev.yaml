@@ -54,4 +54,4 @@ jobs:
           && cd chesscom-helper \
           && git fetch origin dev && git reset --hard origin/dev \
           && ls -la \
-          && bash ./deploy_scripts/deploy-dev.sh"
+          && bash ./deploy_scripts/deploy.sh"
