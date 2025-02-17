@@ -53,4 +53,4 @@ jobs:
           && ssh-add github \
           && cd chesscom-helper \
           && git pull origin dev \
-          && ./scripts/deploy.sh"
+          && bash ./scripts/deploy.sh"
