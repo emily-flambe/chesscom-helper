@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - dev
-      - main
   workflow_dispatch:
     inputs:
       branch:
@@ -13,9 +12,9 @@ on:
         default: 'dev'
 
 jobs:
-  deploy:
+  setup-ssh:
     runs-on: ubuntu-latest
-    # Use matrix to deploy to both dev and prod environments.  All the steps are the same (but environment secret values are different),
+    # Use matrix to deploy to both dev and prod environments.  All the steps are the same,
     # so we can just run the same job twice.
     strategy:
       matrix:
@@ -24,7 +23,6 @@ jobs:
             envName: dev
           - branch: main
             envName: prod
-    if: github.ref == 'refs/heads/' + matrix.branch
     environment: ${{ matrix.envName }}
     steps:
       - name: Checkout code
@@ -47,7 +45,7 @@ jobs:
             IdentityFile ~/.ssh/id_rsa
 
           Host target
-            HostName "${{ github.ref == 'refs/heads/main' ? secrets.PROD_TARGET_HOST : secrets.TARGET_HOST }}"
+            HostName "${{ secrets.TARGET_HOST }}"
             User ec2-user
             IdentityFile ~/.ssh/id_rsa
             ProxyJump bastion
@@ -59,7 +57,7 @@ jobs:
 
       - name: Preload target host key via bastion
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.BASTION_HOST }} "ssh-keyscan -H '${{ github.ref == 'refs/heads/main' ? secrets.PROD_TARGET_HOST : secrets.TARGET_HOST }}'" >> ~/.ssh/known_hosts
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.BASTION_HOST }} "ssh-keyscan -H '${{ secrets.TARGET_HOST }}'" >> ~/.ssh/known_hosts
 
       - name: Check if Docker rebuild is needed
         id: check_changes
@@ -67,7 +65,7 @@ jobs:
           CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
           echo "Changed files:"
           echo "$CHANGED"
-          if echo "$CHANGED" | grep -qE '(Dockerfile|docker-compose.yml|package.json|package-lock.json)'; then
+          if echo "$CHANGED" | grep -qE '(Dockerfile|docker-compose.yml)'; then
             echo "rebuild=true" >> $GITHUB_OUTPUT
           else
             echo "rebuild=false" >> $GITHUB_OUTPUT
@@ -75,9 +73,11 @@ jobs:
 
       - name: Update .env file on target host
         run: |
-          # Use the environment-specific secret: PROD_ENV for main and ENV for dev.
-          ssh target "printf '%b' \"${{ github.ref == 'refs/heads/main' ? secrets.PROD_ENV : secrets.ENV }}\" > chesscom-helper/.env"
+          ssh target "printf '%b' \"${{ secrets.ENV }}\" > chesscom-helper/.env"
+
 
       - name: SSH into target host, git pull, and deploy
         run: |
-          ssh target "cd chesscom-helper && bash ./deploy_scripts/deploy.sh ${{ steps.check_changes.outputs.rebuild }}"
+          ssh target "\\
+          cd chesscom-helper \\
+          && bash ./deploy_scripts/deploy.sh ${{ steps.check_changes.outputs.rebuild }}"
