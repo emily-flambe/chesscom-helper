@@ -70,4 +70,4 @@ jobs:
 
       - name: SSH into target host, git pull, and deploy
         run: |
-          ssh target "cd chesscom-helper && bash ./deploy_scripts/deploy.sh ${{ steps.check_changes.outputs.rebuild }}"
+          ssh target "cd chesscom-helper && bash ./deploy_scripts/test.sh ${{ steps.check_changes.outputs.rebuild }}"

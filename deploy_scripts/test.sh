@@ -1,0 +1,1 @@
+echo "is this thing on?"
