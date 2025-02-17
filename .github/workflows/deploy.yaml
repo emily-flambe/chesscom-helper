@@ -3,6 +3,7 @@ name: DEPLOY using SSH multi-hop
 on:
   push:
     branches:
+      - main
       - dev
   workflow_dispatch:
     inputs:
