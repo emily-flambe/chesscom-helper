@@ -78,4 +78,4 @@ jobs:
 
       - name: Run deploy script
         run: |
-          ssh target "bash ./deploy_scripts/deploy.sh"
+          ssh target "bash chesscom-helper/deploy_scripts/deploy.sh"
