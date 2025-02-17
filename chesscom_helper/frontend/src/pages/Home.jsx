@@ -18,7 +18,7 @@ export default function Home() {
         </Alert>
       )}
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
-        Welcome to Chesscom HelperrrRRRR
+        Welcome to Chesscom Helper
       </Typography>
       <Typography variant="h5" gutterBottom sx={{ mb: 5 }}>
         Your Chesstest Friend :)
