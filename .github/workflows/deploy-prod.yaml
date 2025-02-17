@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  deploy:
+  prod-deploy-to-ec2:
     environment: prod
     runs-on: ubuntu-latest
     steps:
