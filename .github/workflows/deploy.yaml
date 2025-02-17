@@ -58,7 +58,7 @@ jobs:
           CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
           echo "Changed files:"
           echo "$CHANGED"
-          if echo "$CHANGED" | grep -qE '(Dockerfile|docker-compose.yml)'; then
+          if echo "$CHANGED" | grep -qE '(Dockerfile|docker-compose.yml|package.json|package-lock.json)'; then
             echo "rebuild=true" >> $GITHUB_OUTPUT
           else
             echo "rebuild=false" >> $GITHUB_OUTPUT
