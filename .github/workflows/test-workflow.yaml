@@ -1,23 +1,40 @@
-- name: Setup SSH config for multi-hop
-  run: |
-    mkdir -p ~/.ssh
-    echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-    chmod 600 ~/.ssh/id_rsa
+name: Setup SSH config for multi-hop
 
-    # Create SSH config to use bastion as a jump host
-    cat <<EOF >> ~/.ssh/config
-    Host bastion
-      HostName bastion.example.com
-      User ec2-user
-      IdentityFile ~/.ssh/id_rsa
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: false
+        default: 'main'
 
-    Host target
-      HostName internal.ec2.private
-      User ec2-user
-      IdentityFile ~/.ssh/id_rsa
-      ProxyJump bastion
-    EOF
+jobs:
+  setup-ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Preload host keys to avoid interactive prompts
-    ssh-keyscan -H bastion.example.com >> ~/.ssh/known_hosts
-    ssh-keyscan -H internal.ec2.private >> ~/.ssh/known_hosts
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Create SSH config
+        run: |
+          cat <<EOF >> ~/.ssh/config
+          Host bastion
+          HostName "${{ secrets.BASTION_HOST }}"
+          User ec2-user
+          IdentityFile ~/.ssh/id_rsa
+
+          Host target
+            HostName "${{ secrets.TARGET_HOST }}"
+            User ec2-user
+            IdentityFile ~/.ssh/id_rsa
+            ProxyJump bastion
+            EOF
