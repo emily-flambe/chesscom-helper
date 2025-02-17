@@ -45,6 +45,11 @@ jobs:
       - name: Preload known hosts for bastion
         run: ssh-keyscan -H "${{ secrets.DEV_BASTION_HOST }}" >> ~/.ssh/known_hosts
 
+      - name: Validate Connection to Bastion
+        run: |
+          ssh -vvv -o StrictHostKeyChecking=no ec2-user@"${{ secrets.DEV_BASTION_HOST }}" "echo 'Connected to bastion'"
+
+
       - name: Debug DEV_TARGET_HOST via Bastion
         run: |
           ssh -vvv -o StrictHostKeyChecking=no ec2-user@"${{ secrets.DEV_BASTION_HOST }}" "ssh -vvv -o StrictHostKeyChecking=no ec2-user@${{ secrets.DEV_TARGET_HOST }} 'echo \"Connected to target\"'"
