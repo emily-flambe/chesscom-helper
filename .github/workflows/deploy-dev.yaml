@@ -47,12 +47,22 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.DEV_BASTION_HOST }} "ssh-keyscan -H '${{ secrets.DEV_TARGET_HOST }}'" >> ~/.ssh/known_hosts
 
+      - name: Check if Docker rebuild is needed
+        id: check_changes
+        run: |
+          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          echo "Changed files:"
+          echo "$CHANGED"
+          if echo "$CHANGED" | grep -qE '(Dockerfile|docker-compose.yml)'; then
+            echo "rebuild=true" >> $GITHUB_OUTPUT
+          else
+            echo "rebuild=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Update .env file on target host
         run: |
           ssh target "printf '%b' \"${{ secrets.DEV_ENV }}\" > chesscom-helper/.env"
 
       - name: SSH into target host, git pull, and deploy
         run: |
-          ssh target "\
-          cd chesscom-helper \
-          && bash ./deploy_scripts/deploy.sh"
+          ssh target "cd chesscom-helper && bash ./deploy_scripts/deploy.sh ${{ steps.check_changes.outputs.rebuild }}"
