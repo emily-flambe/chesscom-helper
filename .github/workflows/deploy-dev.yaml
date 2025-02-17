@@ -1,31 +1,20 @@
-name: DEPLOY using SSH multi-hop
+name: [DEV] Deploy to EC2 Instance
 
+# Deploy either when a push is made to the dev branch or when a PR is labeled with 'dev-deploy'
 on:
   push:
     branches:
-      - main
       - dev
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to deploy'
-        required: false
-        default: 'dev'
+  pull_request:
+    types: [labeled]
 
 jobs:
-  setup-ssh:
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/' + matrix.branch
+  deploy:
+    if: >
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'dev-deploy'))
+    environment: dev
     runs-on: ubuntu-latest
-    # Use matrix to deploy to both dev and prod environments.  All the steps are the same,
-    # so we can just run the same job twice.
-    strategy:
-      matrix:
-        include:
-          - branch: dev
-            envName: dev
-          - branch: main
-            envName: prod
-    environment: ${{ matrix.envName }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -38,7 +27,7 @@ jobs:
           printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      - name: Create SSH config
+      - name: Create SSH config for DEV
         run: |
           cat <<EOF >> ~/.ssh/config
           Host bastion
@@ -47,19 +36,17 @@ jobs:
             IdentityFile ~/.ssh/id_rsa
 
           Host target
-            HostName "${{ secrets.TARGET_HOST }}"
+            HostName "${{ secrets.DEV_TARGET_HOST }}"
             User ec2-user
             IdentityFile ~/.ssh/id_rsa
             ProxyJump bastion
           EOF
 
       - name: Preload known hosts for bastion
-        run: |
-          ssh-keyscan -H "${{ secrets.BASTION_HOST }}" >> ~/.ssh/known_hosts
+        run: ssh-keyscan -H "${{ secrets.BASTION_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Preload target host key via bastion
-        run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.BASTION_HOST }} "ssh-keyscan -H '${{ secrets.TARGET_HOST }}'" >> ~/.ssh/known_hosts
+        run: ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.BASTION_HOST }} "ssh-keyscan -H '${{ secrets.DEV_TARGET_HOST }}'" >> ~/.ssh/known_hosts
 
       - name: Check if Docker rebuild is needed
         id: check_changes
@@ -75,11 +62,8 @@ jobs:
 
       - name: Update .env file on target host
         run: |
-          ssh target "printf '%b' \"${{ secrets.ENV }}\" > chesscom-helper/.env"
-
+          ssh target "printf '%b' \"${{ secrets.DEV_ENV }}\" > chesscom-helper/.env"
 
       - name: SSH into target host, git pull, and deploy
         run: |
-          ssh target "\\
-          cd chesscom-helper \\
-          && bash ./deploy_scripts/deploy.sh ${{ steps.check_changes.outputs.rebuild }}"
+          ssh target "cd chesscom-helper && bash ./deploy_scripts/deploy.sh ${{ steps.check_changes.outputs.rebuild }}"
