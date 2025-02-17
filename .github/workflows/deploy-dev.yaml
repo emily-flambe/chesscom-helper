@@ -1,4 +1,4 @@
-name: [DEV] Deploy to EC2 Instance
+name: "[DEV] Deploy to EC2 Instance"
 
 # Deploy either when a push is made to the dev branch or when a PR is labeled with 'dev-deploy'
 on:

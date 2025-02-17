@@ -1,4 +1,4 @@
-name: [PROD] Deploy to EC2 Instance
+name: "[PROD] Deploy to EC2 Instance"
 
 on:
   push:
