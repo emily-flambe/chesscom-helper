@@ -69,11 +69,13 @@ jobs:
           ssh target "printf '%b' \"${{ secrets.DEV_ENV }}\" > chesscom-helper/.env"
 
 
-      - name: SSH into target host, git pull, and deploy
+      - name: SSH into target host and git pull
         run: |
           ssh target "eval \"\$(ssh-agent -s)\" \
           && ssh-add github \
           && cd chesscom-helper \
-          && git fetch origin dev && git reset --hard origin/dev \
-          && ls -la \
-          && bash ./deploy_scripts/deploy.sh"
+          && git fetch origin dev && git reset --hard origin/dev"
+
+      - name: Run deploy script
+        run: |
+          ssh target "bash ./deploy_scripts/deploy.sh"
