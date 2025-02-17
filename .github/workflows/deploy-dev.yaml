@@ -63,7 +63,7 @@ jobs:
 
       - name: Update .env file on target host
         run: |
-          ssh target "cd chesscom-helper && echo '${{ secrets.ENV }}' > chesscom_helper/.env-dev"
+          ssh target "printf '%b' \"${{ secrets.ENV }}\" > chesscom-helper/.env-dev"
 
 
       - name: SSH into target host, git pull, and deploy
