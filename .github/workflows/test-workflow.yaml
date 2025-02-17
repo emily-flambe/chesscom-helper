@@ -1,0 +1,23 @@
+- name: Setup SSH config for multi-hop
+  run: |
+    mkdir -p ~/.ssh
+    echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+    chmod 600 ~/.ssh/id_rsa
+
+    # Create SSH config to use bastion as a jump host
+    cat <<EOF >> ~/.ssh/config
+    Host bastion
+      HostName bastion.example.com
+      User ec2-user
+      IdentityFile ~/.ssh/id_rsa
+
+    Host target
+      HostName internal.ec2.private
+      User ec2-user
+      IdentityFile ~/.ssh/id_rsa
+      ProxyJump bastion
+    EOF
+
+    # Preload host keys to avoid interactive prompts
+    ssh-keyscan -H bastion.example.com >> ~/.ssh/known_hosts
+    ssh-keyscan -H internal.ec2.private >> ~/.ssh/known_hosts
