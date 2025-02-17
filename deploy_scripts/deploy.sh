@@ -16,4 +16,4 @@ docker-compose exec web python ../manage.py collectstatic --noinput
 echo "Building npm assets..."
 docker-compose exec web bash -c "npm run build"
 echo "Starting npm in development mode..."
-docker-compose exec -T web bash -c "nohup npm run start > /dev/null 2>&1 &"
+docker-compose exec -T web bash -c "nohup npm run dev > /dev/null 2>&1 &"
