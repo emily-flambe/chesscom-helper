@@ -14,9 +14,18 @@ on:
 
 jobs:
   deploy:
-    # Set environment dynamically: if the branch is main, use "prod", otherwise "dev".
-    environment: ${{ github.ref == 'refs/heads/main' ? 'prod' : 'dev' }}
     runs-on: ubuntu-latest
+    # Use matrix to deploy to both dev and prod environments.  All the steps are the same (but environment secret values are different),
+    # so we can just run the same job twice.
+    strategy:
+      matrix:
+        include:
+          - branch: dev
+            envName: dev
+          - branch: main
+            envName: prod
+    if: github.ref == 'refs/heads/' + matrix.branch
+    environment: ${{ matrix.envName }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
