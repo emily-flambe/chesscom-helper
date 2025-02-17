@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set up SSH key
         run: |
@@ -58,6 +60,11 @@ jobs:
           else
             echo "rebuild=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: Update .env file on target host
+        run: |
+          ssh target "cd chesscom-helper && echo '${{ secrets.ENV }}' > chesscom_helper/.env-dev"
+
 
       - name: SSH into target host, git pull, and deploy
         run: |
