@@ -11,9 +11,12 @@ fi
 
 echo "Running Django migrations..."
 docker-compose exec web python ../manage.py migrate
+
 echo "Collecting static files..."
 docker-compose exec web python ../manage.py collectstatic --noinput
+
 echo "Building npm assets..."
-docker-compose exec web bash -c "npm run build"
+docker-compose exec web bash -l -c "export NODE_ENV=development && npm run build"
+
 echo "Starting npm in development mode..."
-docker-compose exec -T web bash -c "nohup npm run dev > /dev/null 2>&1 &"
+docker-compose exec -T web bash -l -c "nohup npm run dev > /dev/null 2>&1 &"
