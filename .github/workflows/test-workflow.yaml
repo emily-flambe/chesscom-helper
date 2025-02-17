@@ -45,6 +45,10 @@ jobs:
           ssh-keyscan -H "${{ secrets.BASTION_HOST }}" >> ~/.ssh/known_hosts
           ssh-keyscan -H "${{ secrets.TARGET_HOST }}" >> ~/.ssh/known_hosts
 
+      - name: Print key fingerprint
+        run: |
+          ssh-keygen -lf ~/.ssh/id_rsa
+
       - name: SSH into target host and deploy
         run: |
           ssh target "echo 'great job'"
