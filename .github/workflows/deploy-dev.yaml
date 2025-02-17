@@ -74,7 +74,8 @@ jobs:
           ssh target "eval \"\$(ssh-agent -s)\" \
           && ssh-add github \
           && cd chesscom-helper \
-          && git fetch origin dev && git reset --hard origin/dev"
+          && git pull origin dev"
+
 
       - name: Run deploy script
         run: |
