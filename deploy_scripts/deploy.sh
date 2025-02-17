@@ -1,16 +1,8 @@
 #!/bin/bash
 # deploy-dev.sh
 
-echo "Starting SSH agent..."
-eval "$(ssh-agent -s)"
-echo "Adding GitHub key..."
-ssh-add github
-
 echo "Changing to project directory..."
 cd chesscom-helper
-
-echo "Fetching latest changes from dev branch..."
-git fetch origin dev && git reset --hard origin/dev
 
 if [ "$1" == "true" ]; then
   echo "Changes detected in Dockerfile or docker-compose.yml. Rebuilding Docker container..."
