@@ -47,7 +47,8 @@ jobs:
 
       - name: Print key fingerprint
         run: |
-          ssh-keygen -lf ~/.ssh/id_rsa
+          ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub && \
+          ssh-keygen -lf ~/.ssh/id_rsa.pub
 
       - name: SSH into target host and deploy
         run: |
