@@ -40,4 +40,4 @@ RUN npm install
 EXPOSE 8000 5173
 
 # Start both Django and Vite servers
-CMD ["sh", "-c", "cd /app && python manage.py runserver 0.0.0.0:8000 & cd /app/frontend && npm run dev"]
+CMD ["sh", "-c", "cd /app && python manage.py migrate && python manage.py runserver 0.0.0.0:8000 & cd /app/frontend && npm run dev"]
