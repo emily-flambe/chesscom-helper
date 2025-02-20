@@ -1,21 +1,18 @@
-name: DEV DEPLOY using SSH multi-hop
+name: PROD DEPLOY using SSH multi-hop
 
 on:
   push:
     branches:
-      - dev
+      - main
   workflow_dispatch:
     inputs:
       branch:
         description: 'Branch to deploy'
         required: false
-        default: 'dev'
+        default: 'main'
 
 jobs:
-  dev-deploy-to-ec2:
-    if: >
-      github.event_name == 'push' ||
-      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'dev-deploy'))
+  prod-deploy-to-ec2:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -38,7 +35,7 @@ jobs:
             IdentityFile ~/.ssh/id_rsa
 
           Host target
-            HostName "${{ secrets.DEV_TARGET_HOST }}"
+            HostName "${{ secrets.PROD_TARGET_HOST }}"
             User ec2-user
             IdentityFile ~/.ssh/id_rsa
             ProxyJump bastion
@@ -50,7 +47,7 @@ jobs:
 
       - name: Preload target host key via bastion
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.BASTION_HOST }} "ssh-keyscan -H '${{ secrets.DEV_TARGET_HOST }}'" >> ~/.ssh/known_hosts
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.BASTION_HOST }} "ssh-keyscan -H '${{ secrets.PROD_TARGET_HOST }}'" >> ~/.ssh/known_hosts
 
       - name: Check if Docker rebuild is needed
         id: check_changes
@@ -66,17 +63,8 @@ jobs:
 
       - name: Update .env file on target host
         run: |
-          ssh target "printf '%b' \"${{ secrets.DEV_ENV }}\" > chesscom-helper/.env"
+          ssh target "printf '%b' \"${{ secrets.PROD_ENV }}\" > chesscom-helper/.env"
 
-
-      - name: SSH into target host and git pull
+      - name: SSH into target host, git pull, and deploy
         run: |
-          ssh target "eval \"\$(ssh-agent -s)\" \
-          && ssh-add github \
-          && cd chesscom-helper \
-          && git pull origin dev"
-
-
-      - name: Run deploy script
-        run: |
-          ssh target "cd chesscom-helper && bash ./deploy_scripts/deploy.sh"
+          ssh target "cd chesscom-helper && bash ./deploy_scripts/deploy.sh ${{ steps.check_changes.outputs.rebuild }}"
