@@ -55,6 +55,36 @@ npm run dev
 
 The development server should start on http://localhost:5173.
 
+## Cross-platform Docker builds
+
+In order to build a docker image that is compatible with any platform that supports the official Python image - such as, for _instance_, an EC2 instance running AMD - you can use the following commands:
+
+```bash
+docker buildx create --use --name mybuilder
+docker buildx inspect --bootstrap
+docker buildx build --platform linux/amd64,linux/arm64 -t emilycogsdill/chesscom-helper:latest --push .
+```
+
+
+## Running from docker image pulled from docker hub
+
+If you want to be lazy and run this from a docker image pulled from docker hub, you'll need to set up the database before running the container. These commands assume you have an .env file where you are running them:
+
+```bash
+docker network create chesscom-net
+
+docker run -d --name chesscom_db --network chesscom-net \
+  -e POSTGRES_DB=chesscom_db \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=hunter2 \
+  -p 5432:5432 \
+  postgres:15
+
+docker run -d --network chesscom-net --name chesscom_backend \
+  -p 8000:8000 -p 5173:5173 --env-file .env emilycogsdill/chesscom-helper:latest
+```
+
+
 ## Screenshots
 
 Don't want to actually run the thing yourself? That's fine, this is what it all looks like:
