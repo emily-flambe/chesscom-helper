@@ -80,8 +80,7 @@ docker run -d --name chesscom_db --network chesscom-net \
   -p 5432:5432 \
   postgres:15
 
-docker run -d --network chesscom-net --name chesscom_backend \
-  -p 8000:8000 -p 5173:5173 --env-file .env emilycogsdill/chesscom-helper:latest
+docker run -d --name chesscom-helper -p 8000:8000 -p 5173:5173 chesscom-helper
 ```
 
 
