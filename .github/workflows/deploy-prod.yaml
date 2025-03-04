@@ -1,9 +1,6 @@
 name: PROD DEPLOY using SSH multi-hop
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       branch:
