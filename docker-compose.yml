@@ -4,17 +4,16 @@ services:
     build:
       dockerfile: Dockerfile
       context: .
-    environment:
-      - COMMIT_INFO_GIT_SHA=${GIT_SHA:-}
     env_file: .env
     volumes:
       - ./chesscom_helper:/app
     ports:
-      - "8000:8000"  # Django backend
-      - "5173:5173"  # Vite frontend
+      - "8000:8000"
+      - "5173:5173"
     depends_on:
       - db
     command: ["sh", "-c", "/app/scripts/cmd-web.sh --init-db"]
+
   db:
     image: postgres:15
     container_name: chesscom_db
