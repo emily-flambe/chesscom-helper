@@ -42,20 +42,11 @@ jobs:
           username: emilycogsdill
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Generate Docker metadata (backend)
-        id: docker-metadata-backend
-        uses: docker/metadata-action@v4
-        with:
-          images: emilycogsdill/chesscom-helper-backend
-          tags: |
-            type=sha
-            ${{ github.event.inputs.image_tag }}
-
       - name: Generate Docker metadata (frontend)
-        id: docker-metadata-frontend
+        id: docker-metadata
         uses: docker/metadata-action@v4
         with:
-          images: emilycogsdill/chesscom-helper-frontend
+          images: emilycogsdill/chesscom-helper
           tags: |
             type=sha
             ${{ github.event.inputs.image_tag }}
@@ -73,24 +64,12 @@ jobs:
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "POSTGRES_HOST=chesscom_db" >> .env
 
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          target: frontend-prod
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ steps.docker-metadata-frontend.outputs.tags }}
-          labels: ${{ steps.docker-metadata-frontend.outputs.labels }}
-
       - name: Build and push backend image
         uses: docker/build-push-action@v3
         with:
           context: .
-          target: backend-prod
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ steps.docker-metadata-backend.outputs.tags }}
-          labels: ${{ steps.docker-metadata-backend.outputs.labels }}
+            ${{ steps.docker-metadata.outputs.tags }}
+          labels: ${{ steps.docker-metadata.outputs.labels }}
