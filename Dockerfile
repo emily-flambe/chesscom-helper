@@ -29,12 +29,19 @@ COPY chesscom_helper/poetry.lock .
 # Install Python dependencies
 RUN poetry config virtualenvs.create false && poetry install --no-root
 
-# Copy entire project
-COPY chesscom_helper/ /app/
+# Copy only package.json and package-lock.json to leverage Docker cache
+COPY chesscom_helper/frontend/package.json /app/frontend/
+COPY chesscom_helper/frontend/package-lock.json /app/frontend/
 
 # Install frontend dependencies
 WORKDIR /app/frontend
 RUN npm install
+
+# Copy entire project
+COPY chesscom_helper/ /app/
+
+# Build static assets
+RUN npm run build
 
 # Expose ports
 EXPOSE 8000 5173
