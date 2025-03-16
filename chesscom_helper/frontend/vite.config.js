@@ -7,7 +7,7 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     strictPort: true,
-    allowedHosts: ['*'],
+    allowedHosts: ['chesscomhelper.com', 'www.chesscomhelper.com', 'localhost', '127.0.0.1', 'dev.chesscomhelper.com', 'chesscomhelper.emilyflam.be'],
     watch: {
       usePolling: true,
     },
