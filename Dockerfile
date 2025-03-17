@@ -34,7 +34,7 @@ COPY chesscom_helper/ /app/
 
 # Install frontend dependencies
 WORKDIR /app/frontend
-RUN npm install
+RUN npm ci
 
 # Expose ports
 EXPOSE 8000 5173
