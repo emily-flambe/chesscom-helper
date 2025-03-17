@@ -1,26 +1,24 @@
-# Use an official Python image
 FROM python:3.12.8-slim-bookworm
 
-# Set environment variables
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     git \
-    nodejs \
-    npm \
     curl \
-    && apt-get clean
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry for dependency management
 RUN pip install --upgrade pip && pip install poetry
 
-# Install Node.js and npm for Vite frontend
+# Install Node.js and npm for Vite frontend via NodeSource
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs
+    apt-get install -y --no-install-recommends nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy project dependencies
 COPY chesscom_helper/pyproject.toml .
@@ -36,8 +34,6 @@ COPY chesscom_helper/ /app/
 WORKDIR /app/frontend
 RUN npm ci
 
-# Expose ports
 EXPOSE 8000 5173
 
-# Start both Django and Vite servers
 CMD ["sh", "-c", "cd /app && python manage.py runserver 0.0.0.0:8000 & cd /app/frontend && npm run dev"]
