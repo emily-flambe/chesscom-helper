@@ -5,7 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-06-14
+## [0.2.0] - 2025-06-14
+
+### Added
+- **Enhanced Email Notification System**: Users can now subscribe to email notifications when Chess.com players go live
+  - Added "Notify Me" button to each user row in the Users list page
+  - Clean modal dialog for entering email addresses with validation
+  - Improved user experience with loading states and success/error messages
+  - Auto-closing modal after successful subscription
+- **Improved User Interface**: Enhanced Users page with better button layout and responsive design
+- **Better Error Handling**: Comprehensive error and success message handling for notifications
+
+### Fixed
+- Fixed frontend API calls to use correct backend port (8002 instead of 8000)
+- Updated all axios requests to point to the Django backend server
+- Fixed admin user creation in backend startup script with proper superuser privileges
+- Resolved connection issues between frontend and backend components
+
+### Changed
+- Updated frontend components to use absolute URLs for backend communication
+- Improved button grouping and spacing in Users table actions
+- Enhanced notification subscription flow for better user experience
+
+## [0.1.0] - 2025-06-14
 
 ### Added
 - **Player Tracking**: Add and manage Chess.com players to monitor their activity
