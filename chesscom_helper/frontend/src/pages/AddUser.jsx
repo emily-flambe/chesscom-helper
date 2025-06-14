@@ -30,7 +30,7 @@ export default function AddUser() {
     try {
       // Make a POST request to your Django route, e.g.:
       // /api/chesscom-app/add-user/
-      const response = await axios.post('/api/chesscom-app/add-user/', {
+      const response = await axios.post('http://localhost:8002/api/chesscom-app/add-user/', {
         username,
       });
       // If successful, display a success message from the server or a fallback
