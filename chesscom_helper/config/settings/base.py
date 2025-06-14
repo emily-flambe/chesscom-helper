@@ -160,3 +160,57 @@ CORS_ALLOW_CREDENTIALS = True
 # Redirect to home page after login/logout
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+# Email Configuration
+EMAIL_BACKEND = get_env_variable('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = get_env_variable('EMAIL_HOST', 'localhost')
+EMAIL_PORT = get_env_variable('EMAIL_PORT', 587)
+EMAIL_USE_TLS = get_env_variable('EMAIL_USE_TLS', True)
+EMAIL_HOST_USER = get_env_variable('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = get_env_variable('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = get_env_variable('DEFAULT_FROM_EMAIL', 'noreply@chesscomhelper.com')
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': '/app/logs/django.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'chesscom_app': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

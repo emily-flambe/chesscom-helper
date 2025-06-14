@@ -23,6 +23,9 @@ from chesscom_app.views import (
     add_chesscom_user,
     refresh_all_chesscom_users,
     remove_chesscom_user,
+    subscribe_to_notifications,
+    unsubscribe_from_notifications,
+    get_user_subscriptions,
 )
 
 urlpatterns = [
@@ -38,4 +41,7 @@ urlpatterns = [
     path(
         "remove-user/<str:username>/", remove_chesscom_user, name="remove_chesscom_user"
     ),
+    path("subscribe/", subscribe_to_notifications, name="subscribe_to_notifications"),
+    path("unsubscribe/", unsubscribe_from_notifications, name="unsubscribe_from_notifications"),
+    path("user/<str:username>/subscriptions/", get_user_subscriptions, name="get_user_subscriptions"),
 ]
