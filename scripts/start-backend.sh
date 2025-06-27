@@ -94,6 +94,14 @@ echo "Collecting static files..."
 poetry run python manage.py collectstatic --noinput
 print_success "Static files collected"
 
+# Kill any existing processes on port 8000
+echo "Checking for processes on port 8000..."
+if lsof -ti:8000 >/dev/null 2>&1; then
+    print_warning "Killing existing process on port 8000"
+    lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+    sleep 1
+fi
+
 # Start development server
 echo ""
 print_success "Starting Django development server..."

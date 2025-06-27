@@ -44,7 +44,7 @@ export default function Users() {
     try {
       // If you want to always refresh-all before fetching, 
       // you can do: await axios.post('/api/chesscom-app/refresh-all-users/');
-      const response = await axios.get('http://localhost:8002/api/chesscom-app/users/');
+      const response = await axios.get('/api/chesscom-app/users/');
       if (Array.isArray(response.data)) {
         setUsers(response.data);
       } else {
@@ -69,7 +69,7 @@ export default function Users() {
     setLoading(true);
     setError(null);
     try {
-      await axios.post(`http://localhost:8002/api/chesscom-app/remove-user/${username}/`);
+      await axios.post(`/api/chesscom-app/remove-user/${username}/`);
       // Re-fetch after delete
       await fetchUsers();
     } catch (err) {
@@ -99,7 +99,7 @@ export default function Users() {
     setNotifyMessage('');
 
     try {
-      const response = await axios.post('http://localhost:8002/api/chesscom-app/subscribe/', {
+      const response = await axios.post('/api/chesscom-app/subscribe/', {
         email: email.trim(),
         username: selectedUser.username,
       });

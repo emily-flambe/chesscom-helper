@@ -44,6 +44,14 @@ if [ ! -d "node_modules" ]; then
     print_success "Dependencies installed"
 fi
 
+# Kill any existing processes on port 5173
+echo "Checking for processes on port 5173..."
+if lsof -ti:5173 >/dev/null 2>&1; then
+    print_warning "Killing existing process on port 5173"
+    lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+    sleep 1
+fi
+
 # Start development server
 echo ""
 print_success "Starting React development server..."
