@@ -21,7 +21,7 @@ const Login = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post('http://localhost:8002/api/accounts/login/', credentials);
+      const response = await axios.post('/api/accounts/login/', credentials);
       login(response.data.access, credentials.username);
       navigate('/');
     } catch (err) {
