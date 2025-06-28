@@ -33,7 +33,13 @@ const Register = () => {
     try {
       const response = await axios.post(
         '/api/accounts/register/',
-        formData
+        formData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          withCredentials: false
+        }
       );
       setSuccessMessage(response.data.detail);
       // Optionally, redirect or auto log in the user
