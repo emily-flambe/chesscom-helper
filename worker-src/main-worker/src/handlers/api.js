@@ -5,11 +5,190 @@ import { corsHeaders } from '../utils/cors';
 
 const apiRouter = Router({ base: '/api' });
 
+// Helper function to hash passwords using Web Crypto API
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Helper function to verify passwords
+async function verifyPassword(password, hashedPassword) {
+  const hashedInput = await hashPassword(password);
+  return hashedInput === hashedPassword;
+}
+
+// Helper function to generate simple JWT-like token
+function generateToken(username) {
+  const payload = {
+    username,
+    exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+  };
+  return btoa(JSON.stringify(payload));
+}
+
 // CORS preflight handler
 apiRouter.options('*', () => new Response(null, { 
   status: 204, 
   headers: corsHeaders() 
 }));
+
+// POST /api/accounts/register/ - User registration
+apiRouter.post('/accounts/register/', async (request, env) => {
+  if (!env.DB) {
+    return Response.json({ error: 'Database not configured' }, { 
+      status: 503, 
+      headers: corsHeaders() 
+    });
+  }
+
+  try {
+    const { username, email, password, password2 } = await request.json();
+    
+    // Validate required fields
+    if (!username || !email || !password || !password2) {
+      return Response.json({ 
+        error: 'All fields are required' 
+      }, { 
+        status: 400, 
+        headers: corsHeaders() 
+      });
+    }
+    
+    // Validate password match
+    if (password !== password2) {
+      return Response.json({ 
+        password2: ['Passwords do not match'] 
+      }, { 
+        status: 400, 
+        headers: corsHeaders() 
+      });
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return Response.json({ 
+        email: ['Invalid email format'] 
+      }, { 
+        status: 400, 
+        headers: corsHeaders() 
+      });
+    }
+    
+    // Check if user already exists
+    const existingUser = await env.DB.prepare(
+      'SELECT id FROM auth_users WHERE username = ? OR email = ?'
+    ).bind(username, email).first();
+    
+    if (existingUser) {
+      return Response.json({ 
+        error: 'User with this username or email already exists' 
+      }, { 
+        status: 409, 
+        headers: corsHeaders() 
+      });
+    }
+    
+    // Hash password and create user
+    const hashedPassword = await hashPassword(password);
+    const now = new Date().toISOString();
+    
+    await env.DB.prepare(`
+      INSERT INTO auth_users (username, email, password_hash, date_joined, is_active)
+      VALUES (?, ?, ?, ?, 1)
+    `).bind(username, email, hashedPassword, now).run();
+    
+    return Response.json({ 
+      detail: 'Registration successful! You can now login.' 
+    }, { 
+      status: 201, 
+      headers: corsHeaders() 
+    });
+    
+  } catch (error) {
+    console.error('Registration error:', error);
+    return Response.json({ 
+      error: 'Registration failed' 
+    }, { 
+      status: 500, 
+      headers: corsHeaders() 
+    });
+  }
+});
+
+// POST /api/accounts/login/ - User login
+apiRouter.post('/accounts/login/', async (request, env) => {
+  if (!env.DB) {
+    return Response.json({ error: 'Database not configured' }, { 
+      status: 503, 
+      headers: corsHeaders() 
+    });
+  }
+
+  try {
+    const { username, password } = await request.json();
+    
+    if (!username || !password) {
+      return Response.json({ 
+        error: 'Username and password are required' 
+      }, { 
+        status: 400, 
+        headers: corsHeaders() 
+      });
+    }
+    
+    // Find user by username
+    const user = await env.DB.prepare(
+      'SELECT id, username, email, password_hash, is_active FROM auth_users WHERE username = ?'
+    ).bind(username).first();
+    
+    if (!user || !user.is_active) {
+      return Response.json({ 
+        error: 'Invalid credentials' 
+      }, { 
+        status: 401, 
+        headers: corsHeaders() 
+      });
+    }
+    
+    // Verify password
+    const passwordValid = await verifyPassword(password, user.password_hash);
+    if (!passwordValid) {
+      return Response.json({ 
+        error: 'Invalid credentials' 
+      }, { 
+        status: 401, 
+        headers: corsHeaders() 
+      });
+    }
+    
+    // Generate token
+    const access = generateToken(user.username);
+    
+    return Response.json({ 
+      access,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email
+      }
+    }, { 
+      headers: corsHeaders() 
+    });
+    
+  } catch (error) {
+    console.error('Login error:', error);
+    return Response.json({ 
+      error: 'Login failed' 
+    }, { 
+      status: 500, 
+      headers: corsHeaders() 
+    });
+  }
+});
 
 // GET /api/health - Health check and D1 connectivity test
 apiRouter.get('/health', async (request, env) => {

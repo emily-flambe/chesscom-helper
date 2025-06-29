@@ -1,6 +1,20 @@
 -- D1 Database Schema for Chess.com Helper
 -- This schema replicates the Django models for D1 compatibility
 
+-- Authentication users table
+CREATE TABLE IF NOT EXISTS auth_users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    date_joined TEXT NOT NULL,  -- ISO timestamp string
+    is_active INTEGER DEFAULT 1
+);
+
+-- Create indices for auth lookups
+CREATE INDEX IF NOT EXISTS idx_auth_username ON auth_users(username);
+CREATE INDEX IF NOT EXISTS idx_auth_email ON auth_users(email);
+
 -- Users table
 CREATE TABLE IF NOT EXISTS chesscom_app_user (
     player_id INTEGER PRIMARY KEY,
