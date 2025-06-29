@@ -63,17 +63,49 @@ cd ../cron-worker && wrangler deploy
 
 ### Architecture Overview
 
-**Current Production Stack:**
-- **Main Worker**: Serves React frontend + API endpoints with direct D1 access
-- **Cron Worker**: Background live match checking with D1 integration
-- **Database**: Cloudflare D1 (globally distributed SQLite)
-- **Email**: SendGrid integration via Workers
+This project uses a **dual-environment architecture** that maintains identical APIs while using different backend technologies for development and production.
 
-**Benefits of D1 Architecture:**
-- Single cloud provider (simplified infrastructure)
-- Direct Worker-to-D1 connections (no HTTP bridge)
-- Global distribution and automatic replication
-- Reduced latency and operational complexity
+**Development Environment (Local):**
+- **Framework**: Django with Django ORM
+- **Database**: SQLite (local file)
+- **Frontend**: React (proxied to Django backend)
+- **Purpose**: Familiar development experience with Django admin interface
+
+**Production Environment (Cloudflare):**
+- **Framework**: Cloudflare Workers (JavaScript)
+- **Database**: D1 (globally distributed SQLite)
+- **Frontend**: React (served as static assets)
+- **Purpose**: Edge performance and global distribution
+
+#### How They Stay in Sync
+
+Both environments implement **identical REST APIs** by:
+
+1. **Same API Endpoints**: Both respond to `/api/chesscom-app/users/`, `/api/chesscom-app/add-user/`, etc.
+2. **Same Data Schema**: SQLite (dev) and D1 (prod) use identical table structures
+3. **Same Business Logic**: Both fetch from Chess.com API and transform data identically
+4. **Same Response Format**: Frontend receives identical JSON regardless of backend
+
+**Django Version** uses ORM:
+```python
+user, created = User.objects.update_or_create(
+    player_id=user_data["player_id"], defaults=user_data
+)
+```
+
+**Worker Version** uses raw SQL:
+```javascript
+const user = await db.addUser(userData);
+```
+
+Both produce the same API response, so the React frontend works seamlessly with either backend.
+
+**Benefits of This Architecture:**
+- Django's familiar development experience locally
+- Cloudflare's edge performance globally
+- No duplicate code maintenance (shared API contract)
+- Easy local debugging with Django admin interface
+- Production scalability with global edge deployment
 
 ## Make Commands
 

@@ -8,7 +8,7 @@
     "build-and-deploy": "npm run build && npm run deploy"
   },
   "dependencies": {
-    "itty-router": "^4.0.0"
+    "itty-router": "^4.2.2"
   },
   "devDependencies": {
     "wrangler": "^4.22.0"
