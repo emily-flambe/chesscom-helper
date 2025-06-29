@@ -4,7 +4,7 @@
   "main": "worker-src/main-worker/src/index.js",
   "compatibility_flags": ["nodejs_compat"],
   "build": {
-    "command": "cd chesscom_helper/frontend && npm install && npm run build && cp -r dist ../../worker-src/main-worker/"
+    "command": "cd chesscom_helper/frontend && npm install && npm run build"
   },
   "site": {
     "bucket": "./worker-src/main-worker/dist"
