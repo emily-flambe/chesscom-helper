@@ -1,0 +1,35 @@
+
+ ⛅️ wrangler 4.22.0
+───────────────────
+Successfully created tail, expires at 2025-06-28T22:43:10Z
+Connected to chesscom-helper, waiting for logs...
+POST https://chesscomhelper.emilycogsdill.com/api/accounts/register/ - Exception Thrown @ 6/28/2025, 10:44:26 AM
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1m  TypeError: Incorrect type for Promise: the Promise did not resolve to 'Response'.[0m
+
+
+GET https://chesscomhelper.emilycogsdill.com/register - Exception Thrown @ 6/28/2025, 11:02:18 AM
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1m  TypeError: Cannot read properties of undefined (reading 'fetch')[0m
+
+
+GET https://chesscomhelper.emilycogsdill.com/favicon.ico - Exception Thrown @ 6/28/2025, 11:02:19 AM
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1m  TypeError: Cannot read properties of undefined (reading 'fetch')[0m
+
+
+GET https://chesscomhelper.emilycogsdill.com/register - Exception Thrown @ 6/28/2025, 11:02:19 AM
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1m  TypeError: Cannot read properties of undefined (reading 'fetch')[0m
+
+
+GET https://chesscomhelper.emilycogsdill.com/favicon.ico - Exception Thrown @ 6/28/2025, 11:02:20 AM
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1m  TypeError: Cannot read properties of undefined (reading 'fetch')[0m
+
+
+This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). The promise rejected with the reason:
+Error: Not logged in.
+    at requireLoggedIn (/opt/homebrew/lib/node_modules/wrangler/wrangler-dist/cli.js:50246:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async performApiFetch (/opt/homebrew/lib/node_modules/wrangler/wrangler-dist/cli.js:50160:3)
+    at async fetchInternal (/opt/homebrew/lib/node_modules/wrangler/wrangler-dist/cli.js:50194:20)
+    at async fetchResult (/opt/homebrew/lib/node_modules/wrangler/wrangler-dist/cli.js:50371:16)
+    at async deleteTail (/opt/homebrew/lib/node_modules/wrangler/wrangler-dist/cli.js:89491:5)
+    at async _WebSocket.exit (/opt/homebrew/lib/node_modules/wrangler/wrangler-dist/cli.js:141788:11)
+🪵  Logs were written to "/Users/emilycogsdill/Library/Preferences/.wrangler/logs/wrangler-2025-06-28_16-43-57_046.log"

@@ -1,5 +1,5 @@
 // frontend/src/pages/LogoutConfirmation.jsx
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Button } from '@mui/material';
 import { AuthContext } from '../context/AuthContext';

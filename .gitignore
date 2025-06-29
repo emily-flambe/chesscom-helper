@@ -87,6 +87,9 @@ celerybeat.pid
 
 # Environments
 .env
+.env.local
+.env.production
+.env.development
 .venv
 env/
 venv/
@@ -135,6 +138,10 @@ cta/prof
 # Node
 node_modules
 .out
+
+# Worker build output
+worker-src/main-worker/dist/
+worker-src/cron-worker/dist/
 
 # Cypress
 e2e/yarn.lock

@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import json
 import os
+from pathlib import Path
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 def get_env_variable(var_name, default=None):
@@ -73,7 +77,7 @@ INSTALLED_APPS = [
     "django_vite",
     # Apps in this project
     "chesscom_app",
-    "accounts"
+    "accounts",
 ]
 
 MIDDLEWARE = [
@@ -143,16 +147,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
-        'rest_framework.throttling.UserRateThrottle',
+        "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        'anon': '5/minute',
-        'user': '10/minute',    },
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        "anon": "5/minute",
+        "user": "10/minute",
+    },
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
     ],
 }
 
@@ -161,53 +164,66 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # Redirect to home page after login/logout
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
 
 # Email Configuration
-EMAIL_BACKEND = get_env_variable('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = get_env_variable('EMAIL_HOST', 'localhost')
-EMAIL_PORT = get_env_variable('EMAIL_PORT', 587)
-EMAIL_USE_TLS = get_env_variable('EMAIL_USE_TLS', True)
-EMAIL_HOST_USER = get_env_variable('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = get_env_variable('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = get_env_variable('DEFAULT_FROM_EMAIL', 'noreply@chesscomhelper.com')
+EMAIL_BACKEND = get_env_variable(
+    "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
+)
+EMAIL_HOST = get_env_variable("EMAIL_HOST", "localhost")
+EMAIL_PORT = get_env_variable("EMAIL_PORT", 587)
+EMAIL_USE_TLS = get_env_variable("EMAIL_USE_TLS", True)
+EMAIL_HOST_USER = get_env_variable("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = get_env_variable("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = get_env_variable(
+    "DEFAULT_FROM_EMAIL", "noreply@chesscomhelper.com"
+)
+
+# Database
+# Default database configuration for SQLite (overridden in specific settings files)
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
 
 # Logging
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
+    "handlers": {
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
         },
-        'chesscom_app': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "chesscom_app": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
 }

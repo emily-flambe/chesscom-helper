@@ -1,0 +1,62 @@
+name: Deploy Cloudflare Workers
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy-main-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            chesscom_helper/frontend/package-lock.json
+            worker-src/main-worker/package-lock.json
+      
+      - name: Install frontend dependencies
+        run: |
+          cd chesscom_helper/frontend
+          npm ci
+      
+      - name: Install worker dependencies
+        run: |
+          cd worker-src/main-worker
+          npm ci
+      
+      - name: Build and deploy main worker
+        run: |
+          cd worker-src/main-worker
+          npm run build-and-deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  deploy-cron-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: worker-src/cron-worker/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd worker-src/cron-worker
+          npm ci
+      
+      - name: Deploy cron worker
+        run: |
+          cd worker-src/cron-worker
+          wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

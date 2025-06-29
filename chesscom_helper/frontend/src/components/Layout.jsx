@@ -1,11 +1,11 @@
 // Layout.jsx
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { Outlet, Link as RouterLink } from 'react-router-dom';
 import { Drawer, List, ListItem, ListItemButton, ListItemText, Toolbar, Box } from '@mui/material';
 import { AuthContext } from '../context/AuthContext';
 
 export default function Layout() {
-  const { token, logout } = useContext(AuthContext);
+  const { token } = useContext(AuthContext);
 
   return (
     <Box sx={{ display: 'flex' }}>

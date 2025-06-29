@@ -1,5 +1,5 @@
 // frontend/src/components/Header.jsx
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { Button, AppBar, Toolbar, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';

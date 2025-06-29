@@ -1,6 +1,6 @@
 // AddUser.jsx
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import {
   Box,
   Typography,
@@ -30,7 +30,7 @@ export default function AddUser() {
     try {
       // Make a POST request to your Django route, e.g.:
       // /api/chesscom-app/add-user/
-      const response = await axios.post('/api/chesscom-app/add-user/', {
+      const response = await api.post('/api/chesscom-app/add-user/', {
         username,
       });
       // If successful, display a success message from the server or a fallback

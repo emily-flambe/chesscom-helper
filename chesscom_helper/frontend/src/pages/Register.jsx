@@ -1,6 +1,6 @@
 // frontend/src/pages/Register.jsx
-import React, { useState } from 'react';
-import axios from 'axios';
+import { useState } from 'react';
+import api from '../utils/api';
 import {
   Box,
   Typography,
@@ -31,7 +31,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(
+      const response = await api.post(
         '/api/accounts/register/',
         formData,
         {
@@ -62,7 +62,7 @@ const Register = () => {
 
       {/* Disclaimer paragraph */}
       <Typography variant="body2" color="textSecondary" gutterBottom sx={{ fontStyle: 'italic', my: 4 }}>
-        Disclaimer: While I will not *personally* profit from your account information ending up somewhere unsavory, I cannot guarantee that it won't happen.
+        Disclaimer: While I will not *personally* profit from your account information ending up somewhere unsavory, I cannot guarantee that it won&apos;t happen.
         User discretion is advised.
       </Typography>
 
