@@ -49,7 +49,7 @@ def fetch_and_save_chesscom_user(username):
             "status": 201 if created else 200,
         }
 
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         return {"error": f"Error fetching player data: {str(e)}", "status": 500}
 
 

@@ -1,7 +1,7 @@
 # Chess.com Helper - Makefile
 # Development and deployment automation
 
-.PHONY: help install dev build test lint clean setup deps check deploy deploy-local
+.PHONY: help install dev build test lint clean setup deps check deploy deploy-local logs admin
 
 # Default target
 help: ## Show this help message
@@ -83,6 +83,15 @@ shell: ## Open Django shell
 	@echo "🐚 Opening Django shell..."
 	export $$(cat .env | grep -v '^#' | xargs) && cd chesscom_helper && PATH="$$HOME/.local/bin:$$PATH" poetry run python manage.py shell
 
+admin: ## Open Django admin console in browser
+	@echo "🔧 Opening Django admin console..."
+	@echo "Starting Django server and opening admin in browser..."
+	export $$(cat .env | grep -v '^#' | xargs) && cd chesscom_helper && PATH="$$HOME/.local/bin:$$PATH" poetry run python manage.py runserver &
+	@sleep 3
+	@open http://127.0.0.1:8000/admin/
+	@echo "Django admin opened at http://127.0.0.1:8000/admin/"
+	@echo "Press Ctrl+C to stop the server"
+
 # Cleaning
 clean: ## Clean build artifacts and cache
 	@echo "🧽 Cleaning build artifacts..."
@@ -109,6 +118,10 @@ deploy: ## Deploy to Cloudflare production environment
 	@echo "☁️  Deploying to Cloudflare production..."
 	@echo "🔄 Triggering manual Cloudflare deployment..."
 	npx wrangler deploy --config wrangler.json
+
+logs: ## View Cloudflare Worker logs (live tail)
+	@echo "📋 Starting Cloudflare Worker log tailing..."
+	npx wrangler tail --config wrangler.json
 
 # Quick shortcuts
 quick-start: deps dev ## Quick start for new developers

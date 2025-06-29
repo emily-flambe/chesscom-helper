@@ -13,25 +13,23 @@ apiRouter.options('*', () => new Response(null, {
 
 // GET /api/chesscom-app/users/ - List all tracked users
 apiRouter.get('/chesscom-app/users/', async (request, env) => {
-  if (!env.DATABASE_URL) {
+  if (!env.DB) {
     return Response.json({ error: 'Database not configured' }, { 
       status: 503, 
       headers: corsHeaders() 
     });
   }
   
-  const db = new DatabaseService(env.DATABASE_URL);
+  const db = new DatabaseService(env.DB);
   try {
     const users = await db.getUsers();
     return Response.json(users, { headers: corsHeaders() });
   } catch (error) {
     console.error('Database error:', error);
-    return Response.json({ error: 'Database connection failed' }, { 
-      status: 503, 
+    return Response.json({ error: 'Database query failed' }, { 
+      status: 500, 
       headers: corsHeaders() 
     });
-  } finally {
-    await db.close();
   }
 });
 
@@ -39,14 +37,14 @@ apiRouter.get('/chesscom-app/users/', async (request, env) => {
 apiRouter.get('/chesscom-app/user/:username/', async (request, env) => {
   const { username } = request.params;
   
-  if (!env.DATABASE_URL) {
+  if (!env.DB) {
     return Response.json({ error: 'Database not configured' }, { 
       status: 503, 
       headers: corsHeaders() 
     });
   }
   
-  const db = new DatabaseService(env.DATABASE_URL);
+  const db = new DatabaseService(env.DB);
   try {
     const user = await db.getUserByUsername(username);
     if (!user) {
@@ -56,21 +54,25 @@ apiRouter.get('/chesscom-app/user/:username/', async (request, env) => {
       });
     }
     return Response.json(user, { headers: corsHeaders() });
-  } finally {
-    await db.close();
+  } catch (error) {
+    console.error('Database error:', error);
+    return Response.json({ error: 'Database query failed' }, { 
+      status: 500, 
+      headers: corsHeaders() 
+    });
   }
 });
 
 // POST /api/chesscom-app/add-user/ - Add user to tracking
 apiRouter.post('/chesscom-app/add-user/', async (request, env) => {
-  if (!env.DATABASE_URL) {
+  if (!env.DB) {
     return Response.json({ error: 'Database not configured' }, { 
       status: 503, 
       headers: corsHeaders() 
     });
   }
   
-  const db = new DatabaseService(env.DATABASE_URL);
+  const db = new DatabaseService(env.DB);
   const chesscomApi = new ChesscomAPI();
   
   try {
@@ -128,8 +130,6 @@ apiRouter.post('/chesscom-app/add-user/', async (request, env) => {
       status: 500, 
       headers: corsHeaders() 
     });
-  } finally {
-    await db.close();
   }
 });
 
@@ -137,14 +137,14 @@ apiRouter.post('/chesscom-app/add-user/', async (request, env) => {
 apiRouter.delete('/chesscom-app/remove-user/:username/', async (request, env) => {
   const { username } = request.params;
   
-  if (!env.DATABASE_URL) {
+  if (!env.DB) {
     return Response.json({ error: 'Database not configured' }, { 
       status: 503, 
       headers: corsHeaders() 
     });
   }
   
-  const db = new DatabaseService(env.DATABASE_URL);
+  const db = new DatabaseService(env.DB);
   
   try {
     const user = await db.getUserByUsername(username);
@@ -159,21 +159,25 @@ apiRouter.delete('/chesscom-app/remove-user/:username/', async (request, env) =>
     return Response.json({ message: 'User removed successfully' }, { 
       headers: corsHeaders() 
     });
-  } finally {
-    await db.close();
+  } catch (error) {
+    console.error('Database error:', error);
+    return Response.json({ error: 'Failed to remove user' }, { 
+      status: 500, 
+      headers: corsHeaders() 
+    });
   }
 });
 
 // POST /api/chesscom-app/subscribe/ - Subscribe to email notifications
 apiRouter.post('/chesscom-app/subscribe/', async (request, env) => {
-  if (!env.DATABASE_URL) {
+  if (!env.DB) {
     return Response.json({ error: 'Database not configured' }, { 
       status: 503, 
       headers: corsHeaders() 
     });
   }
   
-  const db = new DatabaseService(env.DATABASE_URL);
+  const db = new DatabaseService(env.DB);
   
   try {
     const { username, email } = await request.json();
@@ -224,21 +228,19 @@ apiRouter.post('/chesscom-app/subscribe/', async (request, env) => {
       status: 500, 
       headers: corsHeaders() 
     });
-  } finally {
-    await db.close();
   }
 });
 
 // POST /api/chesscom-app/unsubscribe/ - Unsubscribe from notifications
 apiRouter.post('/chesscom-app/unsubscribe/', async (request, env) => {
-  if (!env.DATABASE_URL) {
+  if (!env.DB) {
     return Response.json({ error: 'Database not configured' }, { 
       status: 503, 
       headers: corsHeaders() 
     });
   }
   
-  const db = new DatabaseService(env.DATABASE_URL);
+  const db = new DatabaseService(env.DB);
   
   try {
     const { username, email } = await request.json();
@@ -264,8 +266,12 @@ apiRouter.post('/chesscom-app/unsubscribe/', async (request, env) => {
     return Response.json({ message: 'Unsubscribed successfully' }, { 
       headers: corsHeaders() 
     });
-  } finally {
-    await db.close();
+  } catch (error) {
+    console.error('Database error:', error);
+    return Response.json({ error: 'Failed to unsubscribe' }, { 
+      status: 500, 
+      headers: corsHeaders() 
+    });
   }
 });
 
@@ -273,14 +279,14 @@ apiRouter.post('/chesscom-app/unsubscribe/', async (request, env) => {
 apiRouter.get('/chesscom-app/user/:username/subscriptions/', async (request, env) => {
   const { username } = request.params;
   
-  if (!env.DATABASE_URL) {
+  if (!env.DB) {
     return Response.json({ error: 'Database not configured' }, { 
       status: 503, 
       headers: corsHeaders() 
     });
   }
   
-  const db = new DatabaseService(env.DATABASE_URL);
+  const db = new DatabaseService(env.DB);
   
   try {
     const user = await db.getUserByUsername(username);
@@ -293,8 +299,12 @@ apiRouter.get('/chesscom-app/user/:username/subscriptions/', async (request, env
     
     const subscriptions = await db.getUserSubscriptions(user.player_id);
     return Response.json(subscriptions, { headers: corsHeaders() });
-  } finally {
-    await db.close();
+  } catch (error) {
+    console.error('Database error:', error);
+    return Response.json({ error: 'Failed to fetch subscriptions' }, { 
+      status: 500, 
+      headers: corsHeaders() 
+    });
   }
 });
 

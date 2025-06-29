@@ -1,25 +1,62 @@
 #!/bin/bash
-# deploy-dev.sh
+# deploy.sh - Deployment script for D1 architecture
 
-if [ "$1" == "true" ]; then
-  echo "Changes detected in Dockerfile or docker-compose.yml. Rebuilding Docker container..."
-  docker-compose build && docker-compose up -d
-else
-  echo "No rebuild required. Restarting container..."
-  docker-compose restart
+set -e
+
+echo "🚀 Starting deployment to Cloudflare Workers + D1..."
+
+# Get to the project root
+cd "$(dirname "$0")/../.."
+
+# Check if wrangler is installed
+if ! command -v wrangler &> /dev/null; then
+    echo "❌ Wrangler CLI not found. Please install it first:"
+    echo "   npm install -g wrangler"
+    exit 1
 fi
 
-echo "Running Django migrations..."
-docker-compose exec web python ../manage.py migrate
+# Check if we're in a git repository and get branch info
+if git rev-parse --git-dir > /dev/null 2>&1; then
+    BRANCH=$(git branch --show-current)
+    COMMIT=$(git rev-parse --short HEAD)
+    echo "📋 Deploying branch: $BRANCH (commit: $COMMIT)"
+else
+    echo "⚠️  Not in a git repository"
+fi
 
-echo "Collecting static files..."
-docker-compose exec web python ../manage.py collectstatic --noinput
+# Build frontend
+echo "🔨 Building React frontend..."
+cd chesscom_helper/frontend
+npm ci
+npm run build
 
-echo "Installing npm dependencies..."
-docker-compose exec web bash -l -c "npm install"
+# Deploy main worker
+echo "🚀 Deploying main worker (frontend + API)..."
+cd ../../worker-src/main-worker
+npm ci
+wrangler deploy
 
-echo "Building npm assets..."
-docker-compose exec web bash -l -c "npm run build"
+# Deploy cron worker
+echo "⏰ Deploying cron worker (background jobs)..."
+cd ../cron-worker
+npm ci
+wrangler deploy
 
-echo "Starting npm in development mode..."
-docker-compose exec -T web bash -l -c "nohup npm run dev > /dev/null 2>&1 &"
+# Verify D1 database connection
+echo "🗄️ Verifying D1 database connection..."
+cd ../../
+wrangler d1 execute chesscom-helper-db --command="SELECT COUNT(*) as table_count FROM sqlite_master WHERE type='table'"
+
+echo "✅ Deployment completed successfully!"
+echo ""
+echo "🌐 Your app should be available at:"
+echo "   https://chesscom-helper.emily-flambe.workers.dev"
+echo ""
+echo "📊 To monitor your deployment:"
+echo "   wrangler tail chesscom-helper"
+echo "   wrangler tail chesscom-helper-cron"
+echo ""
+echo "🗄️ To manage your D1 database:"
+echo "   wrangler d1 execute chesscom-helper-db --command='SELECT * FROM chesscom_app_user LIMIT 5'"
+echo ""
+echo "💡 For troubleshooting, see docs/MONITORING.md"

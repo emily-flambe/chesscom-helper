@@ -21,16 +21,25 @@ DJANGO_VITE = {
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# SQLite database for local development
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": get_env_variable("POSTGRES_DB"),
-        "HOST": get_env_variable("POSTGRES_HOST"),
-        "PORT": get_env_variable("POSTGRES_PORT"),
-        "USER": get_env_variable("POSTGRES_USER"),
-        "PASSWORD": get_env_variable("POSTGRES_PASSWORD"),
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# PostgreSQL configuration (commented out for local development)
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql_psycopg2",
+#         "NAME": get_env_variable("POSTGRES_DB"),
+#         "HOST": get_env_variable("POSTGRES_HOST"),
+#         "PORT": get_env_variable("POSTGRES_PORT"),
+#         "USER": get_env_variable("POSTGRES_USER"),
+#         "PASSWORD": get_env_variable("POSTGRES_PASSWORD"),
+#     }
+# }
 
 # When we do dev work, we should be using cta-tech.dev
 

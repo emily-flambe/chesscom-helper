@@ -16,8 +16,11 @@ include = ["**/*"]
 CHESS_COM_API_BASE = "https://api.chess.com/pub"
 FRONTEND_URL = "https://chesscom-helper.emily-flambe.workers.dev"
 
-# Database connection (set as secret)
-# DATABASE_URL will be configured separately
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "chesscom-helper-db"
+database_id = "your-database-id-here"
 
 [triggers]
 crons = []

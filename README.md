@@ -4,24 +4,32 @@ A web application for tracking Chess.com players and receiving email notificatio
 
 ## Tech Stack
 
-- **Backend**: Django (Python) with PostgreSQL
+- **Backend**: SQLite (development) / Cloudflare D1 (production)
 - **Frontend**: React with Vite and Material-UI
+- **Database**: Cloudflare D1 (SQLite-based, globally distributed)
+- **Deployment**: Cloudflare Workers with native D1 integration
 - **API**: Chess.com Public API integration
-- **Email**: SMTP support for notifications
+- **Email**: SendGrid via Cloudflare Workers
+- **Legacy**: Django backend (local development only)
 
 ## Prerequisites
 
-- Python 3.12+ with Poetry
-- Node.js 18+ and npm
-- PostgreSQL 15+
+- **Production**: Wrangler CLI v3+ (for D1 database and Workers deployment)
+- **Development**: Python 3.12+ with Poetry, Node.js 18+ and npm
+- **Required**: Cloudflare account with Workers and D1 access
 
 ## Quick Start
+
+### Local Development Setup
 
 ```bash
 git clone https://github.com/your-username/chesscom-helper.git
 cd chesscom-helper
 
-# Complete setup (installs deps, creates database, runs migrations)
+# Install Wrangler CLI globally
+npm install -g wrangler
+
+# Complete setup (installs deps, creates SQLite database, runs migrations)
 make setup
 
 # Start both servers
@@ -31,6 +39,41 @@ make dev
 **Frontend**: http://localhost:5173  
 **Backend**: http://localhost:8000  
 **Admin**: http://localhost:8000/admin
+
+### Production Deployment (Cloudflare D1 + Workers)
+
+```bash
+# 1. Create D1 database
+wrangler d1 create chesscom-helper-db
+
+# 2. Note the database_id from output and update wrangler.toml files
+
+# 3. Apply schema to D1
+wrangler d1 execute chesscom-helper-db --file=scripts/d1-schema.sql
+
+# 4. Set up secrets for Workers
+cd worker-src/main-worker
+wrangler secret put EMAIL_API_KEY  # SendGrid API key
+wrangler secret put EMAIL_FROM_ADDRESS  # Verified sender email
+
+# 5. Deploy both workers
+cd worker-src/main-worker && wrangler deploy
+cd ../cron-worker && wrangler deploy
+```
+
+### Architecture Overview
+
+**Current Production Stack:**
+- **Main Worker**: Serves React frontend + API endpoints with direct D1 access
+- **Cron Worker**: Background live match checking with D1 integration
+- **Database**: Cloudflare D1 (globally distributed SQLite)
+- **Email**: SendGrid integration via Workers
+
+**Benefits of D1 Architecture:**
+- Single cloud provider (simplified infrastructure)
+- Direct Worker-to-D1 connections (no HTTP bridge)
+- Global distribution and automatic replication
+- Reduced latency and operational complexity
 
 ## Make Commands
 
@@ -63,20 +106,28 @@ curl -X POST http://localhost:8000/api/chesscom-app/subscribe/ \
 
 ## Email Configuration
 
-Edit `.env` file:
+### Local Development (Django - Optional)
+
+For local development with Django backend:
 
 ```bash
-# For development (console output)
+# Edit .env file for local email testing
 EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
-
-# For production (Gmail example)
-EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your-gmail@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
 ```
+
+### Production (Cloudflare Workers + D1)
+
+Email configuration is handled entirely through Worker secrets:
+
+```bash
+# Required secrets for production Workers
+wrangler secret put EMAIL_API_KEY      # SendGrid API key
+wrangler secret put EMAIL_FROM_ADDRESS # Verified sender email
+```
+
+**Note**: The Django backend is now used only for local development. Production runs entirely on Cloudflare Workers with direct D1 database access.
+
+See [docs/EMAIL_SETUP.md](docs/EMAIL_SETUP.md) for detailed email configuration.
 
 ## License
 
