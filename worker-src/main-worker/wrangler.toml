@@ -1,0 +1,23 @@
+name = "chesscom-helper"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[build]
+command = "npm run build"
+
+# Assets for React frontend
+[assets]
+bucket = "./dist"
+include = ["**/*"]
+
+# Environment variables
+[vars]
+CHESS_COM_API_BASE = "https://api.chess.com/pub"
+FRONTEND_URL = "https://chesscom-helper.emily-flambe.workers.dev"
+
+# Database connection (set as secret)
+# DATABASE_URL will be configured separately
+
+[triggers]
+crons = []

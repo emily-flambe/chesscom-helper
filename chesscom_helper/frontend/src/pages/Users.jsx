@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import {
   Box,
   Typography,
@@ -43,8 +43,8 @@ export default function Users() {
     setError(null);
     try {
       // If you want to always refresh-all before fetching, 
-      // you can do: await axios.post('/api/chesscom-app/refresh-all-users/');
-      const response = await axios.get('/api/chesscom-app/users/');
+      // you can do: await api.post('/api/chesscom-app/refresh-all-users/');
+      const response = await api.get('/api/chesscom-app/users/');
       if (Array.isArray(response.data)) {
         setUsers(response.data);
       } else {
@@ -69,7 +69,7 @@ export default function Users() {
     setLoading(true);
     setError(null);
     try {
-      await axios.post(`/api/chesscom-app/remove-user/${username}/`);
+      await api.post(`/api/chesscom-app/remove-user/${username}/`);
       // Re-fetch after delete
       await fetchUsers();
     } catch (err) {
@@ -99,7 +99,7 @@ export default function Users() {
     setNotifyMessage('');
 
     try {
-      const response = await axios.post('/api/chesscom-app/subscribe/', {
+      const response = await api.post('/api/chesscom-app/subscribe/', {
         email: email.trim(),
         username: selectedUser.username,
       });

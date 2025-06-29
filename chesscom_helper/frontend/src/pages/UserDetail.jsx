@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import {
   Box,
   Typography,
@@ -46,20 +46,20 @@ export default function UserDetail() {
 
     try {
       // Attempt to GET existing user
-      const response = await axios.get(`/api/chesscom-app/user/${searchUsername}/`);
+      const response = await api.get(`/api/chesscom-app/user/${searchUsername}/`);
       setUser(response.data);
     } catch (err) {
       // If user is not found (404), auto-add them
       if (err.response && err.response.status === 404) {
         try {
-          await axios.post('/api/chesscom-app/add-user/', {
+          await api.post('/api/chesscom-app/add-user/', {
             username: searchUsername,
           });
           // 2) Set the message that user was added
           setAddedMessage(`User "${searchUsername}" was added to your list!`);
 
           // Re-fetch the newly added user
-          const secondResponse = await axios.get(`/api/chesscom-app/user/${searchUsername}/`);
+          const secondResponse = await api.get(`/api/chesscom-app/user/${searchUsername}/`);
           setUser(secondResponse.data);
         } catch (err2) {
           console.error('Error adding user or fetching newly added user:', err2);
