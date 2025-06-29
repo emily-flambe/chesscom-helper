@@ -117,11 +117,11 @@ deploy-local: deploy-check build ## Deploy to local/development environment
 deploy: ## Deploy to Cloudflare production environment
 	@echo "☁️  Deploying to Cloudflare production..."
 	@echo "🔄 Triggering manual Cloudflare deployment..."
-	npx wrangler deploy --config wrangler.json
+	cd worker-src/main-worker && npx wrangler deploy
 
 logs: ## View Cloudflare Worker logs (live tail)
 	@echo "📋 Starting Cloudflare Worker log tailing..."
-	npx wrangler tail --config wrangler.json
+	cd worker-src/main-worker && npx wrangler tail
 
 # Quick shortcuts
 quick-start: deps dev ## Quick start for new developers

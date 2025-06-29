@@ -13,5 +13,9 @@
   "vars": {
     "CHESS_COM_API_BASE": "https://api.chess.com/pub",
     "FRONTEND_URL": "https://chesscom-helper.emily-flambe.workers.dev"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1.0
   }
 }

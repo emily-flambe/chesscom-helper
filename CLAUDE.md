@@ -47,7 +47,7 @@ When working on this project, Claude agents should identify their role and respo
 
 ## Workflow
 
-1. **Create a new branch** for your changes:
+1. **Create a new branch** for your changes if you are currently on the `main` branch:
    ```bash
    git checkout -b feature/your-feature-name
    ```

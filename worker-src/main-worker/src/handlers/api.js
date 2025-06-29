@@ -11,6 +11,34 @@ apiRouter.options('*', () => new Response(null, {
   headers: corsHeaders() 
 }));
 
+// GET /api/health - Health check and D1 connectivity test
+apiRouter.get('/health', async (request, env) => {
+  const health = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    database: 'unknown',
+    version: '1.0.0'
+  };
+
+  // Test D1 database connectivity
+  if (!env.DB) {
+    health.database = 'not_configured';
+    health.status = 'degraded';
+  } else {
+    try {
+      // Simple connectivity test
+      const result = await env.DB.prepare('SELECT 1 as test').first();
+      health.database = result ? 'connected' : 'error';
+    } catch (error) {
+      health.database = 'error';
+      health.error = error.message;
+      health.status = 'degraded';
+    }
+  }
+
+  return Response.json(health, { headers: corsHeaders() });
+});
+
 // GET /api/chesscom-app/users/ - List all tracked users
 apiRouter.get('/chesscom-app/users/', async (request, env) => {
   if (!env.DB) {

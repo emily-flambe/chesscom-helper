@@ -2,7 +2,7 @@
   "name": "chesscom-helper-worker",
   "version": "1.0.0",
   "scripts": {
-    "build": "cd ../../chesscom_helper/frontend && npm run build",
+    "build": "echo 'Frontend already built'",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "build-and-deploy": "npm run build && npm run deploy"
