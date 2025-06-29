@@ -4,17 +4,13 @@
   "main": "worker-src/main-worker/src/index.js",
   "compatibility_flags": ["nodejs_compat"],
   "build": {
-    "command": "cd worker-src/main-worker && npm run build"
+    "command": "cd chesscom_helper/frontend && npm install && npm run build && cp -r dist ../../worker-src/main-worker/"
   },
-  "assets": {
-    "bucket": "./worker-src/main-worker/dist",
-    "include": ["**/*"]
+  "site": {
+    "bucket": "./worker-src/main-worker/dist"
   },
   "vars": {
     "CHESS_COM_API_BASE": "https://api.chess.com/pub",
     "FRONTEND_URL": "https://chesscom-helper.emily-flambe.workers.dev"
-  },
-  "triggers": {
-    "crons": []
   }
 }
