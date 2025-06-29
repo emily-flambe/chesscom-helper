@@ -42,6 +42,14 @@ urlpatterns = [
         "remove-user/<str:username>/", remove_chesscom_user, name="remove_chesscom_user"
     ),
     path("subscribe/", subscribe_to_notifications, name="subscribe_to_notifications"),
-    path("unsubscribe/", unsubscribe_from_notifications, name="unsubscribe_from_notifications"),
-    path("user/<str:username>/subscriptions/", get_user_subscriptions, name="get_user_subscriptions"),
+    path(
+        "unsubscribe/",
+        unsubscribe_from_notifications,
+        name="unsubscribe_from_notifications",
+    ),
+    path(
+        "user/<str:username>/subscriptions/",
+        get_user_subscriptions,
+        name="get_user_subscriptions",
+    ),
 ]

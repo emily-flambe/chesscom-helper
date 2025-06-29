@@ -14,7 +14,7 @@ export default defineConfig({
     },
   },
   define: {
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+    'process.env.NODE_ENV': JSON.stringify(globalThis.process?.env?.NODE_ENV || 'production'),
   },
   server: {
     host: '0.0.0.0',

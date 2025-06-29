@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import api from '../utils/api';
 import {
   Box,
@@ -61,7 +61,6 @@ export default function Users() {
   // 2) On mount, load the user list
   useEffect(() => {
     fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 3) Deletion logic
@@ -126,7 +125,7 @@ export default function Users() {
     }
   };
 
-  const sortedUsers = React.useMemo(() => {
+  const sortedUsers = useMemo(() => {
     if (!sortColumn) return users;
     const copy = [...users];
     copy.sort((a, b) => {

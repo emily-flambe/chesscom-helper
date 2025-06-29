@@ -1,7 +1,7 @@
 # Chess.com Helper - Makefile
 # Development and deployment automation
 
-.PHONY: help install dev build test lint clean setup deps check deploy
+.PHONY: help install dev build test lint clean setup deps check deploy deploy-local
 
 # Default target
 help: ## Show this help message
@@ -101,9 +101,14 @@ deploy-check: lint test ## Pre-deployment checks
 	@echo "✅ Running deployment checks..."
 	export $$(cat .env | grep -v '^#' | xargs) && cd chesscom_helper && PATH="$$HOME/.local/bin:$$PATH" poetry run python manage.py check --deploy
 
-deploy: deploy-check build ## Deploy to production
-	@echo "🚀 Deploying to production..."
-	./deploy_scripts/deploy.sh
+deploy-local: deploy-check build ## Deploy to local/development environment
+	@echo "🚀 Deploying to local environment..."
+	./scripts/deploy/deploy.sh
+
+deploy: ## Deploy to Cloudflare production environment
+	@echo "☁️  Deploying to Cloudflare production..."
+	@echo "🔄 Triggering manual Cloudflare deployment..."
+	npx wrangler deploy --config wrangler.json
 
 # Quick shortcuts
 quick-start: deps dev ## Quick start for new developers

@@ -1,5 +1,4 @@
 // frontend/src/pages/Home.jsx
-import React from 'react';
 import { Box, Typography, Alert } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 

@@ -6,8 +6,9 @@
   "build": {
     "command": "cd chesscom_helper/frontend && npm install && npm run build"
   },
-  "site": {
-    "bucket": "./worker-src/main-worker/dist"
+  "assets": {
+    "directory": "./worker-src/main-worker/dist",
+    "binding": "ASSETS"
   },
   "vars": {
     "CHESS_COM_API_BASE": "https://api.chess.com/pub",

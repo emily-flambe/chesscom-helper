@@ -1,5 +1,5 @@
 // frontend/src/pages/Login.jsx
-import React, { useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import api from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import { Box, Typography, TextField, Button, Alert, Link } from '@mui/material';
@@ -24,7 +24,7 @@ const Login = () => {
       const response = await api.post('/api/accounts/login/', credentials);
       login(response.data.access, credentials.username);
       navigate('/');
-    } catch (err) {
+    } catch {
       setError('Invalid credentials');
     } finally {
       setLoading(false);

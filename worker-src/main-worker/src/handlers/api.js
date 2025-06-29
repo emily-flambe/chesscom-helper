@@ -13,10 +13,23 @@ apiRouter.options('*', () => new Response(null, {
 
 // GET /api/chesscom-app/users/ - List all tracked users
 apiRouter.get('/chesscom-app/users/', async (request, env) => {
+  if (!env.DATABASE_URL) {
+    return Response.json({ error: 'Database not configured' }, { 
+      status: 503, 
+      headers: corsHeaders() 
+    });
+  }
+  
   const db = new DatabaseService(env.DATABASE_URL);
   try {
     const users = await db.getUsers();
     return Response.json(users, { headers: corsHeaders() });
+  } catch (error) {
+    console.error('Database error:', error);
+    return Response.json({ error: 'Database connection failed' }, { 
+      status: 503, 
+      headers: corsHeaders() 
+    });
   } finally {
     await db.close();
   }
@@ -25,6 +38,14 @@ apiRouter.get('/chesscom-app/users/', async (request, env) => {
 // GET /api/chesscom-app/user/{username}/ - Get specific user details
 apiRouter.get('/chesscom-app/user/:username/', async (request, env) => {
   const { username } = request.params;
+  
+  if (!env.DATABASE_URL) {
+    return Response.json({ error: 'Database not configured' }, { 
+      status: 503, 
+      headers: corsHeaders() 
+    });
+  }
+  
   const db = new DatabaseService(env.DATABASE_URL);
   try {
     const user = await db.getUserByUsername(username);
@@ -42,6 +63,13 @@ apiRouter.get('/chesscom-app/user/:username/', async (request, env) => {
 
 // POST /api/chesscom-app/add-user/ - Add user to tracking
 apiRouter.post('/chesscom-app/add-user/', async (request, env) => {
+  if (!env.DATABASE_URL) {
+    return Response.json({ error: 'Database not configured' }, { 
+      status: 503, 
+      headers: corsHeaders() 
+    });
+  }
+  
   const db = new DatabaseService(env.DATABASE_URL);
   const chesscomApi = new ChesscomAPI();
   
@@ -108,6 +136,14 @@ apiRouter.post('/chesscom-app/add-user/', async (request, env) => {
 // DELETE /api/chesscom-app/remove-user/{username}/ - Remove user
 apiRouter.delete('/chesscom-app/remove-user/:username/', async (request, env) => {
   const { username } = request.params;
+  
+  if (!env.DATABASE_URL) {
+    return Response.json({ error: 'Database not configured' }, { 
+      status: 503, 
+      headers: corsHeaders() 
+    });
+  }
+  
   const db = new DatabaseService(env.DATABASE_URL);
   
   try {
@@ -130,6 +166,13 @@ apiRouter.delete('/chesscom-app/remove-user/:username/', async (request, env) =>
 
 // POST /api/chesscom-app/subscribe/ - Subscribe to email notifications
 apiRouter.post('/chesscom-app/subscribe/', async (request, env) => {
+  if (!env.DATABASE_URL) {
+    return Response.json({ error: 'Database not configured' }, { 
+      status: 503, 
+      headers: corsHeaders() 
+    });
+  }
+  
   const db = new DatabaseService(env.DATABASE_URL);
   
   try {
@@ -188,6 +231,13 @@ apiRouter.post('/chesscom-app/subscribe/', async (request, env) => {
 
 // POST /api/chesscom-app/unsubscribe/ - Unsubscribe from notifications
 apiRouter.post('/chesscom-app/unsubscribe/', async (request, env) => {
+  if (!env.DATABASE_URL) {
+    return Response.json({ error: 'Database not configured' }, { 
+      status: 503, 
+      headers: corsHeaders() 
+    });
+  }
+  
   const db = new DatabaseService(env.DATABASE_URL);
   
   try {
@@ -222,6 +272,14 @@ apiRouter.post('/chesscom-app/unsubscribe/', async (request, env) => {
 // GET /api/chesscom-app/user/{username}/subscriptions/ - Get user subscriptions
 apiRouter.get('/chesscom-app/user/:username/subscriptions/', async (request, env) => {
   const { username } = request.params;
+  
+  if (!env.DATABASE_URL) {
+    return Response.json({ error: 'Database not configured' }, { 
+      status: 503, 
+      headers: corsHeaders() 
+    });
+  }
+  
   const db = new DatabaseService(env.DATABASE_URL);
   
   try {

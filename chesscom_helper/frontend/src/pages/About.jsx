@@ -1,4 +1,3 @@
-import React from "react";
 import { Container, Typography, Box, Link } from "@mui/material";
 
 const About = () => {
@@ -74,7 +73,7 @@ const About = () => {
           />
           <Box sx={{ flexBasis: "100%", textAlign: "left" }}>
             <Typography variant="body2" sx={{ fontStyle: "italic" }}>
-              I'm a what, Cursor? A WHAT?
+              I&apos;m a what, Cursor? A WHAT?
             </Typography>
           </Box>
           <img

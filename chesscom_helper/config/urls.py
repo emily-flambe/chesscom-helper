@@ -31,8 +31,7 @@ urlpatterns = [
     path("api/accounts/", include("accounts.urls")),
     path("admin/", admin.site.urls),
     path("accounts/register/", accounts_views.register, name="register"),
-    path('accounts/delete/', accounts_views.delete_account, name='delete_account'),
+    path("accounts/delete/", accounts_views.delete_account, name="delete_account"),
     path("accounts/login/", django_auth_views.LoginView.as_view(), name="login"),
     path("accounts/logout/", django_auth_views.LogoutView.as_view(), name="logout"),
-
 ]

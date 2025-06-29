@@ -5,13 +5,12 @@ import { corsHeaders } from './utils/cors';
 
 const router = Router();
 
+// API routes first to avoid conflicts
+router.all('/api/*', handleAPI);
+
 // Serve static React files
 router.get('/', handleStatic);
-router.get('/static/*', handleStatic);
 router.get('/assets/*', handleStatic);
-
-// API routes
-router.all('/api/*', handleAPI);
 
 // Fallback to React app for SPA routing
 router.get('*', handleStatic);
