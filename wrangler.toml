@@ -1,0 +1,8 @@
+name = "chesscom-helper"
+main = "src/index.ts" 
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "chesscom-helper-production"
+database_id = "5abdc148-9c53-420d-b364-c81305c5cc58"
