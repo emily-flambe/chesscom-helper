@@ -1,3 +1,0 @@
-chesscomhelper.com {
-    reverse_proxy localhost:5173
-}
