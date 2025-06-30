@@ -30,10 +30,10 @@ router
   .all('*', rateLimiter)
   .all('*', validateRequest)
 
-router.all('/api/v1/auth/*', authRoutes)
-router.all('/api/v1/users/*', authenticateUser, userRoutes)
-router.all('/api/v1/monitoring/*', authenticateUser, monitoringRoutes)
-router.all('/api/v1/notifications/*', authenticateUser, notificationRoutes)
+router.all('/api/v1/auth/*', authRoutes.fetch)
+router.all('/api/v1/users/*', authenticateUser, userRoutes.fetch)
+router.all('/api/v1/monitoring/*', authenticateUser, monitoringRoutes.fetch)
+router.all('/api/v1/notifications/*', authenticateUser, notificationRoutes.fetch)
 
 router.get('/health', () => json({ status: 'ok', timestamp: new Date().toISOString() }))
 
