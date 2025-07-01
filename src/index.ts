@@ -156,6 +156,24 @@ export default {
       }
     }
     
+    // Favicon
+    if (url.pathname === '/favicon.png') {
+      try {
+        const faviconFile = await fetch('https://raw.githubusercontent.com/emily-flambe/chesscom-helper/feature/development/majestic-knight.png')
+        if (faviconFile.ok) {
+          return new Response(faviconFile.body, {
+            headers: { 
+              'Content-Type': 'image/png',
+              'Cache-Control': 'public, max-age=86400'
+            }
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching favicon:', error)
+      }
+      return new Response('Not Found', { status: 404 })
+    }
+    
     // Main page
     if (url.pathname === '/') {
       return new Response(getHTML(), {
@@ -174,6 +192,7 @@ function getHTML() {
     <title>Chess.com Helper</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <style>
       body { font-family: system-ui; margin: 0; background: #0f0f23; color: #e8eaed; padding: 2rem; }
       .container { max-width: 600px; margin: 0 auto; background: #16213e; padding: 2rem; border-radius: 20px; }

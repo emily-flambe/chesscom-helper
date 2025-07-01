@@ -1,65 +1,45 @@
-# Chess.com Helper API
+# Chess.com Helper
 
-A Cloudflare Workers-based API for monitoring Chess.com player activity and sending email notifications when players start or finish games.
+A simple Cloudflare Workers application for monitoring Chess.com players.
 
-## Features
+## Current Features
 
-- 🔐 **User Authentication** - JWT-based authentication with secure registration/login
-- ♟️ **Player Monitoring** - Real-time monitoring of Chess.com players via API
-- 📧 **Email Notifications** - Smart email alerts when subscribed players are active
-- ⚡ **Edge Computing** - Built on Cloudflare Workers for global performance
-- 🗄️ **D1 Database** - Serverless SQL database for reliable data storage
-- 🚀 **Rate Limiting** - Built-in rate limiting and request validation
-- 🧪 **Comprehensive Testing** - Full test suite with Vitest
+- 🔐 **Basic Authentication** - Simple user registration and login
+- ♟️ **Chess.com Integration** - Validates usernames against Chess.com API
+- 📝 **Player Monitoring** - Track Chess.com players (in-memory storage)
+- 🌐 **Web Interface** - Simple HTML interface with authentication
+- ⚡ **Edge Computing** - Built on Cloudflare Workers
 
-## Architecture
+## Current Implementation
 
-This is the MVP implementation following the comprehensive architecture documented in `ARCHITECTURE.md`. The system is designed for future expansion with Claude AI integration for advanced chess analysis features.
+This is a minimal viable implementation with:
+- In-memory user storage (not persistent)
+- Basic token-based authentication (not JWT)
+- Chess.com username validation
+- Simple player monitoring list
 
-### Core Services
-
-- **User Service** - Authentication, subscriptions, preferences
-- **Chess.com Monitoring Service** - Player status tracking and game detection
-- **Notification Service** - Smart email delivery with anti-spam protection
-- **Scheduled Jobs** - Automated monitoring and cleanup tasks
+**Note**: This is currently a prototype. The implementation uses in-memory storage and will reset on worker restarts.
 
 ## API Endpoints
 
 ### Authentication
-- `POST /api/v1/auth/register` - User registration
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/logout` - User logout
-- `POST /api/v1/auth/forgot-password` - Password reset
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
 
-### User Management
-- `GET /api/v1/users/me` - Get current user profile
-- `PUT /api/v1/users/me` - Update user profile
-- `DELETE /api/v1/users/me` - Delete account
+### Player Monitoring  
+- `GET /api/players` - Get list of monitored players
+- `POST /api/monitor` - Add a player to monitoring list
 
-### Player Subscriptions
-- `GET /api/v1/users/me/subscriptions` - Get player subscriptions
-- `POST /api/v1/users/me/subscriptions` - Subscribe to a player
-- `DELETE /api/v1/users/me/subscriptions` - Unsubscribe from player
-
-### Notification Preferences
-- `GET /api/v1/users/me/preferences` - Get notification preferences
-- `PUT /api/v1/users/me/preferences` - Update preferences
-
-### Monitoring
-- `GET /api/v1/monitoring/status` - Get monitoring system status
-- `GET /api/v1/monitoring/players/{username}` - Get player status
-
-### Notifications
-- `GET /api/v1/notifications/preferences` - Get notification settings
-- `PUT /api/v1/notifications/preferences` - Update notification settings
-- `GET /api/v1/notifications/history` - Get notification history
+### Utility
+- `GET /health` - Health check endpoint
+- `GET /` - Web interface
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
-- Cloudflare account
+- Cloudflare account  
 - Wrangler CLI
 
 ### Installation
@@ -71,34 +51,7 @@ cd chesscom-helper
 
 # Install dependencies
 npm install
-
-# Set up environment
-cp .env.example .env.local
 ```
-
-### Configuration
-
-1. **Create D1 Database:**
-```bash
-wrangler d1 create chesscom-helper-dev
-```
-
-2. **Update `wrangler.toml`** with your database ID
-
-3. **Run migrations:**
-```bash
-wrangler d1 migrations apply --local
-```
-
-4. **Set up KV namespace:**
-```bash
-wrangler kv:namespace create CACHE
-```
-
-5. **Configure environment variables** in Cloudflare dashboard or wrangler.toml:
-   - `JWT_SECRET` - Secret for JWT token signing
-   - `RESEND_API_KEY` - API key for email service
-   - `CHESS_COM_API_URL` - Chess.com API endpoint (default: https://api.chess.com/pub)
 
 ### Development
 
@@ -106,124 +59,43 @@ wrangler kv:namespace create CACHE
 # Start development server
 npm run dev
 
-# Run tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
 # Type checking
 npm run typecheck
 
-# Linting
+# Linting  
 npm run lint
 ```
 
 ### Deployment
 
 ```bash
-# Deploy to staging
-wrangler deploy --env staging
-
-# Deploy to production
-wrangler deploy --env production
+# Deploy to Cloudflare Workers
+wrangler deploy
 ```
 
-## Database Schema
+## Usage
 
-The database schema is defined in `migrations/0001_initial_schema.sql` and includes:
+1. Visit the deployed Worker URL
+2. Register a new account or login
+3. Add Chess.com usernames to monitor
+4. The application validates usernames against Chess.com API
 
-- `users` - User accounts and authentication
-- `player_subscriptions` - User subscriptions to Chess.com players
-- `player_status` - Current status of monitored players
-- `user_preferences` - Notification preferences
-- `notification_log` - History of sent notifications
-- `monitoring_jobs` - Tracking of scheduled tasks
+## Current Limitations
 
-Future-ready tables for Claude AI integration:
-- `agent_tasks` - AI analysis task tracking
-- `agent_results` - AI analysis results storage
-- `game_analysis` - Chess game analysis data
-
-## Testing
-
-The project includes comprehensive test coverage:
-
-```bash
-# Run all tests
-npm test
-
-# Run specific test file
-npm test auth.test.ts
-
-# Generate coverage report
-npm run test -- --coverage
-```
-
-Test files are located in the `tests/` directory and cover:
-- Authentication endpoints
-- Chess.com service integration
-- Middleware functionality
-- Service layer logic
-
-## Rate Limiting
-
-Built-in rate limiting with different limits for different endpoint types:
-- **Auth endpoints**: 10 requests per 15 minutes
-- **API endpoints**: 1000 requests per hour (authenticated)
-- **Default**: 100 requests per hour
-
-## Monitoring & Observability
-
-The system includes built-in monitoring:
-- Scheduled health checks every 5 minutes
-- Automatic cleanup of old data every 6 hours
-- Request logging and error tracking
-- Performance metrics for Chess.com API calls
-
-## Security Features
-
-- JWT-based authentication with secure tokens
-- Password hashing with SHA-256
-- Request validation and sanitization
-- Rate limiting per IP and user
-- CORS protection
-- Input validation for all endpoints
-
-## Error Handling
-
-Comprehensive error handling with:
-- Structured error responses
-- Request ID tracking
-- Detailed logging for debugging
-- Graceful degradation for external API failures
+- **No Persistence**: Data is stored in-memory and resets on worker restarts
+- **No Email Notifications**: Monitoring list only, no actual notifications
+- **No Rate Limiting**: No request throttling implemented
+- **Basic Security**: Simple password storage without proper hashing
 
 ## Future Enhancements
 
-This MVP is designed for expansion with:
-- Claude AI integration for game analysis
-- Advanced notification intelligence
-- Chess coaching features
-- Performance analytics dashboard
-- Mobile app support
-
-See `IMPLEMENTATION_PLAN.md` for detailed roadmap.
-
-## Contributing
-
-1. Create a feature branch
-2. Make your changes
-3. Add tests for new functionality
-4. Run the test suite
-5. Submit a pull request
+This prototype can be expanded with:
+- Persistent database storage (D1)
+- JWT-based authentication  
+- Email notification system
+- Rate limiting and security improvements
+- Advanced monitoring features
 
 ## License
 
 MIT License - see LICENSE file for details.
-
-## Support
-
-For issues and questions:
-- Create an issue in the GitHub repository
-- Check the documentation in `/docs`
-- Review the architecture guide in `ARCHITECTURE.md`
