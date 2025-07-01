@@ -1,25 +1,61 @@
-// Minimal interface for now
-export interface Env {}
-
-// In-memory storage for monitored players
-let monitoredPlayers: string[] = []
-
-// Simple in-memory auth
-let users: Map<string, {id: string, username: string, password: string}> = new Map()
-let sessions: Map<string, {userId: string, token: string}> = new Map()
-
-function generateToken(): string {
-  return Math.random().toString(36) + Date.now().toString(36)
+export interface Env {
+  DB: D1Database
+  JWT_SECRET: string
+  ENVIRONMENT?: string
 }
 
-// Chess.com validation (keep this working)
+// Simple password hashing using Web Crypto API
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(password)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  const passwordHash = await hashPassword(password)
+  return passwordHash === hash
+}
+
+// Simple JWT creation
+async function createJWT(userId: string, secret: string): Promise<string> {
+  const header = { alg: 'HS256', typ: 'JWT' }
+  const payload = { sub: userId, exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) } // 7 days
+  
+  const headerB64 = btoa(JSON.stringify(header))
+  const payloadB64 = btoa(JSON.stringify(payload))
+  const message = `${headerB64}.${payloadB64}`
+  
+  const encoder = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(message))
+  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
+  
+  return `${message}.${signatureB64}`
+}
+
+// Generate secure ID
+function generateId(): string {
+  return crypto.randomUUID()
+}
+
+// In-memory storage for monitored players (will be moved to D1 later)
+let monitoredPlayers: string[] = []
+
+// Chess.com validation
 async function validateChessComUser(username: string): Promise<{ exists: boolean, data?: any }> {
   try {
     const normalizedUsername = username.toLowerCase()
     const response = await fetch(`https://api.chess.com/pub/player/${normalizedUsername}`, {
-      headers: {
-        'User-Agent': 'Chess.com-Helper/1.0'
-      }
+      headers: { 'User-Agent': 'Chess.com-Helper/1.0' }
     })
     
     if (response.status === 200) {
@@ -44,66 +80,97 @@ export default {
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({ 
         status: 'ok', 
-        message: 'Chess.com Helper running'
+        message: 'Chess.com Helper running with D1'
       }), {
         headers: { 'Content-Type': 'application/json' }
       })
     }
     
-    // Auth register
+    // User Registration
     if (url.pathname === '/api/auth/register' && request.method === 'POST') {
       try {
-        const body = await request.json()
-        const { username, password } = body
+        const body = await request.json() as { email: string, password: string }
         
-        if (!username || !password) {
-          return new Response(JSON.stringify({ error: 'Username and password required' }), 
+        if (!body.email || !body.password) {
+          return new Response(JSON.stringify({ error: 'Email and password required' }), 
             { status: 400, headers: { 'Content-Type': 'application/json' } })
         }
         
-        if (users.has(username)) {
+        // Check if user exists
+        const existingUser = await env.DB.prepare(`
+          SELECT id FROM users WHERE email = ?
+        `).bind(body.email).first()
+        
+        if (existingUser) {
           return new Response(JSON.stringify({ error: 'User already exists' }), 
             { status: 400, headers: { 'Content-Type': 'application/json' } })
         }
         
-        const userId = generateToken()
-        users.set(username, { id: userId, username, password })
+        // Create user
+        const userId = generateId()
+        const passwordHash = await hashPassword(body.password)
+        const now = new Date().toISOString()
         
-        const token = generateToken()
-        sessions.set(token, { userId, token })
+        await env.DB.prepare(`
+          INSERT INTO users (id, email, password_hash, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?)
+        `).bind(userId, body.email, passwordHash, now, now).run()
+        
+        // Create JWT
+        const token = await createJWT(userId, env.JWT_SECRET)
         
         return new Response(JSON.stringify({ 
           success: true, 
           token, 
-          user: { id: userId, username }
+          email: body.email,
+          userId
         }), { headers: { 'Content-Type': 'application/json' } })
+        
       } catch (error) {
+        console.error('Registration error:', error)
         return new Response(JSON.stringify({ error: 'Registration failed' }), 
           { status: 500, headers: { 'Content-Type': 'application/json' } })
       }
     }
 
-    // Auth login
+    // User Login
     if (url.pathname === '/api/auth/login' && request.method === 'POST') {
       try {
-        const body = await request.json()
-        const { username, password } = body
+        const body = await request.json() as { email: string, password: string }
         
-        const user = users.get(username)
-        if (!user || user.password !== password) {
+        if (!body.email || !body.password) {
+          return new Response(JSON.stringify({ error: 'Email and password required' }), 
+            { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+        
+        // Get user
+        const user = await env.DB.prepare(`
+          SELECT id, email, password_hash FROM users WHERE email = ?
+        `).bind(body.email).first()
+        
+        if (!user) {
           return new Response(JSON.stringify({ error: 'Invalid credentials' }), 
             { status: 401, headers: { 'Content-Type': 'application/json' } })
         }
         
-        const token = generateToken()
-        sessions.set(token, { userId: user.id, token })
+        // Verify password
+        const isValid = await verifyPassword(body.password, user.password_hash as string)
+        if (!isValid) {
+          return new Response(JSON.stringify({ error: 'Invalid credentials' }), 
+            { status: 401, headers: { 'Content-Type': 'application/json' } })
+        }
+        
+        // Create JWT
+        const token = await createJWT(user.id as string, env.JWT_SECRET)
         
         return new Response(JSON.stringify({ 
           success: true, 
           token, 
-          user: { id: user.id, username: user.username }
+          user: { id: user.id, email: user.email }
         }), { headers: { 'Content-Type': 'application/json' } })
+        
       } catch (error) {
+        console.error('Login error:', error)
         return new Response(JSON.stringify({ error: 'Login failed' }), 
           { status: 500, headers: { 'Content-Type': 'application/json' } })
       }
@@ -119,37 +186,37 @@ export default {
       })
     }
 
-    // Monitor player API (with Chess.com validation)
+    // Monitor player API
     if (url.pathname === '/api/monitor' && request.method === 'POST') {
       try {
-        const body = await request.json()
-        const { username } = body
+        const body = await request.json() as { username: string }
         
-        if (!username || username.length < 3) {
+        if (!body.username || body.username.length < 3) {
           return new Response(JSON.stringify({ error: 'Invalid username' }), 
             { status: 400, headers: { 'Content-Type': 'application/json' } })
         }
         
-        if (monitoredPlayers.includes(username)) {
-          return new Response(JSON.stringify({ error: `Already monitoring ${username}` }), 
+        if (monitoredPlayers.includes(body.username)) {
+          return new Response(JSON.stringify({ error: `Already monitoring ${body.username}` }), 
             { status: 400, headers: { 'Content-Type': 'application/json' } })
         }
         
         // Validate user exists on Chess.com
-        const validation = await validateChessComUser(username)
+        const validation = await validateChessComUser(body.username)
         if (!validation.exists) {
           return new Response(JSON.stringify({ 
-            error: `User "${username}" not found on Chess.com. Try the exact username (e.g., "MagnusCarlsen" instead of "Magnus")` 
+            error: `User "${body.username}" not found on Chess.com. Try the exact username (e.g., "MagnusCarlsen" instead of "Magnus")` 
           }), { status: 404, headers: { 'Content-Type': 'application/json' } })
         }
         
-        monitoredPlayers.push(username)
+        monitoredPlayers.push(body.username)
         
         return new Response(JSON.stringify({ 
           success: true,
-          message: `Started monitoring ${username}`,
-          username: username
+          message: `Started monitoring ${body.username}`,
+          username: body.username
         }), { headers: { 'Content-Type': 'application/json' } })
+        
       } catch (error) {
         return new Response(JSON.stringify({ error: 'Invalid request' }), 
           { status: 400, headers: { 'Content-Type': 'application/json' } })
@@ -218,7 +285,7 @@ function getHTML() {
 </head>
 <body>
     <div class="container">
-        <h1>♚ Chess.com Helper</h1>
+        <h1>♚ Chess.com Helper (D1 Auth)</h1>
         
         <!-- Auth Section -->
         <div id="authSection" class="auth-section">
@@ -230,8 +297,8 @@ function getHTML() {
             <!-- Login Form -->
             <form id="loginForm">
                 <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="loginUsername" required>
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
@@ -243,8 +310,8 @@ function getHTML() {
             <!-- Register Form -->
             <form id="registerForm" class="hidden">
                 <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="registerUsername" required>
+                    <label>Email</label>
+                    <input type="email" id="registerEmail" required>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
@@ -329,21 +396,21 @@ function getHTML() {
         // Auth form handlers
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const username = document.getElementById('loginUsername').value;
+            const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             
             try {
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ email, password })
                 });
                 
                 const data = await response.json();
                 
                 if (response.ok) {
                     currentToken = data.token;
-                    currentUser = data.user.username;
+                    currentUser = data.user.email;
                     localStorage.setItem('authToken', currentToken);
                     localStorage.setItem('currentUser', currentUser);
                     showMainApp();
@@ -357,21 +424,21 @@ function getHTML() {
         
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
             
             try {
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ email, password })
                 });
                 
                 const data = await response.json();
                 
                 if (response.ok) {
                     currentToken = data.token;
-                    currentUser = data.user.username;
+                    currentUser = data.email;
                     localStorage.setItem('authToken', currentToken);
                     localStorage.setItem('currentUser', currentUser);
                     showMainApp();
