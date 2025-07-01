@@ -7,294 +7,218 @@ export interface Env {
   RESEND_API_KEY: string
 }
 
+// In-memory storage for monitored players
+let monitoredPlayers: string[] = []
+
+// Validate Chess.com user
+async function validateChessComUser(username: string): Promise<{ exists: boolean, data?: any }> {
+  try {
+    // Chess.com usernames are case-insensitive in the API
+    const normalizedUsername = username.toLowerCase()
+    const response = await fetch(`https://api.chess.com/pub/player/${normalizedUsername}`, {
+      headers: {
+        'User-Agent': 'Chess.com-Helper/1.0'
+      }
+    })
+    
+    console.log(`Chess.com API response for ${normalizedUsername}: ${response.status}`)
+    
+    if (response.status === 200) {
+      const data = await response.json()
+      return { exists: true, data }
+    } else if (response.status === 404) {
+      return { exists: false }
+    }
+    
+    // For any other status, allow the user to be added
+    return { exists: true }
+  } catch (error) {
+    console.error('Chess.com API error:', error)
+    return { exists: true } // Allow if API fails
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url)
     
-    // Basic health check
+    // Health check
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({ 
         status: 'ok', 
-        timestamp: new Date().toISOString(),
-        message: 'Chesscom Helper API is running'
+        message: 'Chess.com Helper running'
       }), {
         headers: { 'Content-Type': 'application/json' }
       })
     }
     
-    // Serve favicon
-    if (url.pathname === '/favicon.ico') {
+    // Get players API
+    if (url.pathname === '/api/players' && request.method === 'GET') {
+      return new Response(JSON.stringify({ 
+        players: monitoredPlayers,
+        count: monitoredPlayers.length
+      }), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+    
+    // Test Chess.com API endpoint
+    if (url.pathname.startsWith('/api/test-chess/')) {
+      const username = url.pathname.replace('/api/test-chess/', '')
       try {
-        // For Cloudflare Workers, we need to embed the favicon or serve it differently
-        // Since we can't access the filesystem directly, return a 404 for now
-        // The favicon will be referenced in HTML but served from the project root
-        return new Response('Not Found', { status: 404 })
+        const response = await fetch(`https://api.chess.com/pub/player/${username}`, {
+          headers: {
+            'User-Agent': 'Chess.com-Helper/1.0'
+          }
+        })
+        
+        const responseText = await response.text()
+        let data = null
+        try {
+          data = JSON.parse(responseText)
+        } catch (e) {
+          // Not JSON
+        }
+        
+        return new Response(JSON.stringify({ 
+          username,
+          status: response.status,
+          headers: Object.fromEntries(response.headers.entries()),
+          data: data,
+          responseText: responseText.substring(0, 500)
+        }), {
+          headers: { 'Content-Type': 'application/json' }
+        })
       } catch (error) {
-        return new Response('Not Found', { status: 404 })
+        return new Response(JSON.stringify({ 
+          error: error.toString()
+        }), {
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
+    }
+
+    // Monitor player API
+    if (url.pathname === '/api/monitor' && request.method === 'POST') {
+      try {
+        const body = await request.json()
+        const { username } = body
+        
+        if (!username || username.length < 3) {
+          return new Response(JSON.stringify({ 
+            error: 'Invalid username' 
+          }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+        
+        if (monitoredPlayers.includes(username)) {
+          return new Response(JSON.stringify({ 
+            error: `Already monitoring ${username}` 
+          }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+        
+        // Validate user exists on Chess.com
+        const validation = await validateChessComUser(username)
+        if (!validation.exists) {
+          return new Response(JSON.stringify({ 
+            error: `User "${username}" not found on Chess.com. Try the exact username (e.g., "MagnusCarlsen" instead of "Magnus")` 
+          }), { status: 404, headers: { 'Content-Type': 'application/json' } })
+        }
+        
+        monitoredPlayers.push(username)
+        
+        return new Response(JSON.stringify({ 
+          success: true,
+          message: `Started monitoring ${username}`,
+          username: username
+        }), { headers: { 'Content-Type': 'application/json' } })
+      } catch (error) {
+        return new Response(JSON.stringify({ 
+          error: 'Invalid request' 
+        }), { status: 400, headers: { 'Content-Type': 'application/json' } })
       }
     }
     
-    // Root path - serve HTML frontend
+    // Main page
     if (url.pathname === '/') {
-      return new Response(`
-<!DOCTYPE html>
+      return new Response(getHTML(), {
+        headers: { 'Content-Type': 'text/html' }
+      })
+    }
+    
+    return new Response('Not Found', { status: 404 })
+  }
+}
+
+function getHTML() {
+  return `<!DOCTYPE html>
 <html>
 <head>
-    <title>Chesscom Helper</title>
+    <title>Chess.com Helper</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-      :root {
-        --bg-primary: #0f0f23;
-        --bg-secondary: #1a1a2e;
-        --bg-card: #16213e;
-        --chess-dark: #2d1810;
-        --chess-light: #4a3426;
-        --accent: #64b5f6;
-        --accent-bright: #90caf9;
-        --success: #4caf50;
-        --text-primary: #e8eaed;
-        --text-secondary: #9aa0a6;
-        --shadow: rgba(0,0,0,0.4);
-        --glow: rgba(100, 181, 246, 0.2);
-      }
-      
-      * { box-sizing: border-box; }
-      
-      body {
-        font-family: 'Segoe UI', system-ui, sans-serif;
-        margin: 0;
-        background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
-        min-height: 100vh;
-        padding: 2rem;
-        color: var(--text-primary);
-      }
-      
-      .chess-board {
-        max-width: 600px;
-        margin: 0 auto;
-        background: var(--bg-card);
-        border-radius: 20px;
-        box-shadow: 0 10px 30px var(--shadow), 0 0 0 1px rgba(255,255,255,0.1);
-        padding: 2rem;
-        position: relative;
-        overflow: hidden;
-      }
-      
-      .chess-board::before {
-        content: '';
-        position: absolute;
-        top: -10px;
-        right: -10px;
-        width: 60px;
-        height: 60px;
-        background: repeating-conic-gradient(var(--chess-light) 0deg 90deg, var(--chess-dark) 90deg 180deg);
-        border-radius: 8px;
-        opacity: 0.6;
-      }
-      
-      h1 {
-        color: var(--text-primary);
-        text-align: center;
-        margin: 0 0 1rem 0;
-        font-size: 2.5rem;
-        font-weight: 700;
-        text-shadow: 0 0 20px var(--glow);
-      }
-      
-      h1::after {
-        content: ' ♚';
-        color: var(--accent-bright);
-        filter: drop-shadow(0 0 10px var(--accent));
-      }
-      
-      .subtitle {
-        text-align: center;
-        color: var(--text-secondary);
-        margin-bottom: 2rem;
-        font-size: 1.1rem;
-      }
-      
-      .status-card {
-        background: linear-gradient(135deg, var(--success), #66bb6a);
-        color: white;
-        padding: 1.5rem;
-        border-radius: 15px;
-        text-align: center;
-        margin: 1.5rem 0;
-        box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
-      }
-      
-      .status-card h2 {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.3rem;
-      }
-      
-      .btn {
-        display: inline-block;
-        background: linear-gradient(135deg, var(--accent), var(--accent-bright));
-        color: white;
-        padding: 0.8rem 2rem;
-        border-radius: 25px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(100, 181, 246, 0.3);
-        border: 1px solid rgba(255,255,255,0.2);
-      }
-      
-      .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(100, 181, 246, 0.4);
-        filter: brightness(1.1);
-      }
-      
-      .coming-soon {
-        text-align: center;
-        margin-top: 2rem;
-        padding: 1rem;
-        background: var(--bg-secondary);
-        border-radius: 10px;
-        border-left: 4px solid var(--accent);
-        border: 1px solid rgba(255,255,255,0.1);
-      }
-      
-      .coming-soon h3 {
-        color: var(--text-primary);
-        margin-top: 0;
-      }
-      
-      .coming-soon p {
-        color: var(--text-secondary);
-      }
-      
-      .monitor-form {
-        margin: 2rem 0;
-        padding: 1.5rem;
-        background: var(--bg-secondary);
-        border-radius: 15px;
-        border: 1px solid rgba(255,255,255,0.1);
-      }
-      
-      .monitor-form h3 {
-        color: var(--text-primary);
-        margin: 0 0 1rem 0;
-        text-align: center;
-      }
-      
-      .input-group {
-        margin-bottom: 1rem;
-      }
-      
-      .input-group label {
-        display: block;
-        color: var(--text-secondary);
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-        font-weight: 500;
-      }
-      
-      .input-group input {
-        width: 100%;
-        padding: 0.8rem 1rem;
-        background: var(--bg-card);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 8px;
-        color: var(--text-primary);
-        font-size: 1rem;
-        transition: all 0.3s ease;
-      }
-      
-      .input-group input:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px var(--glow);
-      }
-      
-      .input-group input::placeholder {
-        color: var(--text-secondary);
-        opacity: 0.7;
-      }
-      
-      .btn-primary {
-        width: 100%;
-        background: linear-gradient(135deg, var(--accent), var(--accent-bright));
-        color: white;
-        padding: 0.8rem 2rem;
-        border: none;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(100, 181, 246, 0.3);
-      }
-      
-      .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(100, 181, 246, 0.4);
-        filter: brightness(1.1);
-      }
-      
-      @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-      }
-      
-      .floating {
-        animation: float 3s ease-in-out infinite;
-      }
+      body { font-family: system-ui; margin: 0; background: #0f0f23; color: #e8eaed; padding: 2rem; }
+      .container { max-width: 600px; margin: 0 auto; background: #16213e; padding: 2rem; border-radius: 20px; }
+      h1 { text-align: center; color: #64b5f6; }
+      .form-group { margin: 1rem 0; }
+      label { display: block; margin-bottom: 0.5rem; color: #9aa0a6; }
+      input { width: 100%; padding: 0.8rem; background: #1a1a2e; border: 1px solid #333; border-radius: 8px; color: #e8eaed; }
+      button { width: 100%; padding: 0.8rem; background: #64b5f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+      button:hover { background: #90caf9; }
+      .players { margin-top: 2rem; }
+      .player { background: #1a1a2e; padding: 0.8rem; margin: 0.5rem 0; border-radius: 8px; }
     </style>
 </head>
 <body>
-    <div class="chess-board">
-        <h1 class="floating">Chesscom Helper</h1>
-        <p class="subtitle">Monitor your favorite Chess.com players and get email notifications!</p>
+    <div class="container">
+        <h1>♚ Chess.com Helper</h1>
         
-        <div class="status-card">
-            <h2>✅ API Status</h2>
-            <p>Server is running smoothly</p>
-            <a href="/health" class="btn">Check Health</a>
-        </div>
+        <form id="playerForm">
+            <div class="form-group">
+                <label>Chess.com Username</label>
+                <input type="text" id="username" placeholder="e.g. Magnus" required>
+            </div>
+            <button type="submit">Start Monitoring</button>
+        </form>
         
-        <div class="monitor-form">
-            <h3>🎯 Monitor a Player</h3>
-            <form id="playerForm">
-                <div class="input-group">
-                    <label for="username">Chess.com Username</label>
-                    <input type="text" id="username" name="username" placeholder="e.g. Magnus" required>
-                </div>
-                <button type="submit" class="btn-primary">Start Monitoring</button>
-            </form>
-        </div>
-        
-        <div class="coming-soon">
-            <h3>🚀 Coming Soon</h3>
-            <p>Email notifications, game analysis, and more!</p>
+        <div class="players">
+            <h3>Monitored Players</h3>
+            <div id="playersList">Loading...</div>
         </div>
     </div>
     
     <script>
+        async function loadPlayers() {
+            try {
+                const response = await fetch('/api/players');
+                const data = await response.json();
+                const list = document.getElementById('playersList');
+                if (data.players.length === 0) {
+                    list.innerHTML = '<p>No players yet</p>';
+                } else {
+                    list.innerHTML = data.players.map(p => 
+                        '<div class="player">♟️ ' + p + '</div>'
+                    ).join('');
+                }
+            } catch (error) {
+                document.getElementById('playersList').innerHTML = '<p>Error loading</p>';
+            }
+        }
+        
         document.getElementById('playerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value.trim();
-            const submitBtn = this.querySelector('button[type="submit"]');
+            const btn = this.querySelector('button');
             
-            if (!username) {
-                alert('Please enter a username');
-                return;
-            }
+            if (!username) return;
             
-            // Disable button and show loading
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Adding...';
+            btn.disabled = true;
+            btn.textContent = 'Checking...';
             
             try {
                 const response = await fetch('/api/monitor', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username })
                 });
                 
@@ -303,61 +227,20 @@ export default {
                 if (response.ok) {
                     alert('✅ ' + data.message);
                     document.getElementById('username').value = '';
+                    loadPlayers();
                 } else {
                     alert('❌ ' + data.error);
                 }
             } catch (error) {
                 alert('❌ Error connecting to server');
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Start Monitoring';
+                btn.disabled = false;
+                btn.textContent = 'Start Monitoring';
             }
         });
+        
+        loadPlayers();
     </script>
 </body>
-</html>`, {
-        headers: { 'Content-Type': 'text/html' }
-      })
-    }
-    
-    // API endpoint to monitor a player
-    if (url.pathname === '/api/monitor' && request.method === 'POST') {
-      try {
-        const body = await request.json()
-        const { username } = body
-        
-        if (!username || username.length < 3 || username.length > 25) {
-          return new Response(JSON.stringify({ 
-            error: 'Invalid username. Must be between 3 and 25 characters.' 
-          }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' }
-          })
-        }
-        
-        // For now, just acknowledge the request
-        return new Response(JSON.stringify({ 
-          success: true,
-          message: `Started monitoring ${username}`,
-          username: username
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      } catch (error) {
-        return new Response(JSON.stringify({ 
-          error: 'Invalid request body' 
-        }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-    }
-    
-    // 404 for everything else
-    return new Response(JSON.stringify({ error: 'Not Found' }), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' }
-    })
-  }
+</html>`
 }
