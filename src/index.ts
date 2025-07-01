@@ -181,31 +181,189 @@ function getHTML() {
       .form-group { margin: 1rem 0; }
       label { display: block; margin-bottom: 0.5rem; color: #9aa0a6; }
       input { width: 100%; padding: 0.8rem; background: #1a1a2e; border: 1px solid #333; border-radius: 8px; color: #e8eaed; }
-      button { width: 100%; padding: 0.8rem; background: #64b5f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+      button { width: 100%; padding: 0.8rem; background: #64b5f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem; }
       button:hover { background: #90caf9; }
+      button.secondary { background: #666; }
+      button.secondary:hover { background: #777; }
       .players { margin-top: 2rem; }
       .player { background: #1a1a2e; padding: 0.8rem; margin: 0.5rem 0; border-radius: 8px; }
+      .hidden { display: none; }
+      .auth-section { margin-bottom: 2rem; }
+      .user-info { background: #1a1a2e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+      .tabs { display: flex; margin-bottom: 1rem; }
+      .tab { flex: 1; padding: 0.5rem; text-align: center; background: #1a1a2e; cursor: pointer; }
+      .tab.active { background: #64b5f6; }
+      .tab:first-child { border-radius: 8px 0 0 8px; }
+      .tab:last-child { border-radius: 0 8px 8px 0; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>♚ Chess.com Helper</h1>
         
-        <form id="playerForm">
-            <div class="form-group">
-                <label>Chess.com Username</label>
-                <input type="text" id="username" placeholder="e.g. Magnus" required>
+        <!-- Auth Section -->
+        <div id="authSection" class="auth-section">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('login')">Login</div>
+                <div class="tab" onclick="switchTab('register')">Register</div>
             </div>
-            <button type="submit">Start Monitoring</button>
-        </form>
+            
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+            
+            <!-- Register Form -->
+            <form id="registerForm" class="hidden">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="registerUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button type="submit">Register</button>
+            </form>
+        </div>
         
-        <div class="players">
-            <h3>Monitored Players</h3>
-            <div id="playersList">Loading...</div>
+        <!-- Main App (hidden until authenticated) -->
+        <div id="mainApp" class="hidden">
+            <div class="user-info">
+                <span>Welcome, <strong id="currentUser"></strong>!</span>
+                <button class="secondary" onclick="logout()" style="float: right; width: auto; padding: 0.4rem 1rem;">Logout</button>
+                <div style="clear: both;"></div>
+            </div>
+            
+            <form id="playerForm">
+                <div class="form-group">
+                    <label>Chess.com Username</label>
+                    <input type="text" id="username" placeholder="e.g. MagnusCarlsen" required>
+                </div>
+                <button type="submit">Start Monitoring</button>
+            </form>
+            
+            <div class="players">
+                <h3>Monitored Players</h3>
+                <div id="playersList">Loading...</div>
+            </div>
         </div>
     </div>
     
     <script>
+        // Simple auth state management
+        let currentToken = localStorage.getItem('authToken');
+        let currentUser = localStorage.getItem('currentUser');
+        
+        // Initialize UI based on auth state
+        function initAuth() {
+            if (currentToken) {
+                showMainApp();
+            } else {
+                showAuthSection();
+            }
+        }
+        
+        function showAuthSection() {
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+        }
+        
+        function showMainApp() {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('currentUser').textContent = currentUser || 'User';
+            loadPlayers();
+        }
+        
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'login') {
+                tabs[0].classList.add('active');
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('registerForm').classList.add('hidden');
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('registerForm').classList.remove('hidden');
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            currentToken = null;
+            currentUser = null;
+            showAuthSection();
+        }
+        
+        // Auth form handlers
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentToken = data.token;
+                    currentUser = data.user.username;
+                    localStorage.setItem('authToken', currentToken);
+                    localStorage.setItem('currentUser', currentUser);
+                    showMainApp();
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Login failed');
+            }
+        });
+        
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentToken = data.token;
+                    currentUser = data.user.username;
+                    localStorage.setItem('authToken', currentToken);
+                    localStorage.setItem('currentUser', currentUser);
+                    showMainApp();
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Registration failed');
+            }
+        });
+        
         async function loadPlayers() {
             try {
                 const response = await fetch('/api/players');
@@ -257,7 +415,8 @@ function getHTML() {
             }
         });
         
-        loadPlayers();
+        // Initialize on page load
+        initAuth();
     </script>
 </body>
 </html>`
