@@ -2,98 +2,117 @@
 
 ## Product Overview
 
-Chesscom Helper is a web application that enhances the Chess.com experience by providing automated game analysis, personalized insights, and convenient features for chess players. The application acts as a companion tool that integrates with Chess.com's API to deliver value-added services.
+Chesscom Helper is a web application that provides email notifications for Chess.com player activity. This MVP version focuses on delivering a core notification service that alerts users when their selected Chess.com players are in active matches. The application serves as a monitoring tool for chess enthusiasts who want to stay updated on their favorite players' activities.
 
-## Core Features
+## MVP Scope
+
+This document outlines the Minimum Viable Product (MVP) for Chesscom Helper, which includes only the essential features needed to deliver core value to users. Additional features are planned for future releases.
+
+## Core MVP Features
 
 ### 1. User Authentication & Account Management
 - User registration with email and password
 - Secure login/logout functionality
 - Password reset via email
-- Account settings management
-- Chess.com username association
+- Basic account settings management
 
-### 2. Chess.com Integration
-- Connect Chess.com account via username
-- Fetch user's game history
+### 2. Player Subscription Management
+- Add Chess.com players to notification list
+- Remove players from notification list
+- View list of subscribed players
+- Manage notification preferences per player
+
+### 3. Email Notifications
+- Real-time notifications when subscribed players start a match
+- Match completion notifications
+- Email preferences management (enable/disable notifications)
+- Unsubscribe functionality
+
+## User Experience Requirements
+
+### Web Interface (MVP)
+- Simple, clean design focused on notification management
+- Mobile-responsive layout for basic functionality
+- Fast page load times
+- Minimal clicks to subscribe/unsubscribe to players
+- Easy-to-use player search and subscription interface
+
+### Performance (MVP)
+- Reliable Chess.com player monitoring
+- Timely email delivery (within 5 minutes of match start)
+- Secure user authentication and data handling
+- Stable notification service
+
+## Technical Constraints (MVP)
+
+- Must work within Chess.com API rate limits for player data
+- Respect Chess.com terms of service
+- Ensure user email privacy and security
+- Handle basic concurrent user load
+- Maintain notification service reliability
+
+## MVP Success Metrics
+
+- User registration and retention rate
+- Active player subscriptions per user
+- Email delivery success rate
+- Notification accuracy (matches detected correctly)
+- System uptime for notification service
+
+## MVP Out of Scope
+
+- Game analysis features
+- Chess.com account integration beyond player monitoring
+- Advanced dashboard or analytics
+- Social features or user-to-user interaction
+- Mobile application
+
+## Future Features (Post-MVP)
+
+The following features are planned for future releases after the MVP is successfully deployed:
+
+### Advanced Chess.com Integration
+- Connect user's Chess.com account via username
+- Fetch user's personal game history
 - Access player statistics and ratings
 - Real-time game data synchronization
 
-### 3. Automated Game Analysis
+### Automated Game Analysis
 - Automatic analysis of completed games
 - Move-by-move evaluation using chess engine
 - Identification of critical moments and turning points
 - Mistake and blunder detection
 - Best move suggestions for key positions
 
-### 4. Personalized Insights Dashboard
+### Personalized Insights Dashboard
 - Overview of recent performance trends
 - Win/loss/draw statistics by opening
 - Time control performance breakdown
 - Rating progression charts
 - Most common mistakes patterns
 
-### 5. Opening Repertoire Tracker
+### Opening Repertoire Tracker
 - Track which openings user plays most frequently
 - Success rates for different opening systems
 - Recommendations for opening improvements
 - Common opponent responses to user's openings
 
-### 6. Email Notifications
+### Enhanced Email Notifications
 - Daily/weekly game analysis summaries
 - Achievement notifications (rating milestones, streaks)
-- Customizable notification preferences
 - Email digest of performance insights
 
-### 7. Game Collection Management
+### Game Collection Management
 - Save and organize analyzed games
 - Add personal notes to games
 - Create custom game collections
 - Export games in standard formats (PGN)
 
-## User Experience Requirements
-
-### Web Interface
-- Clean, intuitive design focused on usability
-- Mobile-responsive layout
-- Fast page load times
-- Minimal clicks to access key features
-- Clear data visualizations
-
-### Performance
-- Quick Chess.com data synchronization
-- Efficient game analysis processing
-- Reliable email delivery
-- Secure data handling
-
-## Technical Constraints
-
-- Must work within Chess.com API rate limits
-- Respect Chess.com terms of service
-- Ensure user data privacy and security
-- Scale to handle multiple concurrent users
-- Maintain high availability
-
-## Success Metrics
-
-- User retention rate
-- Games analyzed per user
-- Email engagement rates
-- Feature adoption rates
-- System uptime and performance
-
-## Out of Scope
-
-- Real-time game play or move suggestions during active games
-- Chess training exercises or puzzles
-- Social features or user-to-user interaction
-- Tournament organization
-- Premium Chess.com features replication
-
-## Future Considerations
-
+### Advanced Features
 - Mobile application development
 - Advanced AI-powered coaching recommendations
 - Integration with other chess platforms
 - Collaborative analysis features
 - Premium tier with advanced analytics
+- Chess training exercises or puzzles
+- Tournament organization features
