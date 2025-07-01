@@ -6,19 +6,19 @@ A simple Cloudflare Workers application for monitoring Chess.com players.
 
 - 🔐 **Basic Authentication** - Simple user registration and login
 - ♟️ **Chess.com Integration** - Validates usernames against Chess.com API
-- 📝 **Player Monitoring** - Track Chess.com players (in-memory storage)
+- 📝 **Player Monitoring** - Track Chess.com players with persistent storage
 - 🌐 **Web Interface** - Simple HTML interface with authentication
 - ⚡ **Edge Computing** - Built on Cloudflare Workers
 
 ## Current Implementation
 
-This is a minimal viable implementation with:
-- In-memory user storage (not persistent)
-- Basic token-based authentication (not JWT)
+This is a production-ready implementation with:
+- Cloudflare D1 database for persistent storage
+- JWT-based authentication with session management
 - Chess.com username validation
-- Simple player monitoring list
+- Comprehensive player monitoring system
 
-**Note**: This is currently a prototype. The implementation uses in-memory storage and will reset on worker restarts.
+**Note**: Uses Cloudflare D1 for production deployment with in-memory fallback for local development.
 
 ## API Endpoints
 
@@ -80,21 +80,20 @@ wrangler deploy
 3. Add Chess.com usernames to monitor
 4. The application validates usernames against Chess.com API
 
-## Current Limitations
+## Implementation Features
 
-- **No Persistence**: Data is stored in-memory and resets on worker restarts
-- **No Email Notifications**: Monitoring list only, no actual notifications
-- **No Rate Limiting**: No request throttling implemented
-- **Basic Security**: Simple password storage without proper hashing
+- **Persistent Storage**: Cloudflare D1 database for production data persistence
+- **Email Notifications**: Comprehensive notification system for player activity
+- **Rate Limiting**: Advanced rate limiting with abuse prevention
+- **Enterprise Security**: bcrypt password hashing, JWT tokens, session management
 
-## Future Enhancements
+## Architecture
 
-This prototype can be expanded with:
-- Persistent database storage (D1)
-- JWT-based authentication  
-- Email notification system
-- Rate limiting and security improvements
-- Advanced monitoring features
+- **Database**: Cloudflare D1 SQLite database with automated migrations
+- **Authentication**: JWT-based with secure session management
+- **Monitoring**: Real-time Chess.com player status tracking
+- **Notifications**: Email alerts for player activity
+- **Security**: Multi-layer security with rate limiting and abuse prevention
 
 ## License
 

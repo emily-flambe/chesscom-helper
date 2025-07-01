@@ -1,3 +1,16 @@
 name = "chesscom-helper"
 main = "src/index.ts"
 compatibility_date = "2024-01-15"
+
+# D1 Database Configuration
+[env.production]
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "chesscom-helper-production"
+database_id = "your-production-database-id"
+
+[env.development]
+[[env.development.d1_databases]]
+binding = "DB"
+database_name = "chesscom-helper-development"
+database_id = "your-development-database-id"
