@@ -1,27 +1,26 @@
-export interface Env {
-  DB: D1Database
-  CACHE: KVNamespace
-  JWT_SECRET: string
-  CHESS_COM_API_URL: string
-  EMAIL_API_KEY: string
-  RESEND_API_KEY: string
-}
+// Minimal interface for now
+export interface Env {}
 
 // In-memory storage for monitored players
 let monitoredPlayers: string[] = []
 
-// Validate Chess.com user
+// Simple in-memory auth
+let users: Map<string, {id: string, username: string, password: string}> = new Map()
+let sessions: Map<string, {userId: string, token: string}> = new Map()
+
+function generateToken(): string {
+  return Math.random().toString(36) + Date.now().toString(36)
+}
+
+// Chess.com validation (keep this working)
 async function validateChessComUser(username: string): Promise<{ exists: boolean, data?: any }> {
   try {
-    // Chess.com usernames are case-insensitive in the API
     const normalizedUsername = username.toLowerCase()
     const response = await fetch(`https://api.chess.com/pub/player/${normalizedUsername}`, {
       headers: {
         'User-Agent': 'Chess.com-Helper/1.0'
       }
     })
-    
-    console.log(`Chess.com API response for ${normalizedUsername}: ${response.status}`)
     
     if (response.status === 200) {
       const data = await response.json()
@@ -30,11 +29,10 @@ async function validateChessComUser(username: string): Promise<{ exists: boolean
       return { exists: false }
     }
     
-    // For any other status, allow the user to be added
     return { exists: true }
   } catch (error) {
     console.error('Chess.com API error:', error)
-    return { exists: true } // Allow if API fails
+    return { exists: true }
   }
 }
 
@@ -52,6 +50,65 @@ export default {
       })
     }
     
+    // Auth register
+    if (url.pathname === '/api/auth/register' && request.method === 'POST') {
+      try {
+        const body = await request.json()
+        const { username, password } = body
+        
+        if (!username || !password) {
+          return new Response(JSON.stringify({ error: 'Username and password required' }), 
+            { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+        
+        if (users.has(username)) {
+          return new Response(JSON.stringify({ error: 'User already exists' }), 
+            { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+        
+        const userId = generateToken()
+        users.set(username, { id: userId, username, password })
+        
+        const token = generateToken()
+        sessions.set(token, { userId, token })
+        
+        return new Response(JSON.stringify({ 
+          success: true, 
+          token, 
+          user: { id: userId, username }
+        }), { headers: { 'Content-Type': 'application/json' } })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: 'Registration failed' }), 
+          { status: 500, headers: { 'Content-Type': 'application/json' } })
+      }
+    }
+
+    // Auth login
+    if (url.pathname === '/api/auth/login' && request.method === 'POST') {
+      try {
+        const body = await request.json()
+        const { username, password } = body
+        
+        const user = users.get(username)
+        if (!user || user.password !== password) {
+          return new Response(JSON.stringify({ error: 'Invalid credentials' }), 
+            { status: 401, headers: { 'Content-Type': 'application/json' } })
+        }
+        
+        const token = generateToken()
+        sessions.set(token, { userId: user.id, token })
+        
+        return new Response(JSON.stringify({ 
+          success: true, 
+          token, 
+          user: { id: user.id, username: user.username }
+        }), { headers: { 'Content-Type': 'application/json' } })
+      } catch (error) {
+        return new Response(JSON.stringify({ error: 'Login failed' }), 
+          { status: 500, headers: { 'Content-Type': 'application/json' } })
+      }
+    }
+
     // Get players API
     if (url.pathname === '/api/players' && request.method === 'GET') {
       return new Response(JSON.stringify({ 
@@ -61,59 +118,21 @@ export default {
         headers: { 'Content-Type': 'application/json' }
       })
     }
-    
-    // Test Chess.com API endpoint
-    if (url.pathname.startsWith('/api/test-chess/')) {
-      const username = url.pathname.replace('/api/test-chess/', '')
-      try {
-        const response = await fetch(`https://api.chess.com/pub/player/${username}`, {
-          headers: {
-            'User-Agent': 'Chess.com-Helper/1.0'
-          }
-        })
-        
-        const responseText = await response.text()
-        let data = null
-        try {
-          data = JSON.parse(responseText)
-        } catch (e) {
-          // Not JSON
-        }
-        
-        return new Response(JSON.stringify({ 
-          username,
-          status: response.status,
-          headers: Object.fromEntries(response.headers.entries()),
-          data: data,
-          responseText: responseText.substring(0, 500)
-        }), {
-          headers: { 'Content-Type': 'application/json' }
-        })
-      } catch (error) {
-        return new Response(JSON.stringify({ 
-          error: error.toString()
-        }), {
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-    }
 
-    // Monitor player API
+    // Monitor player API (with Chess.com validation)
     if (url.pathname === '/api/monitor' && request.method === 'POST') {
       try {
         const body = await request.json()
         const { username } = body
         
         if (!username || username.length < 3) {
-          return new Response(JSON.stringify({ 
-            error: 'Invalid username' 
-          }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+          return new Response(JSON.stringify({ error: 'Invalid username' }), 
+            { status: 400, headers: { 'Content-Type': 'application/json' } })
         }
         
         if (monitoredPlayers.includes(username)) {
-          return new Response(JSON.stringify({ 
-            error: `Already monitoring ${username}` 
-          }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+          return new Response(JSON.stringify({ error: `Already monitoring ${username}` }), 
+            { status: 400, headers: { 'Content-Type': 'application/json' } })
         }
         
         // Validate user exists on Chess.com
@@ -132,9 +151,8 @@ export default {
           username: username
         }), { headers: { 'Content-Type': 'application/json' } })
       } catch (error) {
-        return new Response(JSON.stringify({ 
-          error: 'Invalid request' 
-        }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+        return new Response(JSON.stringify({ error: 'Invalid request' }), 
+          { status: 400, headers: { 'Content-Type': 'application/json' } })
       }
     }
     
