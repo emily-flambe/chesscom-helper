@@ -2,15 +2,13 @@ name = "chesscom-helper"
 main = "src/index.ts"
 compatibility_date = "2024-01-15"
 
-# D1 Database Configuration
-[env.production]
-[[env.production.d1_databases]]
-binding = "DB"
-database_name = "chesscom-helper-production"
-database_id = "your-production-database-id"
+# Environment Variables
+[vars]
+JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production"
+ENVIRONMENT = "production"
 
-[env.development]
-[[env.development.d1_databases]]
+# D1 Database Configuration
+[[d1_databases]]
 binding = "DB"
-database_name = "chesscom-helper-development"
-database_id = "your-development-database-id"
+database_name = "chesscom-helper-db"
+database_id = "4b98097e-9152-4056-b6b0-31fbf12152f4"
