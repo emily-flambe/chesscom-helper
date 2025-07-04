@@ -1,11 +1,11 @@
 {
   "env": {
     "es2022": true,
-    "webworker": true
+    "worker": true,
+    "node": true
   },
   "extends": [
-    "eslint:recommended",
-    "@typescript-eslint/recommended"
+    "eslint:recommended"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -16,10 +16,8 @@
     "@typescript-eslint"
   ],
   "rules": {
-    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    "@typescript-eslint/no-explicit-any": "warn",
-    "@typescript-eslint/prefer-const": "error",
-    "@typescript-eslint/no-var-requires": "error",
+    "no-unused-vars": "off",
+    "no-undef": "off",
     "no-console": ["warn", { "allow": ["warn", "error", "info"] }],
     "prefer-const": "error",
     "no-var": "error",

@@ -8,11 +8,6 @@ node_modules/
 dist/
 build/
 
-# Environment files
-.env
-.env.local
-.env.production
-
 # IDE files
 .vscode/
 .idea/
@@ -35,8 +30,11 @@ coverage/
 # TypeScript cache
 *.tsbuildinfo
 
-# Environment files (additional)
+# Environment files (comprehensive)
+.env
+.env.local
 .env.*
 .env.development
 .env.staging
 .env.production
+.env.*.local

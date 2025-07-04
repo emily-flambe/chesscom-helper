@@ -23,7 +23,7 @@ export interface JWTPayload {
   scope?: string;   // Optional scope/permissions
 }
 
-export interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest {
   user: JWTPayload;
 }
 
@@ -70,7 +70,7 @@ function extractTokenFromRequest(request: Request): string | null {
     return null;
   }
   
-  return bearerMatch[1];
+  return bearerMatch[1] || null;
 }
 
 /**
@@ -82,52 +82,52 @@ async function validateJWTToken(
   env: any
 ): Promise<JWTPayload | null> {
   try {
-    // SECURITY: Decode without verification first to check basic structure
-    const decoded = jwt.decode(token);
-    if (!decoded || !decoded.payload) {
-      return null;
-    }
-    
     // SECURITY: Verify cryptographic signature
     const isValid = await jwt.verify(token, config.secret);
     if (!isValid) {
       return null;
     }
     
-    const payload = decoded.payload as JWTPayload;
+    // SECURITY: Decode payload after verification
+    const { payload } = jwt.decode(token);
+    if (!payload) {
+      return null;
+    }
+    
+    const jwtPayload = payload as JWTPayload;
     
     // SECURITY: Additional validation checks
     const now = Math.floor(Date.now() / 1000);
     
     // Check if token is expired (with clock tolerance)
-    if (payload.exp && payload.exp < (now - (config.clockTolerance || 60))) {
+    if (jwtPayload.exp && jwtPayload.exp < (now - (config.clockTolerance || 60))) {
       return null;
     }
     
     // Check if token is too old (additional security measure)
-    if (config.maxAge && payload.iat && (now - payload.iat) > config.maxAge) {
+    if (config.maxAge && jwtPayload.iat && (now - jwtPayload.iat) > config.maxAge) {
       return null;
     }
     
     // SECURITY: Validate issuer with constant-time comparison
-    if (!constantTimeEquals(payload.iss, config.issuer)) {
+    if (!constantTimeEquals(jwtPayload.iss, config.issuer)) {
       return null;
     }
     
     // SECURITY: Validate audience with constant-time comparison
-    if (!constantTimeEquals(payload.aud, config.audience)) {
+    if (!constantTimeEquals(jwtPayload.aud, config.audience)) {
       return null;
     }
     
     // SECURITY: Check if token is revoked (using JWT ID)
-    if (payload.jti) {
-      const isRevoked = await env.REVOKED_TOKENS?.get(payload.jti);
+    if (jwtPayload.jti) {
+      const isRevoked = await env.REVOKED_TOKENS?.get(jwtPayload.jti);
       if (isRevoked) {
         return null;
       }
     }
     
-    return payload;
+    return jwtPayload;
     
   } catch (error) {
     // SECURITY: Log error for monitoring but don't expose details
@@ -184,7 +184,7 @@ export function createJWTMiddleware(config: JWTMiddlewareConfig) {
     request: Request,
     env: any,
     ctx: ExecutionContext
-  ): Promise<{ request: AuthenticatedRequest; user: JWTPayload } | Response> {
+  ): Promise<{ request: Request & AuthenticatedRequest; user: JWTPayload } | Response> {
     
     // SECURITY: Rate limiting check before processing
     const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
@@ -215,8 +215,7 @@ export function createJWTMiddleware(config: JWTMiddlewareConfig) {
     }
     
     // SECURITY: Create authenticated request object
-    const authenticatedRequest = request as AuthenticatedRequest;
-    authenticatedRequest.user = payload;
+    const authenticatedRequest = Object.assign(request, { user: payload });
     
     return {
       request: authenticatedRequest,
@@ -328,7 +327,7 @@ export function requireAuth(config: JWTMiddlewareConfig) {
     request: Request,
     env: any,
     ctx: ExecutionContext,
-    handler: (req: AuthenticatedRequest, user: JWTPayload) => Promise<Response>
+    handler: (req: Request & AuthenticatedRequest, user: JWTPayload) => Promise<Response>
   ): Promise<Response> {
     
     const result = await middleware(request, env, ctx);
