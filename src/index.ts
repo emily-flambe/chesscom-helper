@@ -48,7 +48,7 @@ function generateId(): string {
 }
 
 // In-memory storage for monitored players (will be moved to D1 later)
-let monitoredPlayers: string[] = []
+const monitoredPlayers: string[] = []
 
 // Chess.com validation
 async function validateChessComUser(username: string): Promise<{ exists: boolean, data?: any }> {
@@ -254,95 +254,629 @@ export default {
 
 function getHTML() {
   return `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Chess.com Helper</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="/favicon.png">
     <style>
-      body { font-family: system-ui; margin: 0; background: #0f0f23; color: #e8eaed; padding: 2rem; }
-      .container { max-width: 600px; margin: 0 auto; background: #16213e; padding: 2rem; border-radius: 20px; }
-      h1 { text-align: center; color: #64b5f6; }
-      .form-group { margin: 1rem 0; }
-      label { display: block; margin-bottom: 0.5rem; color: #9aa0a6; }
-      input { width: 100%; padding: 0.8rem; background: #1a1a2e; border: 1px solid #333; border-radius: 8px; color: #e8eaed; }
-      button { width: 100%; padding: 0.8rem; background: #64b5f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem; }
-      button:hover { background: #90caf9; }
-      button.secondary { background: #666; }
-      button.secondary:hover { background: #777; }
-      .players { margin-top: 2rem; }
-      .player { background: #1a1a2e; padding: 0.8rem; margin: 0.5rem 0; border-radius: 8px; }
-      .hidden { display: none; }
-      .auth-section { margin-bottom: 2rem; }
-      .user-info { background: #1a1a2e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-      .tabs { display: flex; margin-bottom: 1rem; }
-      .tab { flex: 1; padding: 0.5rem; text-align: center; background: #1a1a2e; cursor: pointer; }
-      .tab.active { background: #64b5f6; }
-      .tab:first-child { border-radius: 8px 0 0 8px; }
-      .tab:last-child { border-radius: 0 8px 8px 0; }
+      /* CSS Variables for Green Color Palette */
+      :root {
+        /* Primary Greens (replacing blues) */
+        --primary-green: #66bb6a;
+        --primary-green-light: #81c784;
+        --primary-green-dark: #4caf50;
+        
+        /* Background Greens (replacing blue-grays) */
+        --bg-dark-forest: #0f1f0f;
+        --bg-dark-green: #1b2e1b;
+        --bg-green-gray: #1a2e1a;
+        
+        /* Semantic Colors */
+        --success-green: #4caf50;
+        --warning-amber: #ff9800;
+        --error-red: #f44336;
+        
+        /* Text & Neutrals */
+        --text-primary: #e8eaed;
+        --text-secondary: #9aa0a6;
+        --border-gray: #333;
+        --border-green: #2e5d32;
+        
+        /* Spacing */
+        --spacing-xs: 0.25rem;
+        --spacing-sm: 0.5rem;
+        --spacing-md: 1rem;
+        --spacing-lg: 1.5rem;
+        --spacing-xl: 2rem;
+        
+        /* Border Radius */
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-xl: 20px;
+      }
+      
+      /* Reset & Base Styles */
+      * {
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        background: var(--bg-dark-forest);
+        color: var(--text-primary);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* Header Navigation */
+      .header {
+        background: var(--bg-dark-green);
+        border-bottom: 1px solid var(--border-green);
+        padding: var(--spacing-md) var(--spacing-xl);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+      
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        text-decoration: none;
+      }
+      
+      .logo-icon {
+        font-size: 1.5rem;
+      }
+      
+      .nav-user {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+      }
+      
+      .nav-user.auth-nav {
+        gap: var(--spacing-sm);
+      }
+      
+      .nav-user .welcome {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+      
+      .nav-user .username {
+        color: var(--primary-green);
+        font-weight: 600;
+      }
+      
+      .nav-button {
+        background: var(--primary-green);
+        color: white;
+        border: none;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+      }
+      
+      .nav-button:hover {
+        background: var(--primary-green-light);
+        transform: translateY(-1px);
+      }
+      
+      .nav-button.secondary {
+        background: var(--bg-green-gray);
+        color: var(--text-primary);
+        border: 1px solid var(--border-green);
+      }
+      
+      .nav-button.secondary:hover {
+        background: var(--border-green);
+      }
+      
+      /* Main Layout */
+      .main-layout {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: var(--spacing-xl);
+      }
+      
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xl);
+      }
+      
+      /* Auth Section */
+      .auth-container {
+        background: var(--bg-dark-green);
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-xl);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      
+      .auth-header {
+        text-align: center;
+        margin-bottom: var(--spacing-xl);
+      }
+      
+      .auth-title {
+        color: var(--primary-green);
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 var(--spacing-sm) 0;
+      }
+      
+      .auth-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin: 0;
+      }
+      
+      .auth-tabs {
+        display: flex;
+        margin-bottom: var(--spacing-lg);
+        background: var(--bg-green-gray);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-xs);
+      }
+      
+      .auth-tab {
+        flex: 1;
+        padding: var(--spacing-sm) var(--spacing-md);
+        text-align: center;
+        background: transparent;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
+      
+      .auth-tab.active {
+        background: var(--primary-green);
+        color: white;
+      }
+      
+      .auth-tab:hover:not(.active) {
+        color: var(--text-primary);
+      }
+      
+      /* Forms */
+      .form-group {
+        margin-bottom: var(--spacing-md);
+      }
+      
+      .form-label {
+        display: block;
+        margin-bottom: var(--spacing-sm);
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+      
+      .form-input {
+        width: 100%;
+        padding: var(--spacing-md);
+        background: var(--bg-green-gray);
+        border: 1px solid var(--border-green);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all 0.2s ease;
+      }
+      
+      .form-input:focus {
+        outline: none;
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 2px rgba(102, 187, 106, 0.2);
+      }
+      
+      .form-input::placeholder {
+        color: var(--text-secondary);
+      }
+      
+      .form-button {
+        width: 100%;
+        padding: var(--spacing-md);
+        background: var(--primary-green);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: var(--spacing-sm);
+      }
+      
+      .form-button:hover:not(:disabled) {
+        background: var(--primary-green-light);
+        transform: translateY(-1px);
+      }
+      
+      .form-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+      
+      /* Main App Content */
+      .app-content {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xl);
+      }
+      
+      .welcome-card {
+        background: var(--bg-dark-green);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-green);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-md);
+      }
+      
+      .welcome-text {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+      
+      .welcome-user {
+        color: var(--primary-green);
+        font-weight: 600;
+      }
+      
+      /* Player Tracking Section */
+      .tracking-section {
+        background: var(--bg-dark-green);
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-green);
+      }
+      
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-lg);
+      }
+      
+      .section-title {
+        color: var(--primary-green);
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0;
+      }
+      
+      .section-icon {
+        font-size: 1.5rem;
+      }
+      
+      .add-player-form {
+        background: var(--bg-green-gray);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-xl);
+      }
+      
+      .add-player-title {
+        color: var(--text-primary);
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 var(--spacing-md) 0;
+      }
+      
+      .input-group {
+        display: flex;
+        gap: var(--spacing-md);
+      }
+      
+      .input-group .form-input {
+        flex: 1;
+      }
+      
+      .input-group .form-button {
+        width: auto;
+        padding: var(--spacing-md) var(--spacing-lg);
+        margin-top: 0;
+      }
+      
+      /* Player Cards */
+      .players-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: var(--spacing-md);
+      }
+      
+      .player-card {
+        background: var(--bg-green-gray);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-green);
+        transition: all 0.2s ease;
+      }
+      
+      .player-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      }
+      
+      .player-info {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+      }
+      
+      .player-avatar {
+        width: 40px;
+        height: 40px;
+        background: var(--primary-green);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: white;
+      }
+      
+      .player-details {
+        flex: 1;
+      }
+      
+      .player-name {
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 1rem;
+        margin: 0;
+      }
+      
+      .player-status {
+        color: var(--success-green);
+        font-size: 0.85rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+      }
+      
+      .status-indicator {
+        width: 8px;
+        height: 8px;
+        background: var(--success-green);
+        border-radius: 50%;
+      }
+      
+      .empty-state {
+        text-align: center;
+        padding: var(--spacing-xl);
+        color: var(--text-secondary);
+      }
+      
+      .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        opacity: 0.5;
+      }
+      
+      .empty-state-text {
+        font-size: 1.1rem;
+        margin-bottom: var(--spacing-sm);
+      }
+      
+      .empty-state-subtext {
+        font-size: 0.9rem;
+        opacity: 0.7;
+      }
+      
+      /* Utility Classes */
+      .hidden {
+        display: none !important;
+      }
+      
+      .loading {
+        opacity: 0.6;
+      }
+      
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .header {
+          padding: var(--spacing-md);
+        }
+        
+        .header-content {
+          flex-direction: column;
+          gap: var(--spacing-md);
+          align-items: stretch;
+        }
+        
+        .nav-user {
+          justify-content: space-between;
+        }
+        
+        .main-layout {
+          padding: var(--spacing-md);
+        }
+        
+        .auth-container {
+          padding: var(--spacing-lg);
+        }
+        
+        .input-group {
+          flex-direction: column;
+        }
+        
+        .input-group .form-button {
+          width: 100%;
+        }
+        
+        .players-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .welcome-card {
+          flex-direction: column;
+          text-align: center;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .header {
+          padding: var(--spacing-sm);
+        }
+        
+        .main-layout {
+          padding: var(--spacing-sm);
+        }
+        
+        .auth-container {
+          padding: var(--spacing-md);
+        }
+        
+        .tracking-section {
+          padding: var(--spacing-md);
+        }
+        
+        .add-player-form {
+          padding: var(--spacing-md);
+        }
+      }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>♚ Chess.com Helper (D1 Auth)</h1>
-        
-        <!-- Auth Section -->
-        <div id="authSection" class="auth-section">
-            <div class="tabs">
-                <div class="tab active" onclick="switchTab('login')">Login</div>
-                <div class="tab" onclick="switchTab('register')">Register</div>
-            </div>
+    <!-- Header Navigation -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <span class="logo-icon">♚</span>
+                <span>Chess Helper</span>
+            </a>
             
-            <!-- Login Form -->
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="loginEmail" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="loginPassword" required>
-                </div>
-                <button type="submit">Login</button>
-            </form>
+            <!-- Navigation for unauthenticated users -->
+            <nav id="authNav" class="nav-user auth-nav">
+                <button class="nav-button secondary" onclick="switchTab('login')">Login</button>
+                <button class="nav-button" onclick="switchTab('register')">Register</button>
+            </nav>
             
-            <!-- Register Form -->
-            <form id="registerForm" class="hidden">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="registerEmail" required>
+            <!-- Navigation for authenticated users -->
+            <nav id="userNav" class="nav-user hidden">
+                <div class="nav-user-info">
+                    <span class="welcome">Welcome,</span>
+                    <span class="username" id="navUsername">User</span>
                 </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="registerPassword" required>
-                </div>
-                <button type="submit">Register</button>
-            </form>
+                <button class="nav-button secondary" onclick="logout()">Logout</button>
+            </nav>
         </div>
-        
-        <!-- Main App (hidden until authenticated) -->
-        <div id="mainApp" class="hidden">
-            <div class="user-info">
-                <span>Welcome, <strong id="currentUser"></strong>!</span>
-                <button class="secondary" onclick="logout()" style="float: right; width: auto; padding: 0.4rem 1rem;">Logout</button>
-                <div style="clear: both;"></div>
-            </div>
-            
-            <form id="playerForm">
-                <div class="form-group">
-                    <label>Chess.com Username</label>
-                    <input type="text" id="username" placeholder="e.g. MagnusCarlsen" required>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-layout">
+        <div class="container">
+            <!-- Authentication Section -->
+            <section id="authSection" class="auth-container">
+                <div class="auth-header">
+                    <h1 class="auth-title">Welcome to Chess Helper</h1>
+                    <p class="auth-subtitle">Track your favorite Chess.com players</p>
                 </div>
-                <button type="submit">Start Monitoring</button>
-            </form>
+                
+                <div class="auth-tabs">
+                    <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+                    <button class="auth-tab" onclick="switchTab('register')">Register</button>
+                </div>
+                
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label class="form-label" for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" class="form-input" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="form-button">Sign In</button>
+                </form>
+                
+                <!-- Register Form -->
+                <form id="registerForm" class="auth-form hidden">
+                    <div class="form-group">
+                        <label class="form-label" for="registerEmail">Email Address</label>
+                        <input type="email" id="registerEmail" class="form-input" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" class="form-input" placeholder="Create a password" required>
+                    </div>
+                    <button type="submit" class="form-button">Create Account</button>
+                </form>
+            </section>
             
-            <div class="players">
-                <h3>Monitored Players</h3>
-                <div id="playersList">Loading...</div>
-            </div>
+            <!-- Main Application -->
+            <section id="mainApp" class="app-content hidden">
+                <div class="welcome-card">
+                    <div>
+                        <div class="welcome-text">
+                            Welcome back, <span class="welcome-user" id="currentUser">User</span>!
+                        </div>
+                    </div>
+                    <div class="status-indicator"></div>
+                </div>
+                
+                <div class="tracking-section">
+                    <div class="section-header">
+                        <span class="section-icon">👥</span>
+                        <h2 class="section-title">Player Tracking</h2>
+                    </div>
+                    
+                    <div class="add-player-form">
+                        <h3 class="add-player-title">Add New Player</h3>
+                        <form id="playerForm">
+                            <div class="input-group">
+                                <input type="text" id="username" class="form-input" 
+                                       placeholder="Enter Chess.com username (e.g., MagnusCarlsen)" required>
+                                <button type="submit" class="form-button">Start Monitoring</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div id="playersContainer">
+                        <div class="players-grid" id="playersList">
+                            <!-- Players will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
-    </div>
+    </main>
     
     <script>
         // Simple auth state management
@@ -361,27 +895,37 @@ function getHTML() {
         function showAuthSection() {
             document.getElementById('authSection').classList.remove('hidden');
             document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('authNav').classList.remove('hidden');
+            document.getElementById('userNav').classList.add('hidden');
         }
         
         function showMainApp() {
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            document.getElementById('currentUser').textContent = currentUser || 'User';
+            document.getElementById('authNav').classList.add('hidden');
+            document.getElementById('userNav').classList.remove('hidden');
+            
+            const username = currentUser || 'User';
+            document.getElementById('currentUser').textContent = username;
+            document.getElementById('navUsername').textContent = username;
             loadPlayers();
         }
         
         function switchTab(tab) {
-            const tabs = document.querySelectorAll('.tab');
+            const tabs = document.querySelectorAll('.auth-tab');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            
             tabs.forEach(t => t.classList.remove('active'));
             
             if (tab === 'login') {
                 tabs[0].classList.add('active');
-                document.getElementById('loginForm').classList.remove('hidden');
-                document.getElementById('registerForm').classList.add('hidden');
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
             } else {
                 tabs[1].classList.add('active');
-                document.getElementById('loginForm').classList.add('hidden');
-                document.getElementById('registerForm').classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
             }
         }
         
@@ -393,11 +937,34 @@ function getHTML() {
             showAuthSection();
         }
         
+        // Show loading state for buttons
+        function setButtonLoading(button, isLoading, originalText = 'Submit') {
+            if (isLoading) {
+                button.disabled = true;
+                button.textContent = 'Processing...';
+                button.classList.add('loading');
+            } else {
+                button.disabled = false;
+                button.textContent = originalText;
+                button.classList.remove('loading');
+            }
+        }
+        
+        // Show toast notifications (placeholder for now)
+        function showNotification(message, type = 'info') {
+            // For now, still using alert - can be enhanced with toast UI later
+            const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+            alert(emoji + ' ' + message);
+        }
+        
         // Auth form handlers
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+            const button = this.querySelector('button');
+            
+            setButtonLoading(button, true, 'Sign In');
             
             try {
                 const response = await fetch('/api/auth/login', {
@@ -415,10 +982,12 @@ function getHTML() {
                     localStorage.setItem('currentUser', currentUser);
                     showMainApp();
                 } else {
-                    alert('❌ ' + data.error);
+                    showNotification(data.error, 'error');
                 }
             } catch (error) {
-                alert('❌ Login failed');
+                showNotification('Login failed. Please try again.', 'error');
+            } finally {
+                setButtonLoading(button, false, 'Sign In');
             }
         });
         
@@ -426,6 +995,9 @@ function getHTML() {
             e.preventDefault();
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
+            const button = this.querySelector('button');
+            
+            setButtonLoading(button, true, 'Create Account');
             
             try {
                 const response = await fetch('/api/auth/register', {
@@ -443,39 +1015,44 @@ function getHTML() {
                     localStorage.setItem('currentUser', currentUser);
                     showMainApp();
                 } else {
-                    alert('❌ ' + data.error);
+                    showNotification(data.error, 'error');
                 }
             } catch (error) {
-                alert('❌ Registration failed');
+                showNotification('Registration failed. Please try again.', 'error');
+            } finally {
+                setButtonLoading(button, false, 'Create Account');
             }
         });
         
         async function loadPlayers() {
+            const list = document.getElementById('playersList');
+            list.innerHTML = '<div class="loading">Loading players...</div>';
+            
             try {
                 const response = await fetch('/api/players');
                 const data = await response.json();
-                const list = document.getElementById('playersList');
+                
                 if (data.players.length === 0) {
-                    list.innerHTML = '<p>No players yet</p>';
+                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">♟️</div><div class="empty-state-text">No players monitored yet</div><div class="empty-state-subtext">Add a Chess.com username above to start tracking</div></div>';
                 } else {
-                    list.innerHTML = data.players.map(p => 
-                        '<div class="player">♟️ ' + p + '</div>'
+                    list.innerHTML = data.players.map(player => 
+                        '<div class="player-card"><div class="player-info"><div class="player-avatar">♟️</div><div class="player-details"><div class="player-name">' + player + '</div><div class="player-status"><span class="status-indicator"></span>Monitoring active</div></div></div></div>'
                     ).join('');
                 }
             } catch (error) {
-                document.getElementById('playersList').innerHTML = '<p>Error loading</p>';
+                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Error loading players</div><div class="empty-state-subtext">Please try refreshing the page</div></div>';
             }
         }
         
         document.getElementById('playerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const username = document.getElementById('username').value.trim();
-            const btn = this.querySelector('button');
+            const usernameInput = document.getElementById('username');
+            const username = usernameInput.value.trim();
+            const button = this.querySelector('button');
             
             if (!username) return;
             
-            btn.disabled = true;
-            btn.textContent = 'Checking...';
+            setButtonLoading(button, true, 'Start Monitoring');
             
             try {
                 const response = await fetch('/api/monitor', {
@@ -487,17 +1064,16 @@ function getHTML() {
                 const data = await response.json();
                 
                 if (response.ok) {
-                    alert('✅ ' + data.message);
-                    document.getElementById('username').value = '';
+                    showNotification(data.message, 'success');
+                    usernameInput.value = '';
                     loadPlayers();
                 } else {
-                    alert('❌ ' + data.error);
+                    showNotification(data.error, 'error');
                 }
             } catch (error) {
-                alert('❌ Error connecting to server');
+                showNotification('Error connecting to server. Please try again.', 'error');
             } finally {
-                btn.disabled = false;
-                btn.textContent = 'Start Monitoring';
+                setButtonLoading(button, false, 'Start Monitoring');
             }
         });
         

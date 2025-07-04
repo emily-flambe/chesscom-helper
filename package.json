@@ -23,8 +23,7 @@
     "db:studio": "./scripts/db-setup.sh studio",
     "db:studio:remote": "./scripts/db-setup.sh --remote studio",
     "db:generate": "wrangler d1 migrations create",
-    "db:migrate:local": "wrangler d1 migrations apply --local",
-    "db:migrate:remote": "wrangler d1 migrations apply"
+    "db:migrate:local": "wrangler d1 migrations apply --local"
   },
   "keywords": [
     "chess",
@@ -46,8 +45,8 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.0.0",
     "@types/uuid": "^9.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.0.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0",
