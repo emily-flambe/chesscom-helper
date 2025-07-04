@@ -37,7 +37,12 @@
     "wrangler": "^4.22.0"
   },
   "dependencies": {
-    "itty-router": "^5.0.0"
+    "@tsndr/cloudflare-worker-jwt": "^3.2.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/uuid": "^10.0.0",
+    "bcryptjs": "^3.0.2",
+    "itty-router": "^5.0.0",
+    "uuid": "^11.1.0"
   },
   "engines": {
     "node": ">=18.0.0"

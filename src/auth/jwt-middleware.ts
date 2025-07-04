@@ -10,7 +10,7 @@
  * - Rate limiting integration
  */
 
-import { verify, decode } from '@cloudflare/workers-jwt';
+import jwt from '@tsndr/cloudflare-worker-jwt';
 
 export interface JWTPayload {
   sub: string;      // Subject (user ID)
@@ -83,17 +83,18 @@ async function validateJWTToken(
 ): Promise<JWTPayload | null> {
   try {
     // SECURITY: Decode without verification first to check basic structure
-    const decoded = decode(token);
+    const decoded = jwt.decode(token);
     if (!decoded || !decoded.payload) {
       return null;
     }
     
     // SECURITY: Verify cryptographic signature
-    const payload = await verify(token, config.secret, {
-      issuer: config.issuer,
-      audience: config.audience,
-      clockTolerance: config.clockTolerance || 60
-    }) as JWTPayload;
+    const isValid = await jwt.verify(token, config.secret);
+    if (!isValid) {
+      return null;
+    }
+    
+    const payload = decoded.payload as JWTPayload;
     
     // SECURITY: Additional validation checks
     const now = Math.floor(Date.now() / 1000);
