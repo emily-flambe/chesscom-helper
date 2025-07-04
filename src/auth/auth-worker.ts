@@ -18,9 +18,9 @@
  * - Zero-trust architecture principles
  */
 
-import { createJWTMiddleware, JWTPayload, AuthenticatedRequest } from './jwt-middleware';
-import { SessionManager, SessionConfig, SessionData } from './session-manager';
-import { AuthService, RegistrationRequest, LoginRequest, AuthConfig } from './auth-flow';
+import { createJWTMiddleware, type JWTPayload, type AuthenticatedRequest } from './jwt-middleware';
+import { SessionManager, type SessionConfig, type SessionData } from './session-manager';
+import { AuthService, type RegistrationRequest, type LoginRequest, type AuthConfig } from './auth-flow';
 import { AdvancedRateLimiter, AuthRateLimiter, APIRateLimiter } from './rate-limiter';
 import { secureErrorHandler, handleSecureError, ErrorCode } from './secure-error-handler';
 

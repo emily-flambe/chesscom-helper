@@ -58,6 +58,60 @@ wrangler d1 execute chesscom-helper-production --file=database/migrations/0002_c
 wrangler d1 execute chesscom-helper-production --file=database/seeds/dev_seed.sql
 ```
 
+### Database Setup Script
+
+We provide a comprehensive database setup script that handles all database operations:
+
+```bash
+# Show help and available commands
+./scripts/db-setup.sh --help
+
+# Check database status
+./scripts/db-setup.sh status
+
+# Apply migrations (local)
+./scripts/db-setup.sh migrate
+
+# Apply migrations (remote)
+./scripts/db-setup.sh --remote migrate
+
+# Apply seed data (local only)
+./scripts/db-setup.sh seed
+
+# Reset database (destructive!)
+./scripts/db-setup.sh reset
+
+# Create new migration
+./scripts/db-setup.sh create migration_name
+
+# Open D1 Studio
+./scripts/db-setup.sh studio
+```
+
+### NPM Scripts
+
+You can also use npm scripts for common database operations:
+
+```bash
+# Database status
+npm run db:status
+npm run db:status:remote
+
+# Apply migrations
+npm run db:migrate
+npm run db:migrate:remote
+
+# Apply seed data
+npm run db:seed
+
+# Reset database
+npm run db:reset
+
+# Open D1 Studio
+npm run db:studio
+npm run db:studio:remote
+```
+
 ### Local Development
 
 For local development with D1:

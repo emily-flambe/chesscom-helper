@@ -421,12 +421,18 @@ export class AuthService {
       // SECURITY: Revoke JWT token if JTI is available
       if (jwtToken) {
         try {
-          const decoded = JSON.parse(atob(jwtToken.split('.')[1]));
-          if (decoded.jti) {
-            const ttl = decoded.exp ? (decoded.exp - Math.floor(Date.now() / 1000)) : 86400;
-            await env.REVOKED_TOKENS?.put(decoded.jti, 'revoked', {
-              expirationTtl: Math.max(ttl, 0)
-            });
+          const tokenParts = jwtToken.split('.');
+          if (tokenParts.length >= 2) {
+            const payloadBase64 = tokenParts[1];
+            if (payloadBase64) {
+              const decoded = JSON.parse(atob(payloadBase64));
+              if (decoded.jti) {
+                const ttl = decoded.exp ? (decoded.exp - Math.floor(Date.now() / 1000)) : 86400;
+                await env.REVOKED_TOKENS?.put(decoded.jti, 'revoked', {
+                  expirationTtl: Math.max(ttl, 0)
+                });
+              }
+            }
           }
         } catch (error) {
           console.warn('Token revocation warning:', error);

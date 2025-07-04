@@ -1,86 +1,175 @@
-# Claude Development Guidelines
+# Development Partnership
 
-This file contains important instructions for Claude Code when working on this project.
+We're building production-quality code together. Your role is to create maintainable, efficient solutions while catching potential issues early.
 
-## Claude Agent Roles
+When you seem stuck or overly complex, I'll redirect you - my guidance helps you stay on track.
 
-When working on this project, Claude agents should identify their role and responsibilities:
+## 🚨 AUTOMATED CHECKS ARE MANDATORY
+**ALL hook issues are BLOCKING - EVERYTHING must be ✅ GREEN!**  
+No errors. No formatting issues. No linting problems. Zero tolerance.  
+These are not suggestions. Fix ALL issues before continuing.
 
-### 🖊️ Code Writer
-- Implements new features and functionality
-- Fixes bugs and issues in existing code
-- Follows established code patterns and conventions
-- Ensures code is clean, readable, and well-structured
-- Updates documentation when adding new features
+## CRITICAL WORKFLOW - ALWAYS FOLLOW THIS!
 
-### 🧪 Test Writer
-- Creates comprehensive test suites for new features
-- Writes unit tests, integration tests, and end-to-end tests
-- Ensures high test coverage for critical functionality
-- Follows testing best practices and patterns
-- Creates test fixtures and mock data as needed
+### Research → Plan → Implement
+**NEVER JUMP STRAIGHT TO CODING!** Always follow this sequence:
+1. **Research**: Explore the codebase, understand existing patterns
+2. **Plan**: Create a detailed implementation plan and verify it with me  
+3. **Implement**: Execute the plan with validation checkpoints
 
-### 🚀 Test Runner
-- Executes test suites and reports results
-- Runs linting and code quality checks
-- Validates that all tests pass before code changes
-- Identifies and reports test failures with detailed information
-- Ensures CI/CD pipeline requirements are met
+When asked to implement any feature, you'll first say: "Let me research the codebase and create a plan before implementing."
 
-### 👁️ Code Reviewer
-- Reviews code changes for quality, security, and best practices
-- Identifies potential bugs, performance issues, and security vulnerabilities
-- Ensures code follows project conventions and standards
-- Provides constructive feedback and improvement suggestions
-- Validates that changes meet requirements and don't break existing functionality
+For complex architectural decisions or challenging problems, use **"ultrathink"** to engage maximum reasoning capacity. Say: "Let me ultrathink about this architecture before proposing a solution."
 
-**Note**: A single Claude instance may take on multiple roles during development, but should clearly identify which role they are performing for each task.
+### USE MULTIPLE AGENTS!
+*Leverage subagents aggressively* for better results:
 
-## Branch Management and Pull Request Policy
+* Spawn agents to explore different parts of the codebase in parallel
+* Use one agent to write tests while another implements features
+* Delegate research tasks: "I'll have an agent investigate the database schema while I analyze the API structure"
+* For complex refactors: One agent identifies changes, another implements them
 
-**🚨 NEVER PUSH DIRECTLY TO MAIN BRANCH**
+Say: "I'll spawn agents to tackle different aspects of this problem" whenever a task has multiple independent parts.
 
-- Always create a feature branch for any changes
-- Open a pull request for all changes, no matter how small
-- Wait for review/approval before merging to main
-- Use descriptive branch names like `feature/email-notifications` or `fix/user-validation`
+### Reality Checkpoints
+**Stop and validate** at these moments:
+- After implementing a complete feature
+- Before starting a new major component  
+- When something feels wrong
+- Before declaring "done"
+- **WHEN HOOKS FAIL WITH ERRORS** ❌
 
-## Workflow
+Run: `make fmt && make test && make lint`
 
-1. **Create a new branch** for your changes if you are currently on the `main` branch:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+> Why: You can lose track of what's actually working. These checkpoints prevent cascading failures.
 
-2. **Make your changes** and commit them:
-   ```bash
-   git add .
-   git commit -m "Your descriptive commit message"
-   ```
+### 🚨 CRITICAL: Hook Failures Are BLOCKING
+**When hooks report ANY issues (exit code 2), you MUST:**
+1. **STOP IMMEDIATELY** - Do not continue with other tasks
+2. **FIX ALL ISSUES** - Address every ❌ issue until everything is ✅ GREEN
+3. **VERIFY THE FIX** - Re-run the failed command to confirm it's fixed
+4. **CONTINUE ORIGINAL TASK** - Return to what you were doing before the interrupt
+5. **NEVER IGNORE** - There are NO warnings, only requirements
 
-3. **Push the branch** to remote:
-   ```bash
-   git push -u origin feature/your-feature-name
-   ```
+This includes:
+- Formatting issues (gofmt, black, prettier, etc.)
+- Linting violations (golangci-lint, eslint, etc.)
+- Forbidden patterns (time.Sleep, panic(), interface{})
+- ALL other checks
 
-4. **Create a pull request** using GitHub CLI:
-   ```bash
-   gh pr create --title "Your PR Title" --body "Description of changes"
-   ```
+Your code must be 100% clean. No exceptions.
 
-5. **Never use `git push origin main`** - this pushes directly to main
+**Recovery Protocol:**
+- When interrupted by a hook failure, maintain awareness of your original task
+- After fixing all issues and verifying the fix, continue where you left off
+- Use the todo list to track both the fix and your original task
 
-## Code Quality
+## Working Memory Management
 
-- Always run tests before creating a PR
-- Follow existing code conventions and patterns
-- Update documentation when adding new features
-- Include clear commit messages explaining the "why" not just the "what"
+### When context gets long:
+- Re-read this CLAUDE.md file
+- Summarize progress in a PROGRESS.md file
+- Document current state before major changes
 
-## Emergency Exceptions
+### Maintain TODO.md:
+```
+## Current Task
+- [ ] What we're doing RIGHT NOW
 
-The only exception to this rule is for critical production hotfixes, which should still be followed by a retroactive PR for documentation purposes.
+## Completed  
+- [x] What's actually done and tested
 
----
+## Next Steps
+- [ ] What comes next
+```
 
-*This file helps maintain code quality and collaboration standards for the project.*
+## Go-Specific Rules
+
+### FORBIDDEN - NEVER DO THESE:
+- **NO interface{}** or **any{}** - use concrete types!
+- **NO time.Sleep()** or busy waits - use channels for synchronization!
+- **NO** keeping old and new code together
+- **NO** migration functions or compatibility layers
+- **NO** versioned function names (processV2, handleNew)
+- **NO** custom error struct hierarchies
+- **NO** TODOs in final code
+
+> **AUTOMATED ENFORCEMENT**: The smart-lint hook will BLOCK commits that violate these rules.  
+> When you see `❌ FORBIDDEN PATTERN`, you MUST fix it immediately!
+
+### Required Standards:
+- **Delete** old code when replacing it
+- **Meaningful names**: `userID` not `id`
+- **Early returns** to reduce nesting
+- **Concrete types** from constructors: `func NewServer() *Server`
+- **Simple errors**: `return fmt.Errorf("context: %w", err)`
+- **Table-driven tests** for complex logic
+- **Channels for synchronization**: Use channels to signal readiness, not sleep
+- **Select for timeouts**: Use `select` with timeout channels, not sleep loops
+
+## Implementation Standards
+
+### Our code is complete when:
+- ? All linters pass with zero issues
+- ? All tests pass  
+- ? Feature works end-to-end
+- ? Old code is deleted
+- ? Godoc on all exported symbols
+
+### Testing Strategy
+- Complex business logic ? Write tests first
+- Simple CRUD ? Write tests after
+- Hot paths ? Add benchmarks
+- Skip tests for main() and simple CLI parsing
+
+### Project Structure
+```
+cmd/        # Application entrypoints
+internal/   # Private code (the majority goes here)
+pkg/        # Public libraries (only if truly reusable)
+```
+
+## Problem-Solving Together
+
+When you're stuck or confused:
+1. **Stop** - Don't spiral into complex solutions
+2. **Delegate** - Consider spawning agents for parallel investigation
+3. **Ultrathink** - For complex problems, say "I need to ultrathink through this challenge" to engage deeper reasoning
+4. **Step back** - Re-read the requirements
+5. **Simplify** - The simple solution is usually correct
+6. **Ask** - "I see two approaches: [A] vs [B]. Which do you prefer?"
+
+My insights on better approaches are valued - please ask for them!
+
+## Performance & Security
+
+### **Measure First**:
+- No premature optimization
+- Benchmark before claiming something is faster
+- Use pprof for real bottlenecks
+
+### **Security Always**:
+- Validate all inputs
+- Use crypto/rand for randomness
+- Prepared statements for SQL (never concatenate!)
+
+## Communication Protocol
+
+### Progress Updates:
+```
+✓ Implemented authentication (all tests passing)
+✓ Added rate limiting  
+✗ Found issue with token expiration - investigating
+```
+
+### Suggesting Improvements:
+"The current approach works, but I notice [observation].
+Would you like me to [specific improvement]?"
+
+## Working Together
+
+- This is always a feature branch - no backwards compatibility needed
+- When in doubt, we choose clarity over cleverness
+- **REMINDER**: If this file hasn't been referenced in 30+ minutes, RE-READ IT!
+
+Avoid complex abstractions or "clever" code. The simple, obvious solution is probably better, and my guidance helps you stay focused on what matters.
