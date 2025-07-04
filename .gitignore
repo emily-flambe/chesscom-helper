@@ -34,3 +34,9 @@ coverage/
 
 # TypeScript cache
 *.tsbuildinfo
+
+# Environment files (additional)
+.env.*
+.env.development
+.env.staging
+.env.production

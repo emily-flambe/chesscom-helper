@@ -14,8 +14,8 @@
  */
 
 import bcrypt from 'bcryptjs';
-import { sign } from '@cloudflare/workers-jwt';
-import { SessionManager, SessionData } from './session-manager';
+import jwt from '@tsndr/cloudflare-worker-jwt';
+import { SessionManager, type SessionData } from './session-manager';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface User {
@@ -371,7 +371,7 @@ export class AuthService {
         scope: 'user'
       };
       
-      const token = await sign(tokenPayload, this.config.jwtSecret);
+      const token = await jwt.sign(tokenPayload, this.config.jwtSecret);
       
       // SECURITY: Log successful login
       console.info('User login successful:', {
