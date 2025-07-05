@@ -54,7 +54,9 @@ export async function getUserById(db: D1Database, userId: string): Promise<User 
       WHERE id = ?
     `).bind(userId).first()
 
-    if (!result) return null
+    if (!result) {
+return null
+}
 
     return {
       id: result.id as string,
@@ -77,7 +79,9 @@ export async function getUserByEmail(db: D1Database, email: string): Promise<Use
       WHERE email = ?
     `).bind(email).first()
 
-    if (!result) return null
+    if (!result) {
+return null
+}
 
     return {
       id: result.id as string,

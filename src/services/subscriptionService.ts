@@ -22,7 +22,9 @@ export async function getPlayerSubscriptions(db: D1Database, userId: string): Pr
       ORDER BY created_at DESC
     `).bind(userId).all()
 
-    if (!result.results) return []
+    if (!result.results) {
+return []
+}
 
     return result.results.map(row => ({
       id: row.id as string,
@@ -102,7 +104,9 @@ export async function getSubscribersForPlayer(db: D1Database, chessComUsername: 
       WHERE chess_com_username = ?
     `).bind(chessComUsername).all()
 
-    if (!result.results) return []
+    if (!result.results) {
+return []
+}
 
     return result.results.map(row => row.user_id as string)
   } catch (error) {

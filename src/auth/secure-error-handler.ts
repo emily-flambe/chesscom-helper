@@ -73,12 +73,12 @@ export interface SecurityEvent {
  * SECURITY MEASURE: Secure Error Handler with comprehensive protection
  */
 export class SecureErrorHandler {
-  private readonly environment: 'development' | 'production';
-  private readonly enableDetailedLogging: boolean;
+  private readonly environment: 'development' | 'production'
+  private readonly enableDetailedLogging: boolean
   
   constructor(environment: 'development' | 'production' = 'production') {
-    this.environment = environment;
-    this.enableDetailedLogging = environment === 'development';
+    this.environment = environment
+    this.enableDetailedLogging = environment === 'development'
   }
 
   /**
@@ -90,14 +90,14 @@ export class SecureErrorHandler {
     context?: Record<string, any>
   ): ErrorDetails {
     
-    const correlationId = this.generateCorrelationId();
-    const timestamp = Date.now();
+    const correlationId = this.generateCorrelationId()
+    const timestamp = Date.now()
     
     // SECURITY: Classify error and determine security level
-    const errorDetails = this.classifyAuthenticationError(error);
+    const errorDetails = this.classifyAuthenticationError(error)
     
     // SECURITY: Sanitize error based on security level
-    const sanitizedDetails = this.sanitizeError(errorDetails, correlationId, timestamp);
+    const sanitizedDetails = this.sanitizeError(errorDetails, correlationId, timestamp)
     
     // SECURITY: Log security event
     this.logSecurityEvent({
@@ -114,9 +114,9 @@ export class SecureErrorHandler {
       },
       timestamp,
       correlationId
-    });
+    })
     
-    return sanitizedDetails;
+    return sanitizedDetails
   }
 
   /**
@@ -129,8 +129,8 @@ export class SecureErrorHandler {
     context?: Record<string, any>
   ): ErrorDetails {
     
-    const correlationId = this.generateCorrelationId();
-    const timestamp = Date.now();
+    const correlationId = this.generateCorrelationId()
+    const timestamp = Date.now()
     
     const errorDetails: ErrorDetails = {
       code: ErrorCode.INSUFFICIENT_PERMISSIONS,
@@ -141,7 +141,7 @@ export class SecureErrorHandler {
       correlationId,
       timestamp,
       context
-    };
+    }
     
     // SECURITY: Log authorization failure
     this.logSecurityEvent({
@@ -159,9 +159,9 @@ export class SecureErrorHandler {
       },
       timestamp,
       correlationId
-    });
+    })
     
-    return this.sanitizeError(errorDetails, correlationId, timestamp);
+    return this.sanitizeError(errorDetails, correlationId, timestamp)
   }
 
   /**
@@ -174,11 +174,11 @@ export class SecureErrorHandler {
     request: Request
   ): ErrorDetails {
     
-    const correlationId = this.generateCorrelationId();
-    const timestamp = Date.now();
+    const correlationId = this.generateCorrelationId()
+    const timestamp = Date.now()
     
     // SECURITY: Determine validation error code
-    const errorCode = this.getValidationErrorCode(validationRule);
+    const errorCode = this.getValidationErrorCode(validationRule)
     
     const errorDetails: ErrorDetails = {
       code: errorCode,
@@ -194,9 +194,9 @@ export class SecureErrorHandler {
         // SECURITY: Don't log actual value for sensitive fields
         value: this.isSensitiveField(field) ? '[REDACTED]' : value
       }
-    };
+    }
     
-    return errorDetails;
+    return errorDetails
   }
 
   /**
@@ -208,22 +208,22 @@ export class SecureErrorHandler {
     context?: Record<string, any>
   ): ErrorDetails {
     
-    const correlationId = this.generateCorrelationId();
-    const timestamp = Date.now();
+    const correlationId = this.generateCorrelationId()
+    const timestamp = Date.now()
     
-    let errorCode = ErrorCode.RATE_LIMIT_EXCEEDED;
-    let userMessage = 'Too many requests. Please try again later.';
-    let securityLevel = SecurityLevel.MEDIUM;
+    let errorCode = ErrorCode.RATE_LIMIT_EXCEEDED
+    let userMessage = 'Too many requests. Please try again later.'
+    let securityLevel = SecurityLevel.MEDIUM
     
     // SECURITY: Adjust error details based on rate limit type
     if (rateLimitResult.suspended) {
-      errorCode = ErrorCode.IP_BLOCKED;
-      userMessage = 'Access temporarily suspended due to suspicious activity.';
-      securityLevel = SecurityLevel.HIGH;
+      errorCode = ErrorCode.IP_BLOCKED
+      userMessage = 'Access temporarily suspended due to suspicious activity.'
+      securityLevel = SecurityLevel.HIGH
     } else if (rateLimitResult.suspiciousActivity) {
-      errorCode = ErrorCode.SUSPICIOUS_ACTIVITY;
-      userMessage = 'Request blocked due to suspicious activity.';
-      securityLevel = SecurityLevel.HIGH;
+      errorCode = ErrorCode.SUSPICIOUS_ACTIVITY
+      userMessage = 'Request blocked due to suspicious activity.'
+      securityLevel = SecurityLevel.HIGH
     }
     
     const errorDetails: ErrorDetails = {
@@ -235,7 +235,7 @@ export class SecureErrorHandler {
       correlationId,
       timestamp,
       context
-    };
+    }
     
     // SECURITY: Log rate limiting event
     this.logSecurityEvent({
@@ -253,9 +253,9 @@ export class SecureErrorHandler {
       },
       timestamp,
       correlationId
-    });
+    })
     
-    return this.sanitizeError(errorDetails, correlationId, timestamp);
+    return this.sanitizeError(errorDetails, correlationId, timestamp)
   }
 
   /**
@@ -267,8 +267,8 @@ export class SecureErrorHandler {
     context?: Record<string, any>
   ): ErrorDetails {
     
-    const correlationId = this.generateCorrelationId();
-    const timestamp = Date.now();
+    const correlationId = this.generateCorrelationId()
+    const timestamp = Date.now()
     
     const errorDetails: ErrorDetails = {
       code: ErrorCode.UNKNOWN_ERROR,
@@ -283,7 +283,7 @@ export class SecureErrorHandler {
         stack: error.stack,
         name: error.name
       }
-    };
+    }
     
     // SECURITY: Log system error
     this.logSecurityEvent({
@@ -301,9 +301,9 @@ export class SecureErrorHandler {
       },
       timestamp,
       correlationId
-    });
+    })
     
-    return this.sanitizeError(errorDetails, correlationId, timestamp);
+    return this.sanitizeError(errorDetails, correlationId, timestamp)
   }
 
   /**
@@ -316,11 +316,11 @@ export class SecureErrorHandler {
       'Cache-Control': 'no-cache, no-store, must-revalidate',
       'Pragma': 'no-cache',
       'Expires': '0'
-    });
+    })
     
     // SECURITY: Include retry headers for rate limiting
     if (errorDetails.code === ErrorCode.RATE_LIMIT_EXCEEDED && errorDetails.context?.retryAfter) {
-      headers.set('Retry-After', errorDetails.context.retryAfter.toString());
+      headers.set('Retry-After', errorDetails.context.retryAfter.toString())
     }
     
     const responseBody = {
@@ -330,25 +330,25 @@ export class SecureErrorHandler {
         correlationId: errorDetails.correlationId,
         timestamp: errorDetails.timestamp
       }
-    };
+    }
     
     // SECURITY: Include additional details only in development
     if (this.environment === 'development' && errorDetails.securityLevel <= SecurityLevel.MEDIUM) {
-      (responseBody.error as any).details = errorDetails.message;
+      (responseBody.error as any).details = errorDetails.message
     }
     
     return new Response(JSON.stringify(responseBody), {
       status: errorDetails.httpStatus,
       headers
-    });
+    })
   }
 
   /**
    * SECURITY MEASURE: Classify authentication errors
    */
   private classifyAuthenticationError(error: Error | string): ErrorDetails {
-    const errorMessage = typeof error === 'string' ? error : error.message;
-    const errorLower = errorMessage.toLowerCase();
+    const errorMessage = typeof error === 'string' ? error : error.message
+    const errorLower = errorMessage.toLowerCase()
     
     // SECURITY: Map internal errors to standardized error codes
     if (errorLower.includes('invalid credentials') || errorLower.includes('password')) {
@@ -359,7 +359,7 @@ export class SecureErrorHandler {
         securityLevel: SecurityLevel.HIGH,
         httpStatus: 401,
         timestamp: Date.now()
-      };
+      }
     }
     
     if (errorLower.includes('account locked') || errorLower.includes('locked')) {
@@ -370,7 +370,7 @@ export class SecureErrorHandler {
         securityLevel: SecurityLevel.MEDIUM,
         httpStatus: 423,
         timestamp: Date.now()
-      };
+      }
     }
     
     if (errorLower.includes('email not verified') || errorLower.includes('verification')) {
@@ -381,7 +381,7 @@ export class SecureErrorHandler {
         securityLevel: SecurityLevel.LOW,
         httpStatus: 403,
         timestamp: Date.now()
-      };
+      }
     }
     
     if (errorLower.includes('token expired') || errorLower.includes('expired')) {
@@ -392,7 +392,7 @@ export class SecureErrorHandler {
         securityLevel: SecurityLevel.MEDIUM,
         httpStatus: 401,
         timestamp: Date.now()
-      };
+      }
     }
     
     if (errorLower.includes('invalid token') || errorLower.includes('unauthorized')) {
@@ -403,7 +403,7 @@ export class SecureErrorHandler {
         securityLevel: SecurityLevel.HIGH,
         httpStatus: 401,
         timestamp: Date.now()
-      };
+      }
     }
     
     // SECURITY: Default to high security level for unknown errors
@@ -414,7 +414,7 @@ export class SecureErrorHandler {
       securityLevel: SecurityLevel.CRITICAL,
       httpStatus: 401,
       timestamp: Date.now()
-    };
+    }
   }
 
   /**
@@ -426,28 +426,28 @@ export class SecureErrorHandler {
     timestamp: number
   ): ErrorDetails {
     
-    const sanitized = { ...errorDetails };
-    sanitized.correlationId = correlationId;
-    sanitized.timestamp = timestamp;
+    const sanitized = { ...errorDetails }
+    sanitized.correlationId = correlationId
+    sanitized.timestamp = timestamp
     
     // SECURITY: Remove sensitive information based on security level
     if (errorDetails.securityLevel >= SecurityLevel.HIGH) {
       // SECURITY: Remove internal message for high security level
-      sanitized.message = 'Internal error details redacted for security';
+      sanitized.message = 'Internal error details redacted for security'
       
       // SECURITY: Remove logging details from response
-      delete sanitized.loggingDetails;
+      delete sanitized.loggingDetails
       
       // SECURITY: Remove context from response
-      delete sanitized.context;
+      delete sanitized.context
     }
     
     if (errorDetails.securityLevel >= SecurityLevel.CRITICAL) {
       // SECURITY: Use generic message for critical security level
-      sanitized.userMessage = 'An error occurred. Please contact support.';
+      sanitized.userMessage = 'An error occurred. Please contact support.'
     }
     
-    return sanitized;
+    return sanitized
   }
 
   /**
@@ -455,28 +455,28 @@ export class SecureErrorHandler {
    */
   private logSecurityEvent(event: SecurityEvent): void {
     // SECURITY: Redact sensitive information from logs
-    const sanitizedMetadata = this.redactSensitiveData(event.metadata);
+    const sanitizedMetadata = this.redactSensitiveData(event.metadata)
     
     const logEvent = {
       ...event,
       metadata: sanitizedMetadata,
       environment: this.environment
-    };
+    }
     
     // SECURITY: Log based on severity
     switch (event.severity) {
       case 'critical':
-        console.error('SECURITY ALERT - CRITICAL:', logEvent);
-        break;
+        console.error('SECURITY ALERT - CRITICAL:', logEvent)
+        break
       case 'high':
-        console.error('SECURITY ALERT - HIGH:', logEvent);
-        break;
+        console.error('SECURITY ALERT - HIGH:', logEvent)
+        break
       case 'medium':
-        console.warn('SECURITY ALERT - MEDIUM:', logEvent);
-        break;
+        console.warn('SECURITY ALERT - MEDIUM:', logEvent)
+        break
       case 'low':
-        console.info('SECURITY ALERT - LOW:', logEvent);
-        break;
+        console.info('SECURITY ALERT - LOW:', logEvent)
+        break
     }
   }
 
@@ -484,36 +484,36 @@ export class SecureErrorHandler {
    * SECURITY MEASURE: Redact sensitive data from logs
    */
   private redactSensitiveData(data: Record<string, any>): Record<string, any> {
-    const redacted = { ...data };
+    const redacted = { ...data }
     
     const sensitiveFields = [
       'password', 'token', 'secret', 'key', 'authorization',
       'cookie', 'session', 'email', 'phone', 'ssn', 'credit_card'
-    ];
+    ]
     
     for (const [key, value] of Object.entries(redacted)) {
-      const keyLower = key.toLowerCase();
+      const keyLower = key.toLowerCase()
       
       if (sensitiveFields.some(field => keyLower.includes(field))) {
-        redacted[key] = '[REDACTED]';
+        redacted[key] = '[REDACTED]'
       } else if (typeof value === 'object' && value !== null) {
-        redacted[key] = this.redactSensitiveData(value);
+        redacted[key] = this.redactSensitiveData(value)
       }
     }
     
-    return redacted;
+    return redacted
   }
 
   /**
    * SECURITY MEASURE: Generate correlation ID for error tracking
    */
   private generateCorrelationId(): string {
-    const timestamp = Date.now().toString(36);
+    const timestamp = Date.now().toString(36)
     const randomBytes = Array.from(crypto.getRandomValues(new Uint8Array(8)))
       .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+      .join('')
     
-    return `${timestamp}-${randomBytes}`;
+    return `${timestamp}-${randomBytes}`
   }
 
   /**
@@ -521,11 +521,11 @@ export class SecureErrorHandler {
    */
   private mapSecurityLevelToSeverity(level: SecurityLevel): 'low' | 'medium' | 'high' | 'critical' {
     switch (level) {
-      case SecurityLevel.LOW: return 'low';
-      case SecurityLevel.MEDIUM: return 'medium';
-      case SecurityLevel.HIGH: return 'high';
-      case SecurityLevel.CRITICAL: return 'critical';
-      default: return 'medium';
+      case SecurityLevel.LOW: return 'low'
+      case SecurityLevel.MEDIUM: return 'medium'
+      case SecurityLevel.HIGH: return 'high'
+      case SecurityLevel.CRITICAL: return 'critical'
+      default: return 'medium'
     }
   }
 
@@ -533,28 +533,40 @@ export class SecureErrorHandler {
    * Get validation error code
    */
   private getValidationErrorCode(validationRule: string): ErrorCode {
-    if (validationRule.includes('email')) return ErrorCode.INVALID_EMAIL_FORMAT;
-    if (validationRule.includes('password')) return ErrorCode.WEAK_PASSWORD;
-    if (validationRule.includes('required')) return ErrorCode.MISSING_REQUIRED_FIELD;
-    return ErrorCode.INVALID_INPUT;
+    if (validationRule.includes('email')) {
+return ErrorCode.INVALID_EMAIL_FORMAT
+}
+    if (validationRule.includes('password')) {
+return ErrorCode.WEAK_PASSWORD
+}
+    if (validationRule.includes('required')) {
+return ErrorCode.MISSING_REQUIRED_FIELD
+}
+    return ErrorCode.INVALID_INPUT
   }
 
   /**
    * Get user-friendly validation message
    */
   private getValidationUserMessage(field: string, rule: string): string {
-    if (rule.includes('email')) return 'Please enter a valid email address';
-    if (rule.includes('password')) return 'Password does not meet security requirements';
-    if (rule.includes('required')) return `${field} is required`;
-    return `Invalid ${field}`;
+    if (rule.includes('email')) {
+return 'Please enter a valid email address'
+}
+    if (rule.includes('password')) {
+return 'Password does not meet security requirements'
+}
+    if (rule.includes('required')) {
+return `${field} is required`
+}
+    return `Invalid ${field}`
   }
 
   /**
    * Check if field contains sensitive data
    */
   private isSensitiveField(field: string): boolean {
-    const sensitiveFields = ['password', 'token', 'secret', 'key', 'ssn', 'credit_card'];
-    return sensitiveFields.some(sensitive => field.toLowerCase().includes(sensitive));
+    const sensitiveFields = ['password', 'token', 'secret', 'key', 'ssn', 'credit_card']
+    return sensitiveFields.some(sensitive => field.toLowerCase().includes(sensitive))
   }
 }
 
@@ -566,7 +578,7 @@ export const secureErrorHandler = new SecureErrorHandler(
   typeof globalThis !== 'undefined' && (globalThis as any).ENVIRONMENT === 'development' 
     ? 'development' 
     : 'production'
-);
+)
 
 /**
  * SECURITY MEASURE: Utility function for consistent error handling
@@ -578,29 +590,29 @@ export function handleSecureError(
   context?: Record<string, any>
 ): Response {
   
-  let errorDetails: ErrorDetails;
+  let errorDetails: ErrorDetails
   
   switch (type) {
     case 'auth':
-      errorDetails = secureErrorHandler.handleAuthenticationError(error, request, context);
-      break;
+      errorDetails = secureErrorHandler.handleAuthenticationError(error, request, context)
+      break
     case 'rate_limit':
-      errorDetails = secureErrorHandler.handleRateLimitError(context, request);
-      break;
+      errorDetails = secureErrorHandler.handleRateLimitError(context, request)
+      break
     case 'system':
       errorDetails = secureErrorHandler.handleSystemError(
         error instanceof Error ? error : new Error(error.toString()),
         request,
         context
-      );
-      break;
+      )
+      break
     default:
       errorDetails = secureErrorHandler.handleSystemError(
         error instanceof Error ? error : new Error(error.toString()),
         request,
         context
-      );
+      )
   }
   
-  return secureErrorHandler.createErrorResponse(errorDetails);
+  return secureErrorHandler.createErrorResponse(errorDetails)
 }

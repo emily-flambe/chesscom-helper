@@ -834,6 +834,18 @@ function getHTML() {
         border-color: var(--primary-green-light);
       }
       
+      .action-btn.outline {
+        background: transparent;
+        color: var(--primary-green);
+        border: 1px solid var(--primary-green);
+      }
+      
+      .action-btn.outline:hover {
+        background: var(--primary-green);
+        color: white;
+        border-color: var(--primary-green);
+      }
+      
       /* Loading and Error States */
       .loading-cell, .error-cell {
         text-align: center;
@@ -1257,14 +1269,14 @@ function getHTML() {
                     table.style.display = 'table';
                     emptyState.classList.add('hidden');
                     tbody.innerHTML = data.players.map((player, index) => 
-                        `<tr>
+                        \`<tr>
                             <td class="checkbox-column">
-                                <input type="checkbox" class="player-checkbox" data-player="${player}" onchange="updateBulkActions()">
+                                <input type="checkbox" class="player-checkbox" data-player="\${player}" onchange="updateBulkActions()">
                             </td>
                             <td class="player-name-cell">
                                 <div class="player-info-table">
                                     <span class="player-avatar-small">♟️</span>
-                                    <span class="player-name">${player}</span>
+                                    <span class="player-name">\${player}</span>
                                 </div>
                             </td>
                             <td class="status-cell">
@@ -1276,11 +1288,11 @@ function getHTML() {
                             <td class="last-seen-cell">Just now</td>
                             <td class="games-today-cell">0</td>
                             <td class="actions-cell">
-                                <button class="action-btn alert" onclick="toggleAlert('${player}')">🔔 Alert Me</button>
-                                <button class="action-btn" onclick="viewPlayer('${player}')">View</button>
-                                <button class="action-btn secondary" onclick="removePlayer('${player}')">Remove</button>
+                                <button class="action-btn alert" onclick="toggleAlert('\${player}')">🔔 Alert Me</button>
+                                <button class="action-btn outline" onclick="viewDetails('\${player}')">&#128202; View Details</button>
+                                <button class="action-btn secondary" onclick="removePlayer('\${player}')">Remove</button>
                             </td>
-                        </tr>`
+                        </tr>\`
                     ).join('');
                 }
             } catch (error) {
@@ -1353,25 +1365,30 @@ function getHTML() {
             const checkedBoxes = document.querySelectorAll('.player-checkbox:checked');
             const players = Array.from(checkedBoxes).map(cb => cb.dataset.player);
             
-            if (confirm(`Remove ${players.length} player(s) from monitoring?`)) {
+            if (confirm(\`Remove \${players.length} player(s) from monitoring?\`)) {
                 // TODO: Implement bulk remove API
-                showNotification(`Removed ${players.length} player(s)`, 'success');
+                showNotification(\`Removed \${players.length} player(s)\`, 'success');
                 clearSelection();
                 loadPlayers();
             }
         }
         
         window.removePlayer = async function(username) {
-            if (confirm(`Stop monitoring ${username}?`)) {
+            if (confirm(\`Stop monitoring \${username}?\`)) {
                 // TODO: Implement remove API
-                showNotification(`Stopped monitoring ${username}`, 'success');
+                showNotification(\`Stopped monitoring \${username}\`, 'success');
                 loadPlayers();
             }
         }
         
         window.viewPlayer = function(username) {
             // TODO: Implement player view
-            window.open(`https://www.chess.com/member/${username}`, '_blank');
+            window.open(\`https://www.chess.com/member/\${username}\`, '_blank');
+        }
+        
+        window.viewDetails = function(username) {
+            // Phase 1: Show coming soon notification
+            showNotification('Player details coming soon!', 'info');
         }
         
         window.toggleAlert = function(username) {
@@ -1380,7 +1397,7 @@ function getHTML() {
             let targetButton = null;
             
             buttons.forEach(button => {
-                if (button.getAttribute('onclick') === `toggleAlert('${username}')`) {
+                if (button.getAttribute('onclick') === \`toggleAlert('\${username}')\`) {
                     targetButton = button;
                 }
             });
@@ -1391,9 +1408,9 @@ function getHTML() {
                 
                 // Show appropriate notification
                 if (isActive) {
-                    showNotification(`Alert notifications enabled for ${username}`, 'success');
+                    showNotification(\`Alert notifications enabled for \${username}\`, 'success');
                 } else {
-                    showNotification(`Alert notifications disabled for ${username}`, 'info');
+                    showNotification(\`Alert notifications disabled for \${username}\`, 'info');
                 }
                 
                 // TODO: In the future, this would persist the alert preference to the backend
@@ -1417,7 +1434,7 @@ function getHTML() {
                     this.classList.add(isAsc ? 'sorted-desc' : 'sorted-asc');
                     
                     // TODO: Implement actual sorting logic
-                    console.log(`Sorting by ${sortKey} ${isAsc ? 'desc' : 'asc'}`);
+                    console.log(\`Sorting by \${sortKey} \${isAsc ? 'desc' : 'asc'}\`);
                 });
             });
         });
