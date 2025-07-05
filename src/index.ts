@@ -611,69 +611,215 @@ function getHTML() {
         margin-top: 0;
       }
       
-      /* Player Cards */
-      .players-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: var(--spacing-md);
+      /* Players Table Container */
+      .players-container {
+        margin-top: var(--spacing-lg);
       }
       
-      .player-card {
+      /* Bulk Actions Bar */
+      .bulk-actions {
         background: var(--bg-green-gray);
-        padding: var(--spacing-lg);
+        padding: var(--spacing-md);
         border-radius: var(--radius-md);
-        border: 1px solid var(--border-green);
+        margin-bottom: var(--spacing-md);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .bulk-actions-count {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+      
+      .bulk-actions-buttons {
+        display: flex;
+        gap: var(--spacing-sm);
+      }
+      
+      .bulk-action-btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: var(--primary-green);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
         transition: all 0.2s ease;
       }
       
-      .player-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      .bulk-action-btn:hover {
+        background: var(--primary-green-light);
       }
       
-      .player-info {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
+      .bulk-action-btn.secondary {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-green);
       }
       
-      .player-avatar {
+      .bulk-action-btn.secondary:hover {
+        background: var(--bg-green-gray);
+        color: var(--text-primary);
+      }
+      
+      /* Table Wrapper */
+      .table-wrapper {
+        overflow-x: auto;
+        background: var(--bg-green-gray);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-green);
+      }
+      
+      /* Players Table */
+      .players-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      
+      .players-table thead {
+        background: var(--bg-dark-green);
+        border-bottom: 1px solid var(--border-green);
+      }
+      
+      .players-table th {
+        padding: var(--spacing-md);
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      
+      .players-table th.sortable {
+        cursor: pointer;
+        user-select: none;
+        transition: color 0.2s ease;
+      }
+      
+      .players-table th.sortable:hover {
+        color: var(--primary-green);
+      }
+      
+      .players-table th.sortable::after {
+        content: '↕';
+        margin-left: var(--spacing-xs);
+        opacity: 0.5;
+        font-size: 0.8em;
+      }
+      
+      .players-table th.sortable.sorted-asc::after {
+        content: '↑';
+        opacity: 1;
+      }
+      
+      .players-table th.sortable.sorted-desc::after {
+        content: '↓';
+        opacity: 1;
+      }
+      
+      .players-table tbody tr {
+        border-bottom: 1px solid var(--border-green);
+        transition: background-color 0.2s ease;
+      }
+      
+      .players-table tbody tr:hover {
+        background: rgba(102, 187, 106, 0.1);
+      }
+      
+      .players-table td {
+        padding: var(--spacing-md);
+        color: var(--text-primary);
+      }
+      
+      .checkbox-column {
         width: 40px;
-        height: 40px;
-        background: var(--primary-green);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-        color: white;
+        text-align: center;
       }
       
-      .player-details {
-        flex: 1;
+      .player-info-table {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+      }
+      
+      .player-avatar-small {
+        font-size: 1.2rem;
       }
       
       .player-name {
         color: var(--text-primary);
         font-weight: 600;
-        font-size: 1rem;
-        margin: 0;
       }
       
-      .player-status {
-        color: var(--success-green);
-        font-size: 0.85rem;
-        margin: 0;
-        display: flex;
+      .status-badge {
+        display: inline-flex;
         align-items: center;
         gap: var(--spacing-xs);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        background: rgba(76, 175, 80, 0.2);
+        color: var(--success-green);
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+      
+      .status-badge.inactive {
+        background: rgba(255, 152, 0, 0.2);
+        color: var(--warning-amber);
       }
       
       .status-indicator {
         width: 8px;
         height: 8px;
-        background: var(--success-green);
+        background: currentColor;
         border-radius: 50%;
+      }
+      
+      .actions-cell {
+        text-align: right;
+      }
+      
+      .action-btn {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        margin-left: var(--spacing-xs);
+        background: var(--primary-green);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .action-btn:hover {
+        background: var(--primary-green-light);
+      }
+      
+      .action-btn.secondary {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-green);
+      }
+      
+      .action-btn.secondary:hover {
+        background: var(--bg-green-gray);
+        color: var(--error-red);
+        border-color: var(--error-red);
+      }
+      
+      /* Loading and Error States */
+      .loading-cell, .error-cell {
+        text-align: center;
+        padding: var(--spacing-xl);
+        color: var(--text-secondary);
+      }
+      
+      .error-cell {
+        color: var(--error-red);
       }
       
       .empty-state {
@@ -739,8 +885,18 @@ function getHTML() {
           width: 100%;
         }
         
-        .players-grid {
-          grid-template-columns: 1fr;
+        .players-table {
+          font-size: 0.85rem;
+        }
+        
+        .players-table th,
+        .players-table td {
+          padding: var(--spacing-sm);
+        }
+        
+        .action-btn {
+          padding: var(--spacing-xs);
+          font-size: 0.75rem;
         }
         
         .welcome-card {
@@ -868,9 +1024,44 @@ function getHTML() {
                         </form>
                     </div>
                     
-                    <div id="playersContainer">
-                        <div class="players-grid" id="playersList">
-                            <!-- Players will be loaded here -->
+                    <div class="players-container">
+                        <!-- Bulk Actions Bar -->
+                        <div class="bulk-actions hidden" id="bulkActions">
+                            <span class="bulk-actions-count">
+                                <span id="selectedCount">0</span> selected
+                            </span>
+                            <div class="bulk-actions-buttons">
+                                <button class="bulk-action-btn" onclick="bulkRemove()">Remove Selected</button>
+                                <button class="bulk-action-btn secondary" onclick="clearSelection()">Clear Selection</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Table Wrapper for horizontal scroll -->
+                        <div class="table-wrapper">
+                            <table id="playersTable" class="players-table">
+                                <thead>
+                                    <tr>
+                                        <th class="checkbox-column">
+                                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                        </th>
+                                        <th class="sortable" data-sort="player">Player</th>
+                                        <th class="sortable" data-sort="status">Status</th>
+                                        <th class="sortable" data-sort="lastSeen">Last Seen</th>
+                                        <th class="sortable" data-sort="gamesToday">Games Today</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="playersList">
+                                    <!-- Players will be loaded here -->
+                                </tbody>
+                            </table>
+                            
+                            <!-- Empty State -->
+                            <div class="empty-state hidden" id="emptyState">
+                                <div class="empty-state-icon">♟️</div>
+                                <div class="empty-state-text">No players monitored yet</div>
+                                <div class="empty-state-subtext">Add a Chess.com username above to start tracking</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1025,22 +1216,51 @@ function getHTML() {
         });
         
         async function loadPlayers() {
-            const list = document.getElementById('playersList');
-            list.innerHTML = '<div class="loading">Loading players...</div>';
+            const tbody = document.getElementById('playersList');
+            const emptyState = document.getElementById('emptyState');
+            const table = document.getElementById('playersTable');
+            
+            tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">Loading players...</td></tr>';
             
             try {
                 const response = await fetch('/api/players');
                 const data = await response.json();
                 
                 if (data.players.length === 0) {
-                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">♟️</div><div class="empty-state-text">No players monitored yet</div><div class="empty-state-subtext">Add a Chess.com username above to start tracking</div></div>';
+                    tbody.innerHTML = '';
+                    table.style.display = 'none';
+                    emptyState.classList.remove('hidden');
                 } else {
-                    list.innerHTML = data.players.map(player => 
-                        '<div class="player-card"><div class="player-info"><div class="player-avatar">♟️</div><div class="player-details"><div class="player-name">' + player + '</div><div class="player-status"><span class="status-indicator"></span>Monitoring active</div></div></div></div>'
+                    table.style.display = 'table';
+                    emptyState.classList.add('hidden');
+                    tbody.innerHTML = data.players.map((player, index) => 
+                        `<tr>
+                            <td class="checkbox-column">
+                                <input type="checkbox" class="player-checkbox" data-player="${player}" onchange="updateBulkActions()">
+                            </td>
+                            <td class="player-name-cell">
+                                <div class="player-info-table">
+                                    <span class="player-avatar-small">♟️</span>
+                                    <span class="player-name">${player}</span>
+                                </div>
+                            </td>
+                            <td class="status-cell">
+                                <span class="status-badge active">
+                                    <span class="status-indicator"></span>
+                                    Active
+                                </span>
+                            </td>
+                            <td class="last-seen-cell">Just now</td>
+                            <td class="games-today-cell">0</td>
+                            <td class="actions-cell">
+                                <button class="action-btn" onclick="viewPlayer('${player}')">View</button>
+                                <button class="action-btn secondary" onclick="removePlayer('${player}')">Remove</button>
+                            </td>
+                        </tr>`
                     ).join('');
                 }
             } catch (error) {
-                list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div class="empty-state-text">Error loading players</div><div class="empty-state-subtext">Please try refreshing the page</div></div>';
+                tbody.innerHTML = '<tr><td colspan="6" class="error-cell">❌ Error loading players. Please try refreshing the page.</td></tr>';
             }
         }
         
@@ -1075,6 +1295,81 @@ function getHTML() {
             } finally {
                 setButtonLoading(button, false, 'Start Monitoring');
             }
+        });
+        
+        // Table functionality functions (added to window for global access)
+        window.toggleSelectAll = function() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.player-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateBulkActions();
+        }
+        
+        window.updateBulkActions = function() {
+            const checkedBoxes = document.querySelectorAll('.player-checkbox:checked');
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (checkedBoxes.length > 0) {
+                bulkActions.classList.remove('hidden');
+                selectedCount.textContent = checkedBoxes.length;
+            } else {
+                bulkActions.classList.add('hidden');
+                document.getElementById('selectAll').checked = false;
+            }
+        }
+        
+        window.clearSelection = function() {
+            document.getElementById('selectAll').checked = false;
+            document.querySelectorAll('.player-checkbox').forEach(cb => cb.checked = false);
+            updateBulkActions();
+        }
+        
+        window.bulkRemove = async function() {
+            const checkedBoxes = document.querySelectorAll('.player-checkbox:checked');
+            const players = Array.from(checkedBoxes).map(cb => cb.dataset.player);
+            
+            if (confirm(`Remove ${players.length} player(s) from monitoring?`)) {
+                // TODO: Implement bulk remove API
+                showNotification(`Removed ${players.length} player(s)`, 'success');
+                clearSelection();
+                loadPlayers();
+            }
+        }
+        
+        window.removePlayer = async function(username) {
+            if (confirm(`Stop monitoring ${username}?`)) {
+                // TODO: Implement remove API
+                showNotification(`Stopped monitoring ${username}`, 'success');
+                loadPlayers();
+            }
+        }
+        
+        window.viewPlayer = function(username) {
+            // TODO: Implement player view
+            window.open(`https://www.chess.com/member/${username}`, '_blank');
+        }
+        
+        // Table sorting
+        document.addEventListener('DOMContentLoaded', function() {
+            const sortableHeaders = document.querySelectorAll('.sortable');
+            sortableHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const sortKey = this.dataset.sort;
+                    const isAsc = this.classList.contains('sorted-asc');
+                    
+                    // Remove sorting classes from all headers
+                    sortableHeaders.forEach(h => {
+                        h.classList.remove('sorted-asc', 'sorted-desc');
+                    });
+                    
+                    // Add appropriate class to clicked header
+                    this.classList.add(isAsc ? 'sorted-desc' : 'sorted-asc');
+                    
+                    // TODO: Implement actual sorting logic
+                    console.log(`Sorting by ${sortKey} ${isAsc ? 'desc' : 'asc'}`);
+                });
+            });
         });
         
         // Initialize on page load
