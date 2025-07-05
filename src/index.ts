@@ -710,12 +710,12 @@ function getHTML() {
         font-size: 0.8em;
       }
       
-      .players-table th.sortable.sorted-asc::after {
+      .players-table th.sortable.sort-asc::after {
         content: '↑';
         opacity: 1;
       }
       
-      .players-table th.sortable.sorted-desc::after {
+      .players-table th.sortable.sort-desc::after {
         content: '↓';
         opacity: 1;
       }
@@ -1109,6 +1109,10 @@ function getHTML() {
         let currentToken = localStorage.getItem('authToken');
         let currentUser = localStorage.getItem('currentUser');
         
+        // Sorting state variables
+        let currentSortColumn = 'player';
+        let currentSortDirection = 'asc';
+        
         // Initialize UI based on auth state
         function initAuth() {
             if (currentToken) {
@@ -1250,12 +1254,80 @@ function getHTML() {
             }
         });
         
+        // Helper function to get player status as numeric value for sorting
+        function getPlayerStatus(player) {
+            // For now, all players are shown as active
+            // In the future: 0 = offline, 1 = online, 2 = playing
+            return 1;
+        }
+        
+        // Helper function to format last seen date
+        function formatLastSeen(lastSeenDate) {
+            if (!lastSeenDate) return 'Just now';
+            
+            const now = new Date();
+            const seen = new Date(lastSeenDate);
+            const diffMs = now - seen;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return \`\${diffMins}m ago\`;
+            if (diffHours < 24) return \`\${diffHours}h ago\`;
+            return \`\${diffDays}d ago\`;
+        }
+        
+        // Main sorting function
+        function sortPlayers(players, column, direction) {
+            return [...players].sort((a, b) => {
+                let aVal, bVal;
+                
+                switch (column) {
+                    case 'player':
+                        aVal = a.toLowerCase();
+                        bVal = b.toLowerCase();
+                        break;
+                    case 'status':
+                        // Mock data for now - in future this would come from player objects
+                        aVal = getPlayerStatus(a);
+                        bVal = getPlayerStatus(b);
+                        break;
+                    case 'lastSeen':
+                        // Mock data - all players are "Just now" for now
+                        aVal = new Date();
+                        bVal = new Date();
+                        break;
+                    case 'gamesToday':
+                        // Mock data - all players have 0 games for now
+                        aVal = 0;
+                        bVal = 0;
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        
         async function loadPlayers() {
             const tbody = document.getElementById('playersList');
             const emptyState = document.getElementById('emptyState');
             const table = document.getElementById('playersTable');
             
             tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">Loading players...</td></tr>';
+            
+            // Update sort indicators
+            const sortableHeaders = document.querySelectorAll('.sortable');
+            sortableHeaders.forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+                if (header.dataset.sort === currentSortColumn) {
+                    header.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
             
             try {
                 const response = await fetch('/api/players');
@@ -1268,7 +1340,11 @@ function getHTML() {
                 } else {
                     table.style.display = 'table';
                     emptyState.classList.add('hidden');
-                    tbody.innerHTML = data.players.map((player, index) => 
+                    
+                    // Sort players based on current sort settings
+                    const sortedPlayers = sortPlayers(data.players, currentSortColumn, currentSortDirection);
+                    
+                    tbody.innerHTML = sortedPlayers.map((player, index) => 
                         \`<tr>
                             <td class="checkbox-column">
                                 <input type="checkbox" class="player-checkbox" data-player="\${player}" onchange="updateBulkActions()">
@@ -1423,18 +1499,26 @@ function getHTML() {
             sortableHeaders.forEach(header => {
                 header.addEventListener('click', function() {
                     const sortKey = this.dataset.sort;
-                    const isAsc = this.classList.contains('sorted-asc');
+                    
+                    // If clicking the same column, toggle direction
+                    if (currentSortColumn === sortKey) {
+                        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        // If clicking a different column, reset to ascending
+                        currentSortColumn = sortKey;
+                        currentSortDirection = 'asc';
+                    }
                     
                     // Remove sorting classes from all headers
                     sortableHeaders.forEach(h => {
-                        h.classList.remove('sorted-asc', 'sorted-desc');
+                        h.classList.remove('sort-asc', 'sort-desc');
                     });
                     
                     // Add appropriate class to clicked header
-                    this.classList.add(isAsc ? 'sorted-desc' : 'sorted-asc');
+                    this.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
                     
-                    // TODO: Implement actual sorting logic
-                    console.log(\`Sorting by \${sortKey} \${isAsc ? 'desc' : 'asc'}\`);
+                    // Re-render the table with sorted data
+                    loadPlayers();
                 });
             });
         });
