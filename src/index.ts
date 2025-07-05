@@ -1082,7 +1082,6 @@ function getHTML() {
                 
                 <div class="tracking-section">
                     <div class="section-header">
-                        <span class="section-icon">👥</span>
                         <h2 class="section-title">Player Tracking</h2>
                     </div>
                     
@@ -1130,7 +1129,7 @@ function getHTML() {
                             
                             <!-- Empty State -->
                             <div class="empty-state hidden" id="emptyState">
-                                <div class="empty-state-icon">♟️</div>
+                                <div class="empty-state-icon"></div>
                                 <div class="empty-state-text">No players monitored yet</div>
                                 <div class="empty-state-subtext">Add a Chess.com username above to start tracking</div>
                             </div>
@@ -1382,7 +1381,7 @@ function getHTML() {
                             </td>
                             <td class="actions-cell">
                                 <div class="action-buttons">
-                                    <button class="action-btn outline" onclick="viewDetails('\${player}')">📊 View Details</button>
+                                    <button class="action-btn outline" onclick="viewDetails('\${player}')">View Details</button>
                                     <button class="action-btn secondary" onclick="removePlayer('\${player}')">Remove</button>
                                 </div>
                             </td>
@@ -1390,7 +1389,7 @@ function getHTML() {
                     ).join('');
                 }
             } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="5" class="error-cell">❌ Error loading players. Please try refreshing the page.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="error-cell">Error loading players. Please try refreshing the page.</td></tr>';
             }
         }
         
