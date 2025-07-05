@@ -1108,7 +1108,6 @@ function getHTML() {
                                         <th class="sortable" data-sort="player">Player</th>
                                         <th class="sortable" data-sort="status">Status</th>
                                         <th class="sortable" data-sort="lastSeen">Last Seen</th>
-                                        <th class="sortable" data-sort="gamesToday">Games Today</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -1324,11 +1323,6 @@ function getHTML() {
                         aVal = new Date();
                         bVal = new Date();
                         break;
-                    case 'gamesToday':
-                        // Mock data - all players have 0 games for now
-                        aVal = 0;
-                        bVal = 0;
-                        break;
                     default:
                         return 0;
                 }
@@ -1388,7 +1382,6 @@ function getHTML() {
                                 </span>
                             </td>
                             <td class="last-seen-cell">Just now</td>
-                            <td class="games-today-cell">0</td>
                             <td class="actions-cell">
                                 <div class="action-buttons">
                                     <button class="action-btn alert" onclick="toggleAlert('\${player}')">🔔 Alert Me</button>
@@ -1400,7 +1393,7 @@ function getHTML() {
                     ).join('');
                 }
             } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="6" class="error-cell">❌ Error loading players. Please try refreshing the page.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="error-cell">❌ Error loading players. Please try refreshing the page.</td></tr>';
             }
         }
         
