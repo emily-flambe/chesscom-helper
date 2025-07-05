@@ -55,7 +55,7 @@ async function validateChessComUser(username: string): Promise<{ exists: boolean
   try {
     const normalizedUsername = username.toLowerCase()
     const response = await fetch(`https://api.chess.com/pub/player/${normalizedUsername}`, {
-      headers: { 'User-Agent': 'Chess.com-Helper/1.0' }
+      headers: { 'User-Agent': 'Chesscom-Helper/1.0' }
     })
     
     if (response.status === 200) {
@@ -80,7 +80,7 @@ export default {
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({ 
         status: 'ok', 
-        message: 'Chess.com Helper running with D1'
+        message: 'Chesscom Helper running with D1'
       }), {
         headers: { 'Content-Type': 'application/json' }
       })
@@ -223,23 +223,6 @@ export default {
       }
     }
     
-    // Favicon
-    if (url.pathname === '/favicon.png') {
-      try {
-        const faviconFile = await fetch('https://raw.githubusercontent.com/emily-flambe/chesscom-helper/feature/development/majestic-knight.png')
-        if (faviconFile.ok) {
-          return new Response(faviconFile.body, {
-            headers: { 
-              'Content-Type': 'image/png',
-              'Cache-Control': 'public, max-age=86400'
-            }
-          })
-        }
-      } catch (error) {
-        console.error('Error fetching favicon:', error)
-      }
-      return new Response('Not Found', { status: 404 })
-    }
     
     // Main page
     if (url.pathname === '/') {
@@ -256,10 +239,10 @@ function getHTML() {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Chess.com Helper</title>
+    <title>Chesscom Helper</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="icon" type="image/png" href="/majestic-knight-small.png">
     <style>
       /* CSS Variables for Green Color Palette */
       :root {
@@ -344,7 +327,9 @@ function getHTML() {
       }
       
       .logo-icon {
-        font-size: 1.5rem;
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
       }
       
       .nav-user {
@@ -998,8 +983,8 @@ function getHTML() {
     <header class="header">
         <div class="header-content">
             <a href="/" class="logo">
-                <span class="logo-icon">♚</span>
-                <span>Chess Helper</span>
+                <img src="/majestic-knight-small.png" alt="Chesscom Helper" class="logo-icon">
+                <span>Chesscom Helper</span>
             </a>
             
             <!-- Navigation for unauthenticated users -->
@@ -1025,7 +1010,7 @@ function getHTML() {
             <!-- Authentication Section -->
             <section id="authSection" class="auth-container">
                 <div class="auth-header">
-                    <h1 class="auth-title">Welcome to Chess Helper</h1>
+                    <h1 class="auth-title">Welcome to Chesscom Helper</h1>
                     <p class="auth-subtitle">Track your favorite Chess.com players</p>
                 </div>
                 
@@ -1111,6 +1096,7 @@ function getHTML() {
                                         </th>
                                         <th class="sortable" data-sort="player">Player</th>
                                         <th class="sortable" data-sort="lastSeen">Last Seen on Chess.com</th>
+                                        <th>Alerts</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -1210,9 +1196,8 @@ function getHTML() {
         
         // Show toast notifications (placeholder for now)
         function showNotification(message, type = 'info') {
-            // For now, still using alert - can be enhanced with toast UI later
-            const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
-            alert(emoji + ' ' + message);
+            // Notifications disabled - no popups
+            console.log(\`[\${type.toUpperCase()}] \${message}\`);
         }
         
         // Auth form handlers
@@ -1362,14 +1347,18 @@ function getHTML() {
                             </td>
                             <td class="player-name-cell">
                                 <div class="player-info-table">
-                                    <span class="player-avatar-small">♟️</span>
                                     <span class="player-name">\${player}</span>
                                 </div>
                             </td>
                             <td class="last-seen-cell">Just now</td>
+                            <td class="alerts-cell">
+                                <span class="status-badge">
+                                    <span class="status-indicator"></span>
+                                    Enabled
+                                </span>
+                            </td>
                             <td class="actions-cell">
                                 <div class="action-buttons">
-                                    <button class="action-btn alert" onclick="toggleAlert('\${player}')">🔔 Alert Me</button>
                                     <button class="action-btn outline" onclick="viewDetails('\${player}')">📊 View Details</button>
                                     <button class="action-btn secondary" onclick="removePlayer('\${player}')">Remove</button>
                                 </div>
@@ -1378,7 +1367,7 @@ function getHTML() {
                     ).join('');
                 }
             } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="4" class="error-cell">❌ Error loading players. Please try refreshing the page.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="error-cell">❌ Error loading players. Please try refreshing the page.</td></tr>';
             }
         }
         
@@ -1447,20 +1436,16 @@ function getHTML() {
             const checkedBoxes = document.querySelectorAll('.player-checkbox:checked');
             const players = Array.from(checkedBoxes).map(cb => cb.dataset.player);
             
-            if (confirm(\`Remove \${players.length} player(s) from monitoring?\`)) {
-                // TODO: Implement bulk remove API
-                showNotification(\`Removed \${players.length} player(s)\`, 'success');
-                clearSelection();
-                loadPlayers();
-            }
+            // TODO: Implement bulk remove API
+            showNotification(\`Removed \${players.length} player(s)\`, 'success');
+            clearSelection();
+            loadPlayers();
         }
         
         window.removePlayer = async function(username) {
-            if (confirm(\`Stop monitoring \${username}?\`)) {
-                // TODO: Implement remove API
-                showNotification(\`Stopped monitoring \${username}\`, 'success');
-                loadPlayers();
-            }
+            // TODO: Implement remove API
+            showNotification(\`Stopped monitoring \${username}\`, 'success');
+            loadPlayers();
         }
         
         
