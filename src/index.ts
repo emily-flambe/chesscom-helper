@@ -332,6 +332,26 @@ function getHTML() {
         object-fit: contain;
       }
       
+      .logo-text {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.2;
+      }
+      
+      .logo-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary-green);
+      }
+      
+      .logo-tagline {
+        font-size: 0.75rem;
+        font-style: italic;
+        color: var(--text-secondary);
+        margin-top: -2px;
+      }
+      
       .nav-user {
         display: flex;
         align-items: center;
@@ -984,7 +1004,10 @@ function getHTML() {
         <div class="header-content">
             <a href="/" class="logo">
                 <img src="/majestic-knight-small.png" alt="Chesscom Helper" class="logo-icon">
-                <span>Chesscom Helper</span>
+                <div class="logo-text">
+                    <span class="logo-title">Chesscom Helper</span>
+                    <span class="logo-tagline">your chess.com friend</span>
+                </div>
             </a>
             
             <!-- Navigation for unauthenticated users -->
