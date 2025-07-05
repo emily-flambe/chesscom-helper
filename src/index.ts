@@ -811,6 +811,29 @@ function getHTML() {
         border-color: var(--error-red);
       }
       
+      .action-btn.alert {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-gray);
+      }
+      
+      .action-btn.alert:hover {
+        background: var(--bg-green-gray);
+        color: var(--primary-green);
+        border-color: var(--primary-green);
+      }
+      
+      .action-btn.alert.active {
+        background: var(--primary-green);
+        color: white;
+        border-color: var(--primary-green);
+      }
+      
+      .action-btn.alert.active:hover {
+        background: var(--primary-green-light);
+        border-color: var(--primary-green-light);
+      }
+      
       /* Loading and Error States */
       .loading-cell, .error-cell {
         text-align: center;
@@ -1253,6 +1276,7 @@ function getHTML() {
                             <td class="last-seen-cell">Just now</td>
                             <td class="games-today-cell">0</td>
                             <td class="actions-cell">
+                                <button class="action-btn alert" onclick="toggleAlert('${player}')">🔔 Alert Me</button>
                                 <button class="action-btn" onclick="viewPlayer('${player}')">View</button>
                                 <button class="action-btn secondary" onclick="removePlayer('${player}')">Remove</button>
                             </td>
@@ -1348,6 +1372,32 @@ function getHTML() {
         window.viewPlayer = function(username) {
             // TODO: Implement player view
             window.open(`https://www.chess.com/member/${username}`, '_blank');
+        }
+        
+        window.toggleAlert = function(username) {
+            // Find the alert button for this player
+            const buttons = document.querySelectorAll('.action-btn.alert');
+            let targetButton = null;
+            
+            buttons.forEach(button => {
+                if (button.getAttribute('onclick') === `toggleAlert('${username}')`) {
+                    targetButton = button;
+                }
+            });
+            
+            if (targetButton) {
+                // Toggle the active class
+                const isActive = targetButton.classList.toggle('active');
+                
+                // Show appropriate notification
+                if (isActive) {
+                    showNotification(`Alert notifications enabled for ${username}`, 'success');
+                } else {
+                    showNotification(`Alert notifications disabled for ${username}`, 'info');
+                }
+                
+                // TODO: In the future, this would persist the alert preference to the backend
+            }
         }
         
         // Table sorting
