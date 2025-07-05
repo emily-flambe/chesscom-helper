@@ -224,6 +224,19 @@ export default {
     }
     
     
+    // Serve the knight image
+    if (url.pathname === '/majestic-knight-small.png') {
+      // For now, redirect to a hosted version or return a simple placeholder
+      // In production, this would be served from your CDN or static hosting
+      return new Response('', {
+        status: 302,
+        headers: {
+          'Location': 'https://raw.githubusercontent.com/emily-flambe/chesscom-helper/feature/ui-overhaul-green-theme/public/majestic-knight-small.png',
+          'Cache-Control': 'public, max-age=86400'
+        }
+      })
+    }
+    
     // Main page
     if (url.pathname === '/') {
       return new Response(getHTML(), {
