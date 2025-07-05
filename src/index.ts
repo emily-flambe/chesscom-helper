@@ -1,233 +1,83 @@
+import { Router } from 'itty-router'
+import { authRoutes } from './routes/auth'
+import { userRoutes } from './routes/users'
+import { monitoringRoutes } from './routes/monitoring'
+import { notificationRoutes } from './routes/notifications'
+import { authenticateUser } from './middleware/auth'
+
 export interface Env {
   DB: D1Database
   JWT_SECRET: string
   ENVIRONMENT?: string
+  CHESS_COM_API_URL?: string
 }
 
-// Simple password hashing using Web Crypto API
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-}
+// Create main router
+const router = Router()
 
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const passwordHash = await hashPassword(password)
-  return passwordHash === hash
-}
+// Health check route
+router.get('/health', () => {
+  return new Response(JSON.stringify({ 
+    status: 'ok', 
+    message: 'Chesscom Helper running with secure architecture'
+  }), {
+    headers: { 'Content-Type': 'application/json' }
+  })
+})
 
-// Simple JWT creation
-async function createJWT(userId: string, secret: string): Promise<string> {
-  const header = { alg: 'HS256', typ: 'JWT' }
-  const payload = { sub: userId, exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) } // 7 days
+// Legacy API compatibility - redirect to proper endpoints with auth
+router.get('/api/players', async (request: Request, env: Env) => {
+  const authResult = await authenticateUser(request, env)
+  if (authResult) return authResult
   
-  const headerB64 = btoa(JSON.stringify(header))
-  const payloadB64 = btoa(JSON.stringify(payload))
-  const message = `${headerB64}.${payloadB64}`
-  
-  const encoder = new TextEncoder()
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  )
-  
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(message))
-  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-  
-  return `${message}.${signatureB64}`
-}
+  // Forward to proper user subscriptions endpoint
+  return router.handle(new Request(new URL('/api/v1/users/me/subscriptions', request.url), {
+    method: 'GET',
+    headers: request.headers
+  }), env)
+})
 
-// Generate secure ID
-function generateId(): string {
-  return crypto.randomUUID()
-}
+router.post('/api/monitor', async (request: Request, env: Env) => {
+  const authResult = await authenticateUser(request, env)
+  if (authResult) return authResult
+  
+  // Forward to proper user subscriptions endpoint
+  return router.handle(new Request(new URL('/api/v1/users/me/subscriptions', request.url), {
+    method: 'POST',
+    headers: request.headers,
+    body: JSON.stringify(await request.json())
+  }), env)
+})
 
-// In-memory storage for monitored players (will be moved to D1 later)
-const monitoredPlayers: string[] = []
-
-// Chess.com validation
-async function validateChessComUser(username: string): Promise<{ exists: boolean, data?: any }> {
-  try {
-    const normalizedUsername = username.toLowerCase()
-    const response = await fetch(`https://api.chess.com/pub/player/${normalizedUsername}`, {
-      headers: { 'User-Agent': 'Chesscom-Helper/1.0' }
-    })
-    
-    if (response.status === 200) {
-      const data = await response.json()
-      return { exists: true, data }
-    } else if (response.status === 404) {
-      return { exists: false }
-    }
-    
-    return { exists: true }
-  } catch (error) {
-    console.error('Chess.com API error:', error)
-    return { exists: true }
-  }
-}
+// Mount secure routers with authentication
+router.all('/api/v1/auth/*', authRoutes.handle)
+router.all('/api/v1/users/*', async (request: Request, env: Env) => {
+  const authResult = await authenticateUser(request, env)
+  if (authResult) return authResult
+  return userRoutes.handle(request, env)
+})
+router.all('/api/v1/monitoring/*', async (request: Request, env: Env) => {
+  const authResult = await authenticateUser(request, env)
+  if (authResult) return authResult
+  return monitoringRoutes.handle(request, env)
+})
+router.all('/api/v1/notifications/*', async (request: Request, env: Env) => {
+  const authResult = await authenticateUser(request, env)
+  if (authResult) return authResult
+  return notificationRoutes.handle(request, env)
+})
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    // Try router first
+    const response = await router.handle(request, env)
+    if (response) return response
+    
+    
     const url = new URL(request.url)
-    
-    // Health check
-    if (url.pathname === '/health') {
-      return new Response(JSON.stringify({ 
-        status: 'ok', 
-        message: 'Chesscom Helper running with D1'
-      }), {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
-    
-    // User Registration
-    if (url.pathname === '/api/auth/register' && request.method === 'POST') {
-      try {
-        const body = await request.json() as { email: string, password: string }
-        
-        if (!body.email || !body.password) {
-          return new Response(JSON.stringify({ error: 'Email and password required' }), 
-            { status: 400, headers: { 'Content-Type': 'application/json' } })
-        }
-        
-        // Check if user exists
-        const existingUser = await env.DB.prepare(`
-          SELECT id FROM users WHERE email = ?
-        `).bind(body.email).first()
-        
-        if (existingUser) {
-          return new Response(JSON.stringify({ error: 'User already exists' }), 
-            { status: 400, headers: { 'Content-Type': 'application/json' } })
-        }
-        
-        // Create user
-        const userId = generateId()
-        const passwordHash = await hashPassword(body.password)
-        const now = new Date().toISOString()
-        
-        await env.DB.prepare(`
-          INSERT INTO users (id, email, password_hash, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?)
-        `).bind(userId, body.email, passwordHash, now, now).run()
-        
-        // Create JWT
-        const token = await createJWT(userId, env.JWT_SECRET)
-        
-        return new Response(JSON.stringify({ 
-          success: true, 
-          token, 
-          email: body.email,
-          userId
-        }), { headers: { 'Content-Type': 'application/json' } })
-        
-      } catch (error) {
-        console.error('Registration error:', error)
-        return new Response(JSON.stringify({ error: 'Registration failed' }), 
-          { status: 500, headers: { 'Content-Type': 'application/json' } })
-      }
-    }
-
-    // User Login
-    if (url.pathname === '/api/auth/login' && request.method === 'POST') {
-      try {
-        const body = await request.json() as { email: string, password: string }
-        
-        if (!body.email || !body.password) {
-          return new Response(JSON.stringify({ error: 'Email and password required' }), 
-            { status: 400, headers: { 'Content-Type': 'application/json' } })
-        }
-        
-        // Get user
-        const user = await env.DB.prepare(`
-          SELECT id, email, password_hash FROM users WHERE email = ?
-        `).bind(body.email).first()
-        
-        if (!user) {
-          return new Response(JSON.stringify({ error: 'Invalid credentials' }), 
-            { status: 401, headers: { 'Content-Type': 'application/json' } })
-        }
-        
-        // Verify password
-        const isValid = await verifyPassword(body.password, user.password_hash as string)
-        if (!isValid) {
-          return new Response(JSON.stringify({ error: 'Invalid credentials' }), 
-            { status: 401, headers: { 'Content-Type': 'application/json' } })
-        }
-        
-        // Create JWT
-        const token = await createJWT(user.id as string, env.JWT_SECRET)
-        
-        return new Response(JSON.stringify({ 
-          success: true, 
-          token, 
-          user: { id: user.id, email: user.email }
-        }), { headers: { 'Content-Type': 'application/json' } })
-        
-      } catch (error) {
-        console.error('Login error:', error)
-        return new Response(JSON.stringify({ error: 'Login failed' }), 
-          { status: 500, headers: { 'Content-Type': 'application/json' } })
-      }
-    }
-
-    // Get players API
-    if (url.pathname === '/api/players' && request.method === 'GET') {
-      return new Response(JSON.stringify({ 
-        players: monitoredPlayers,
-        count: monitoredPlayers.length
-      }), {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
-
-    // Monitor player API
-    if (url.pathname === '/api/monitor' && request.method === 'POST') {
-      try {
-        const body = await request.json() as { username: string }
-        
-        if (!body.username || body.username.length < 3) {
-          return new Response(JSON.stringify({ error: 'Invalid username' }), 
-            { status: 400, headers: { 'Content-Type': 'application/json' } })
-        }
-        
-        if (monitoredPlayers.includes(body.username)) {
-          return new Response(JSON.stringify({ error: `Already monitoring ${body.username}` }), 
-            { status: 400, headers: { 'Content-Type': 'application/json' } })
-        }
-        
-        // Validate user exists on Chess.com
-        const validation = await validateChessComUser(body.username)
-        if (!validation.exists) {
-          return new Response(JSON.stringify({ 
-            error: `User "${body.username}" not found on Chess.com. Try the exact username (e.g., "MagnusCarlsen" instead of "Magnus")` 
-          }), { status: 404, headers: { 'Content-Type': 'application/json' } })
-        }
-        
-        monitoredPlayers.push(body.username)
-        
-        return new Response(JSON.stringify({ 
-          success: true,
-          message: `Started monitoring ${body.username}`,
-          username: body.username
-        }), { headers: { 'Content-Type': 'application/json' } })
-        
-      } catch (error) {
-        return new Response(JSON.stringify({ error: 'Invalid request' }), 
-          { status: 400, headers: { 'Content-Type': 'application/json' } })
-      }
-    }
-    
     
     // Serve the knight image
     if (url.pathname === '/majestic-knight-small.png') {
-      // For now, redirect to a hosted version or return a simple placeholder
-      // In production, this would be served from your CDN or static hosting
       return new Response('', {
         status: 302,
         headers: {
