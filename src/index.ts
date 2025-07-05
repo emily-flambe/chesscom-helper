@@ -1106,8 +1106,7 @@ function getHTML() {
                                             <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
                                         </th>
                                         <th class="sortable" data-sort="player">Player</th>
-                                        <th class="sortable" data-sort="status">Status</th>
-                                        <th class="sortable" data-sort="lastSeen">Last Seen</th>
+                                        <th class="sortable" data-sort="lastSeen">Last Seen on Chess.com</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -1279,13 +1278,6 @@ function getHTML() {
             }
         });
         
-        // Helper function to get player status as numeric value for sorting
-        function getPlayerStatus(player) {
-            // For now, all players are shown as active
-            // In the future: 0 = offline, 1 = online, 2 = playing
-            return 1;
-        }
-        
         // Helper function to format last seen date
         function formatLastSeen(lastSeenDate) {
             if (!lastSeenDate) return 'Just now';
@@ -1312,11 +1304,6 @@ function getHTML() {
                     case 'player':
                         aVal = a.toLowerCase();
                         bVal = b.toLowerCase();
-                        break;
-                    case 'status':
-                        // Mock data for now - in future this would come from player objects
-                        aVal = getPlayerStatus(a);
-                        bVal = getPlayerStatus(b);
                         break;
                     case 'lastSeen':
                         // Mock data - all players are "Just now" for now
@@ -1375,12 +1362,6 @@ function getHTML() {
                                     <span class="player-name">\${player}</span>
                                 </div>
                             </td>
-                            <td class="status-cell">
-                                <span class="status-badge active">
-                                    <span class="status-indicator"></span>
-                                    Active
-                                </span>
-                            </td>
                             <td class="last-seen-cell">Just now</td>
                             <td class="actions-cell">
                                 <div class="action-buttons">
@@ -1393,7 +1374,7 @@ function getHTML() {
                     ).join('');
                 }
             } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="5" class="error-cell">❌ Error loading players. Please try refreshing the page.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="error-cell">❌ Error loading players. Please try refreshing the page.</td></tr>';
             }
         }
         
