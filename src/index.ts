@@ -403,7 +403,7 @@ function getHTML() {
       }
       
       .container {
-        max-width: 800px;
+        max-width: 1200px;
         margin: 0 auto;
         width: 100%;
         display: flex;
@@ -684,11 +684,11 @@ function getHTML() {
       }
       
       .players-table th {
-        padding: var(--spacing-md);
+        padding: var(--spacing-md) var(--spacing-lg);
         text-align: left;
         font-weight: 600;
         color: var(--text-secondary);
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
@@ -730,8 +730,9 @@ function getHTML() {
       }
       
       .players-table td {
-        padding: var(--spacing-md);
+        padding: var(--spacing-md) var(--spacing-lg);
         color: var(--text-primary);
+        font-size: 0.95rem;
       }
       
       .checkbox-column {
@@ -762,7 +763,7 @@ function getHTML() {
         background: rgba(76, 175, 80, 0.2);
         color: var(--success-green);
         border-radius: var(--radius-sm);
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         font-weight: 500;
       }
       
@@ -780,19 +781,31 @@ function getHTML() {
       
       .actions-cell {
         text-align: right;
+        min-width: 320px;
+      }
+      
+      /* Action Buttons Container */
+      .action-buttons {
+        display: flex;
+        gap: var(--spacing-xs);
+        justify-content: flex-end;
+        flex-wrap: nowrap;
       }
       
       .action-btn {
-        padding: var(--spacing-xs) var(--spacing-sm);
-        margin-left: var(--spacing-xs);
+        padding: 6px 10px;
         background: var(--primary-green);
         color: white;
         border: none;
         border-radius: var(--radius-sm);
-        font-size: 0.85rem;
+        font-size: 0.875rem;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s ease;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
       }
       
       .action-btn:hover {
@@ -886,6 +899,19 @@ function getHTML() {
       
       .loading {
         opacity: 0.6;
+      }
+      
+      /* Wide Screen Enhancements */
+      @media (min-width: 1200px) {
+        .players-table th,
+        .players-table td {
+          padding: var(--spacing-lg) var(--spacing-xl);
+        }
+        
+        .action-btn {
+          padding: 8px 16px;
+          font-size: 0.9rem;
+        }
       }
       
       /* Responsive Design */
@@ -1364,9 +1390,11 @@ function getHTML() {
                             <td class="last-seen-cell">Just now</td>
                             <td class="games-today-cell">0</td>
                             <td class="actions-cell">
-                                <button class="action-btn alert" onclick="toggleAlert('\${player}')">🔔 Alert Me</button>
-                                <button class="action-btn outline" onclick="viewDetails('\${player}')">&#128202; View Details</button>
-                                <button class="action-btn secondary" onclick="removePlayer('\${player}')">Remove</button>
+                                <div class="action-buttons">
+                                    <button class="action-btn alert" onclick="toggleAlert('\${player}')">🔔 Alert Me</button>
+                                    <button class="action-btn outline" onclick="viewDetails('\${player}')">📊 View Details</button>
+                                    <button class="action-btn secondary" onclick="removePlayer('\${player}')">Remove</button>
+                                </div>
                             </td>
                         </tr>\`
                     ).join('');
@@ -1457,10 +1485,6 @@ function getHTML() {
             }
         }
         
-        window.viewPlayer = function(username) {
-            // TODO: Implement player view
-            window.open(\`https://www.chess.com/member/\${username}\`, '_blank');
-        }
         
         window.viewDetails = function(username) {
             // Phase 1: Show coming soon notification
