@@ -1006,7 +1006,7 @@ function getHTML() {
                 <img src="/majestic-knight-small.png" alt="Chesscom Helper" class="logo-icon">
                 <div class="logo-text">
                     <span class="logo-title">Chesscom Helper</span>
-                    <span class="logo-tagline">your chess.com friend</span>
+                    <span class="logo-tagline">your chesstest friend</span>
                 </div>
             </a>
             
