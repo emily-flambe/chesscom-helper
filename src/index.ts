@@ -403,7 +403,7 @@ function getHTML() {
       }
       
       .container {
-        max-width: 1200px;
+        max-width: 1000px;
         margin: 0 auto;
         width: 100%;
         display: flex;
@@ -780,25 +780,26 @@ function getHTML() {
       }
       
       .actions-cell {
-        text-align: right;
-        min-width: 320px;
+        text-align: left;
+        min-width: 280px;
+        padding-left: var(--spacing-md);
       }
       
       /* Action Buttons Container */
       .action-buttons {
         display: flex;
         gap: var(--spacing-xs);
-        justify-content: flex-end;
+        justify-content: flex-start;
         flex-wrap: nowrap;
       }
       
       .action-btn {
-        padding: 6px 10px;
+        padding: 6px 12px;
         background: var(--primary-green);
         color: white;
         border: none;
         border-radius: var(--radius-sm);
-        font-size: 0.875rem;
+        font-size: 0.85rem;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s ease;
@@ -806,6 +807,8 @@ function getHTML() {
         display: inline-flex;
         align-items: center;
         gap: 4px;
+        min-width: 85px;
+        justify-content: center;
       }
       
       .action-btn:hover {
@@ -902,15 +905,16 @@ function getHTML() {
       }
       
       /* Wide Screen Enhancements */
-      @media (min-width: 1200px) {
+      @media (min-width: 1000px) {
         .players-table th,
         .players-table td {
-          padding: var(--spacing-lg) var(--spacing-xl);
+          padding: var(--spacing-lg);
         }
         
         .action-btn {
           padding: 8px 16px;
-          font-size: 0.9rem;
+          font-size: 0.875rem;
+          min-width: 90px;
         }
       }
       
