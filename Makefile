@@ -86,6 +86,10 @@ db-reset: ## ⚠️  Reset local database (destructive)
 	@echo "$(YELLOW)Resetting local database...$(RESET)"
 	@./scripts/db-setup.sh reset
 
+db-clear: ## 🧹 Clear all data from local database (keeps schema)
+	@echo "$(YELLOW)Clearing all data from local database...$(RESET)"
+	@wrangler d1 execute chesscom-helper-db --local --command "DELETE FROM notification_log; DELETE FROM player_subscriptions; DELETE FROM player_status; DELETE FROM user_preferences; DELETE FROM users; DELETE FROM monitoring_jobs; DELETE FROM agent_results; DELETE FROM agent_tasks; DELETE FROM game_analysis; DELETE FROM notification_optimizations; DELETE FROM player_activity_log; DELETE FROM player_notification_preferences; DELETE FROM player_stats; DELETE FROM user_behavior_insights;"
+
 db-studio: ## 🎨 Open D1 Studio for local database
 	@echo "$(CYAN)Opening D1 Studio...$(RESET)"
 	@./scripts/db-setup.sh studio
