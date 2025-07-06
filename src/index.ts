@@ -1147,6 +1147,490 @@ function getHTML() {
           padding: var(--spacing-md);
         }
       }
+      
+      /* Phase 4: Notification Management UI Styles */
+      
+      /* App Navigation Tabs */
+      .app-navigation {
+        display: flex;
+        margin-bottom: var(--spacing-xl);
+        background: var(--bg-green-gray);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-xs);
+        border: 1px solid var(--border-green);
+      }
+      
+      .app-tab {
+        flex: 1;
+        padding: var(--spacing-md) var(--spacing-lg);
+        text-align: center;
+        background: transparent;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+      
+      .app-tab.active {
+        background: var(--primary-green);
+        color: white;
+        box-shadow: 0 2px 4px rgba(102, 187, 106, 0.3);
+      }
+      
+      .app-tab:hover:not(.active) {
+        color: var(--text-primary);
+        background: rgba(102, 187, 106, 0.1);
+      }
+      
+      /* Tab Content */
+      .tab-content {
+        width: 100%;
+      }
+      
+      .tab-content.hidden {
+        display: none;
+      }
+      
+      /* Notification Settings Styles */
+      .notifications-section {
+        width: 100%;
+      }
+      
+      .notification-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xl);
+      }
+      
+      .dashboard-stats {
+        display: flex;
+        gap: var(--spacing-lg);
+        flex-wrap: wrap;
+        margin-top: var(--spacing-md);
+      }
+      
+      .stat-card {
+        background: var(--bg-green-gray);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-green);
+        flex: 1;
+        min-width: 150px;
+      }
+      
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        display: block;
+      }
+      
+      .stat-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: var(--spacing-xs);
+      }
+      
+      /* Settings Cards */
+      .settings-card {
+        background: var(--bg-dark-green);
+        border: 1px solid var(--border-green);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+      
+      .settings-title {
+        color: var(--primary-green);
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0 0 var(--spacing-lg) 0;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+      }
+      
+      .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--spacing-lg);
+      }
+      
+      .setting-item {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+      }
+      
+      .setting-label {
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+      }
+      
+      .setting-description {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        margin: 0;
+        line-height: 1.4;
+      }
+      
+      .setting-checkbox {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--primary-green);
+      }
+      
+      .setting-select,
+      .setting-input {
+        background: var(--bg-green-gray);
+        border: 1px solid var(--border-green);
+        color: var(--text-primary);
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        transition: border-color 0.2s ease;
+      }
+      
+      .setting-select:focus,
+      .setting-input:focus {
+        outline: none;
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 2px rgba(102, 187, 106, 0.2);
+      }
+      
+      .time-range {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+      }
+      
+      .time-separator {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+      
+      /* Player Settings */
+      .player-settings {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+      }
+      
+      .player-setting-item {
+        background: var(--bg-green-gray);
+        border: 1px solid var(--border-green);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+      }
+      
+      .player-setting-item:hover {
+        background: rgba(102, 187, 106, 0.05);
+        border-color: var(--primary-green);
+      }
+      
+      .player-setting-info {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xs);
+      }
+      
+      .player-setting-name {
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      
+      .player-setting-status {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+      
+      .player-setting-controls {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+      }
+      
+      .setting-toggle {
+        background: transparent;
+        border: 1px solid var(--border-green);
+        color: var(--text-secondary);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.85rem;
+      }
+      
+      .setting-toggle.enabled {
+        background: var(--primary-green);
+        color: white;
+        border-color: var(--primary-green);
+      }
+      
+      .setting-toggle:hover {
+        background: var(--primary-green);
+        color: white;
+      }
+      
+      /* Queue Status */
+      .queue-status {
+        display: flex;
+        gap: var(--spacing-xl);
+        flex-wrap: wrap;
+      }
+      
+      .status-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-md);
+        background: var(--bg-green-gray);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-green);
+        flex: 1;
+        min-width: 120px;
+      }
+      
+      .status-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      
+      .status-count {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-green);
+      }
+      
+      /* Analytics Styles */
+      .analytics-section {
+        width: 100%;
+      }
+      
+      .history-filters {
+        display: flex;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+        flex-wrap: wrap;
+      }
+      
+      .filter-select,
+      .filter-input {
+        background: var(--bg-green-gray);
+        border: 1px solid var(--border-green);
+        color: var(--text-primary);
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+      }
+      
+      .notification-history {
+        background: var(--bg-green-gray);
+        border: 1px solid var(--border-green);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+      }
+      
+      .history-item {
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--border-green);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s ease;
+      }
+      
+      .history-item:hover {
+        background: rgba(102, 187, 106, 0.05);
+      }
+      
+      .history-item:last-child {
+        border-bottom: none;
+      }
+      
+      .history-info {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xs);
+      }
+      
+      .history-title {
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      
+      .history-details {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+      
+      .history-status {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      
+      .history-status.sent {
+        background: rgba(76, 175, 80, 0.2);
+        color: var(--success-green);
+      }
+      
+      .history-status.delivered {
+        background: rgba(76, 175, 80, 0.3);
+        color: var(--success-green);
+      }
+      
+      .history-status.failed {
+        background: rgba(244, 67, 54, 0.2);
+        color: var(--error-red);
+      }
+      
+      .history-status.clicked {
+        background: rgba(102, 187, 106, 0.2);
+        color: var(--primary-green);
+      }
+      
+      .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: var(--spacing-lg);
+      }
+      
+      .analytics-card {
+        background: var(--bg-green-gray);
+        border: 1px solid var(--border-green);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        text-align: center;
+      }
+      
+      .analytics-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        display: block;
+        margin-bottom: var(--spacing-xs);
+      }
+      
+      .analytics-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      
+      .bulk-player-actions {
+        display: flex;
+        gap: var(--spacing-md);
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      
+      /* Pagination */
+      .pagination {
+        display: flex;
+        justify-content: center;
+        gap: var(--spacing-sm);
+        margin-top: var(--spacing-lg);
+      }
+      
+      .pagination-btn {
+        background: var(--bg-green-gray);
+        border: 1px solid var(--border-green);
+        color: var(--text-primary);
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+      }
+      
+      .pagination-btn:hover:not(.disabled) {
+        background: var(--primary-green);
+        color: white;
+      }
+      
+      .pagination-btn.active {
+        background: var(--primary-green);
+        color: white;
+      }
+      
+      .pagination-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      /* Responsive Design for Phase 4 */
+      @media (min-width: 1000px) {
+        .settings-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .dashboard-stats {
+          justify-content: space-between;
+        }
+        
+        .app-navigation {
+          max-width: 600px;
+          margin: 0 auto var(--spacing-xl) auto;
+        }
+      }
+      
+      @media (max-width: 768px) {
+        .app-tab {
+          padding: var(--spacing-sm) var(--spacing-md);
+          font-size: 0.9rem;
+        }
+        
+        .settings-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .dashboard-stats {
+          flex-direction: column;
+        }
+        
+        .queue-status {
+          flex-direction: column;
+        }
+        
+        .history-filters {
+          flex-direction: column;
+        }
+        
+        .analytics-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .player-setting-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: var(--spacing-md);
+        }
+        
+        .player-setting-controls {
+          width: 100%;
+          justify-content: space-between;
+        }
+      }
     </style>
 </head>
 <body>
@@ -1233,10 +1717,19 @@ function getHTML() {
                     <button class="welcome-dismiss" onclick="dismissWelcome()" title="Dismiss">×</button>
                 </div>
                 
-                <div class="tracking-section">
-                    <div class="section-header">
-                        <h2 class="section-title">Player Tracking</h2>
-                    </div>
+                <!-- Main App Navigation -->
+                <div class="app-navigation">
+                    <button class="app-tab active" onclick="switchAppTab('players')">Players</button>
+                    <button class="app-tab" onclick="switchAppTab('notifications')">Notifications</button>
+                    <button class="app-tab" onclick="switchAppTab('analytics')">Analytics</button>
+                </div>
+                
+                <!-- Players Tab Content -->
+                <div id="playersTab" class="tab-content">
+                    <div class="tracking-section">
+                        <div class="section-header">
+                            <h2 class="section-title">Player Tracking</h2>
+                        </div>
                     
                     <div class="add-player-form">
                         <h3 class="add-player-title">Add New Player</h3>
@@ -1289,7 +1782,144 @@ function getHTML() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
+            
+            <!-- Notifications Tab Content -->
+            <div id="notificationsTab" class="tab-content hidden">
+                <div class="notifications-section">
+                    <!-- Notification Settings Dashboard -->
+                    <div class="notification-dashboard">
+                        <div class="section-header">
+                            <h2 class="section-title">Notification Settings</h2>
+                            <div class="dashboard-stats" id="dashboardStats">
+                                <!-- Stats will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Global Notification Settings -->
+                        <div class="settings-card">
+                            <h3 class="settings-title">Global Settings</h3>
+                            <div class="settings-grid">
+                                <div class="setting-item">
+                                    <label class="setting-label">
+                                        <input type="checkbox" id="emailEnabled" class="setting-checkbox" onchange="updateGlobalSettings()">
+                                        Email Notifications
+                                    </label>
+                                    <p class="setting-description">Receive email notifications for player activity</p>
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <label class="setting-label">Notification Frequency</label>
+                                    <select id="notificationFrequency" class="setting-select" onchange="updateGlobalSettings()">
+                                        <option value="immediate">Immediate</option>
+                                        <option value="digest_hourly">Hourly Digest</option>
+                                        <option value="digest_daily">Daily Digest</option>
+                                        <option value="disabled">Disabled</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <label class="setting-label">Quiet Hours</label>
+                                    <div class="time-range">
+                                        <input type="time" id="quietHoursStart" class="setting-input" onchange="updateGlobalSettings()">
+                                        <span class="time-separator">to</span>
+                                        <input type="time" id="quietHoursEnd" class="setting-input" onchange="updateGlobalSettings()">
+                                    </div>
+                                    <p class="setting-description">No notifications during these hours</p>
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <label class="setting-label">Timezone</label>
+                                    <select id="timezone" class="setting-select" onchange="updateGlobalSettings()">
+                                        <option value="UTC">UTC</option>
+                                        <option value="America/New_York">Eastern Time</option>
+                                        <option value="America/Chicago">Central Time</option>
+                                        <option value="America/Denver">Mountain Time</option>
+                                        <option value="America/Los_Angeles">Pacific Time</option>
+                                        <option value="Europe/London">London</option>
+                                        <option value="Europe/Paris">Paris</option>
+                                        <option value="Asia/Tokyo">Tokyo</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Player-Specific Settings -->
+                        <div class="settings-card">
+                            <h3 class="settings-title">Player-Specific Settings</h3>
+                            <div class="player-settings" id="playerSettings">
+                                <!-- Player settings will be loaded here -->
+                            </div>
+                            <div class="bulk-player-actions">
+                                <button class="bulk-action-btn" onclick="bulkEnableNotifications()">Enable All</button>
+                                <button class="bulk-action-btn secondary" onclick="bulkDisableNotifications()">Disable All</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Real-time Status Monitor -->
+                        <div class="settings-card">
+                            <h3 class="settings-title">Notification Queue Status</h3>
+                            <div class="queue-status" id="queueStatus">
+                                <div class="status-item">
+                                    <span class="status-label">Pending:</span>
+                                    <span class="status-count" id="pendingCount">0</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Processing:</span>
+                                    <span class="status-count" id="processingCount">0</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">Sent (24h):</span>
+                                    <span class="status-count" id="sentCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analytics Tab Content -->
+            <div id="analyticsTab" class="tab-content hidden">
+                <div class="analytics-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Notification Analytics</h2>
+                    </div>
+                    
+                    <!-- Notification History -->
+                    <div class="settings-card">
+                        <h3 class="settings-title">Recent Notifications</h3>
+                        <div class="history-filters">
+                            <select id="historyPlayerFilter" class="filter-select" onchange="loadNotificationHistory()">
+                                <option value="">All Players</option>
+                            </select>
+                            <select id="historyStatusFilter" class="filter-select" onchange="loadNotificationHistory()">
+                                <option value="">All Status</option>
+                                <option value="sent">Sent</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="failed">Failed</option>
+                                <option value="clicked">Clicked</option>
+                            </select>
+                            <input type="date" id="historyStartDate" class="filter-input" onchange="loadNotificationHistory()">
+                            <input type="date" id="historyEndDate" class="filter-input" onchange="loadNotificationHistory()">
+                        </div>
+                        <div class="notification-history" id="notificationHistory">
+                            <!-- History will be loaded here -->
+                        </div>
+                        <div class="pagination" id="historyPagination">
+                            <!-- Pagination will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Analytics -->
+                    <div class="settings-card">
+                        <h3 class="settings-title">Performance Metrics</h3>
+                        <div class="analytics-grid" id="analyticsGrid">
+                            <!-- Analytics will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
         </div>
     </main>
     
@@ -1757,6 +2387,562 @@ function getHTML() {
                 }
             }
         }
+        
+        // =============================================================================
+        // PHASE 4: Notification Management JavaScript Functions
+        // =============================================================================
+        
+        // Current app tab state
+        let currentAppTab = 'players';
+        
+        // Notification preferences state
+        let notificationPreferences = null;
+        let playerSettings = [];
+        let notificationHistory = [];
+        let currentHistoryPage = 0;
+        let historyFilters = {};
+        
+        // Tab switching functionality
+        function switchAppTab(tab) {
+            const tabs = document.querySelectorAll('.app-tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            // Update active tab
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(tc => tc.classList.add('hidden'));
+            
+            const activeTab = document.querySelector(\`[onclick="switchAppTab('\${tab}')"]\`);
+            const activeContent = document.getElementById(\`\${tab}Tab\`);
+            
+            if (activeTab && activeContent) {
+                activeTab.classList.add('active');
+                activeContent.classList.remove('hidden');
+                currentAppTab = tab;
+                
+                // Load content for the active tab
+                if (tab === 'notifications') {
+                    loadNotificationSettings();
+                } else if (tab === 'analytics') {
+                    loadNotificationAnalytics();
+                }
+            }
+        }
+        
+        // Load notification settings
+        async function loadNotificationSettings() {
+            try {
+                // Load dashboard stats
+                await loadDashboardStats();
+                
+                // Load notification preferences
+                await loadNotificationPreferences();
+                
+                // Load player-specific settings
+                await loadPlayerNotificationSettings();
+                
+                // Load queue status
+                await loadQueueStatus();
+                
+                // Set up real-time updates
+                startRealTimeUpdates();
+                
+            } catch (error) {
+                console.error('Error loading notification settings:', error);
+            }
+        }
+        
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('/api/v1/notifications/dashboard/stats', {
+                    headers: { 'Authorization': \`Bearer \${currentToken}\` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboardStats(data.stats);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+        
+        function updateDashboardStats(stats) {
+            const statsContainer = document.getElementById('dashboardStats');
+            if (statsContainer) {
+                statsContainer.innerHTML = \`
+                    <div class="stat-card">
+                        <span class="stat-value">\${stats.totalPlayers}</span>
+                        <span class="stat-label">Total Players</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">\${stats.enabledPlayers}</span>
+                        <span class="stat-label">Enabled Players</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">\${stats.notifications24h}</span>
+                        <span class="stat-label">24h Notifications</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">\${stats.pendingNotifications}</span>
+                        <span class="stat-label">Pending</span>
+                    </div>
+                \`;
+            }
+        }
+        
+        // Load notification preferences
+        async function loadNotificationPreferences() {
+            try {
+                const response = await fetch('/api/v1/notifications/preferences/v2', {
+                    headers: { 'Authorization': \`Bearer \${currentToken}\` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    notificationPreferences = data.preferences;
+                    updatePreferencesForm(data.preferences);
+                } else {
+                    // Create default preferences if they don't exist
+                    notificationPreferences = {
+                        emailEnabled: true,
+                        notificationFrequency: 'immediate',
+                        quietHoursStart: '22:00',
+                        quietHoursEnd: '07:00',
+                        timezone: 'UTC'
+                    };
+                    updatePreferencesForm(notificationPreferences);
+                }
+            } catch (error) {
+                console.error('Error loading notification preferences:', error);
+            }
+        }
+        
+        function updatePreferencesForm(preferences) {
+            if (preferences) {
+                document.getElementById('emailEnabled').checked = preferences.emailEnabled;
+                document.getElementById('notificationFrequency').value = preferences.notificationFrequency;
+                document.getElementById('quietHoursStart').value = preferences.quietHoursStart;
+                document.getElementById('quietHoursEnd').value = preferences.quietHoursEnd;
+                document.getElementById('timezone').value = preferences.timezone;
+            }
+        }
+        
+        // Update global notification settings
+        async function updateGlobalSettings() {
+            try {
+                const preferences = {
+                    emailEnabled: document.getElementById('emailEnabled').checked,
+                    notificationFrequency: document.getElementById('notificationFrequency').value,
+                    quietHoursStart: document.getElementById('quietHoursStart').value,
+                    quietHoursEnd: document.getElementById('quietHoursEnd').value,
+                    timezone: document.getElementById('timezone').value
+                };
+                
+                const response = await fetch('/api/v1/notifications/preferences/v2', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': \`Bearer \${currentToken}\`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(preferences)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    notificationPreferences = data.preferences;
+                    showToast('Settings updated successfully', 'success');
+                } else {
+                    showToast('Failed to update settings', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating global settings:', error);
+                showToast('Failed to update settings', 'error');
+            }
+        }
+        
+        // Load player-specific notification settings
+        async function loadPlayerNotificationSettings() {
+            try {
+                const response = await fetch('/api/v1/notifications/players', {
+                    headers: { 'Authorization': \`Bearer \${currentToken}\` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    playerSettings = data.settings;
+                    updatePlayerSettingsDisplay(data.settings);
+                }
+            } catch (error) {
+                console.error('Error loading player settings:', error);
+            }
+        }
+        
+        function updatePlayerSettingsDisplay(settings) {
+            const container = document.getElementById('playerSettings');
+            if (!container) return;
+            
+            if (settings.length === 0) {
+                container.innerHTML = '<p class="setting-description">No player-specific settings configured yet.</p>';
+                return;
+            }
+            
+            container.innerHTML = settings.map(setting => \`
+                <div class="player-setting-item">
+                    <div class="player-setting-info">
+                        <span class="player-setting-name">\${setting.playerName}</span>
+                        <span class="player-setting-status">
+                            \${setting.enabled ? 'Notifications enabled' : 'Notifications disabled'}
+                        </span>
+                    </div>
+                    <div class="player-setting-controls">
+                        <button class="setting-toggle \${setting.enabled ? 'enabled' : ''}" 
+                                onclick="togglePlayerNotifications('\${setting.playerName}', \${!setting.enabled})">
+                            \${setting.enabled ? 'Enabled' : 'Disabled'}
+                        </button>
+                    </div>
+                </div>
+            \`).join('');
+        }
+        
+        // Toggle player notification settings
+        async function togglePlayerNotifications(playerName, enabled) {
+            try {
+                const response = await fetch(\`/api/v1/notifications/players/\${encodeURIComponent(playerName)}\`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': \`Bearer \${currentToken}\`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ enabled })
+                });
+                
+                if (response.ok) {
+                    await loadPlayerNotificationSettings();
+                    showToast(\`Notifications \${enabled ? 'enabled' : 'disabled'} for \${playerName}\`, 'success');
+                } else {
+                    showToast('Failed to update player settings', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating player settings:', error);
+                showToast('Failed to update player settings', 'error');
+            }
+        }
+        
+        // Bulk notification operations
+        async function bulkEnableNotifications() {
+            await bulkPlayerOperation('enable');
+        }
+        
+        async function bulkDisableNotifications() {
+            await bulkPlayerOperation('disable');
+        }
+        
+        async function bulkPlayerOperation(action) {
+            try {
+                const playerNames = playerSettings.map(setting => setting.playerName);
+                
+                const response = await fetch('/api/v1/notifications/players/bulk', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': \`Bearer \${currentToken}\`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action,
+                        playerNames
+                    })
+                });
+                
+                if (response.ok) {
+                    await loadPlayerNotificationSettings();
+                    showToast(\`Successfully \${action}d notifications for all players\`, 'success');
+                } else {
+                    showToast(\`Failed to \${action} notifications\`, 'error');
+                }
+            } catch (error) {
+                console.error('Error in bulk operation:', error);
+                showToast(\`Failed to \${action} notifications\`, 'error');
+            }
+        }
+        
+        // Load queue status
+        async function loadQueueStatus() {
+            try {
+                const response = await fetch('/api/v1/notifications/queue/status', {
+                    headers: { 'Authorization': \`Bearer \${currentToken}\` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateQueueStatus(data.status);
+                }
+            } catch (error) {
+                console.error('Error loading queue status:', error);
+            }
+        }
+        
+        function updateQueueStatus(status) {
+            document.getElementById('pendingCount').textContent = status.pending || 0;
+            document.getElementById('processingCount').textContent = status.processing || 0;
+            document.getElementById('sentCount').textContent = status.sent || 0;
+        }
+        
+        // Real-time updates
+        let realTimeInterval;
+        
+        function startRealTimeUpdates() {
+            // Update queue status every 30 seconds
+            realTimeInterval = setInterval(async () => {
+                if (currentAppTab === 'notifications') {
+                    await loadQueueStatus();
+                    await loadDashboardStats();
+                }
+            }, 30000);
+        }
+        
+        function stopRealTimeUpdates() {
+            if (realTimeInterval) {
+                clearInterval(realTimeInterval);
+                realTimeInterval = null;
+            }
+        }
+        
+        // Load notification analytics
+        async function loadNotificationAnalytics() {
+            try {
+                await loadNotificationHistory();
+                await loadAnalyticsMetrics();
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+            }
+        }
+        
+        // Load notification history
+        async function loadNotificationHistory() {
+            try {
+                const params = new URLSearchParams({
+                    limit: '20',
+                    offset: (currentHistoryPage * 20).toString(),
+                    ...historyFilters
+                });
+                
+                const response = await fetch(\`/api/v1/notifications/history/v2?\${params}\`, {
+                    headers: { 'Authorization': \`Bearer \${currentToken}\` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    notificationHistory = data.notifications;
+                    updateHistoryDisplay(data.notifications);
+                    updateHistoryPagination(data.pagination);
+                    
+                    // Populate player filter
+                    updateHistoryPlayerFilter(data.notifications);
+                }
+            } catch (error) {
+                console.error('Error loading notification history:', error);
+            }
+        }
+        
+        function updateHistoryDisplay(notifications) {
+            const container = document.getElementById('notificationHistory');
+            if (!container) return;
+            
+            if (notifications.length === 0) {
+                container.innerHTML = '<div class="history-item"><div class="history-info"><span class="history-title">No notifications found</span></div></div>';
+                return;
+            }
+            
+            container.innerHTML = notifications.map(notification => \`
+                <div class="history-item">
+                    <div class="history-info">
+                        <span class="history-title">\${notification.subject || 'Notification'}</span>
+                        <span class="history-details">
+                            \${notification.playerName} • \${new Date(notification.sentAt).toLocaleString()}
+                        </span>
+                    </div>
+                    <span class="history-status \${notification.status}">\${notification.status}</span>
+                </div>
+            \`).join('');
+        }
+        
+        function updateHistoryPlayerFilter(notifications) {
+            const filter = document.getElementById('historyPlayerFilter');
+            if (!filter) return;
+            
+            const players = [...new Set(notifications.map(n => n.playerName))];
+            const currentValue = filter.value;
+            
+            filter.innerHTML = '<option value="">All Players</option>' + 
+                players.map(player => \`<option value="\${player}">\${player}</option>\`).join('');
+            
+            filter.value = currentValue;
+        }
+        
+        function updateHistoryPagination(pagination) {
+            const container = document.getElementById('historyPagination');
+            if (!container || !pagination) return;
+            
+            const totalPages = Math.ceil(pagination.totalCount / pagination.limit);
+            const currentPage = Math.floor(pagination.offset / pagination.limit);
+            
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += \`<button class="pagination-btn \${currentPage === 0 ? 'disabled' : ''}" 
+                                        onclick="changeHistoryPage(\${currentPage - 1})" 
+                                        \${currentPage === 0 ? 'disabled' : ''}>‹</button>\`;
+            
+            // Page numbers
+            for (let i = Math.max(0, currentPage - 2); i <= Math.min(totalPages - 1, currentPage + 2); i++) {
+                paginationHTML += \`<button class="pagination-btn \${i === currentPage ? 'active' : ''}" 
+                                          onclick="changeHistoryPage(\${i})">\${i + 1}</button>\`;
+            }
+            
+            // Next button
+            paginationHTML += \`<button class="pagination-btn \${currentPage === totalPages - 1 ? 'disabled' : ''}" 
+                                        onclick="changeHistoryPage(\${currentPage + 1})" 
+                                        \${currentPage === totalPages - 1 ? 'disabled' : ''}>›</button>\`;
+            
+            container.innerHTML = paginationHTML;
+        }
+        
+        function changeHistoryPage(page) {
+            currentHistoryPage = page;
+            loadNotificationHistory();
+        }
+        
+        // Load analytics metrics
+        async function loadAnalyticsMetrics() {
+            try {
+                const endDate = new Date().toISOString().split('T')[0];
+                const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                
+                const params = new URLSearchParams({
+                    startDate,
+                    endDate,
+                    groupBy: 'day'
+                });
+                
+                const response = await fetch(\`/api/v1/notifications/analytics?\${params}\`, {
+                    headers: { 'Authorization': \`Bearer \${currentToken}\` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateAnalyticsDisplay(data.analytics);
+                }
+            } catch (error) {
+                console.error('Error loading analytics metrics:', error);
+            }
+        }
+        
+        function updateAnalyticsDisplay(analytics) {
+            const container = document.getElementById('analyticsGrid');
+            if (!container) return;
+            
+            // Calculate totals
+            const totals = analytics.reduce((acc, day) => ({
+                sent: acc.sent + day.totalNotificationsSent,
+                delivered: acc.delivered + day.totalNotificationsDelivered,
+                failed: acc.failed + day.totalNotificationsFailed,
+                clicked: acc.clicked + day.totalNotificationsClicked
+            }), { sent: 0, delivered: 0, failed: 0, clicked: 0 });
+            
+            const deliveryRate = totals.sent > 0 ? Math.round((totals.delivered / totals.sent) * 100) : 0;
+            const clickRate = totals.delivered > 0 ? Math.round((totals.clicked / totals.delivered) * 100) : 0;
+            
+            container.innerHTML = \`
+                <div class="analytics-card">
+                    <span class="analytics-value">\${totals.sent}</span>
+                    <span class="analytics-label">Total Sent</span>
+                </div>
+                <div class="analytics-card">
+                    <span class="analytics-value">\${totals.delivered}</span>
+                    <span class="analytics-label">Delivered</span>
+                </div>
+                <div class="analytics-card">
+                    <span class="analytics-value">\${deliveryRate}%</span>
+                    <span class="analytics-label">Delivery Rate</span>
+                </div>
+                <div class="analytics-card">
+                    <span class="analytics-value">\${clickRate}%</span>
+                    <span class="analytics-label">Click Rate</span>
+                </div>
+            \`;
+        }
+        
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = \`toast toast-\${type}\`;
+            toast.textContent = message;
+            toast.style.cssText = \`
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--\${type === 'success' ? 'success-green' : type === 'error' ? 'error-red' : 'primary-green'});
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                z-index: 1000;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                transform: translateX(100%);
+            \`;
+            
+            document.body.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Remove after 4 seconds
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 4000);
+        }
+        
+        // Update history filters when changed
+        window.loadNotificationHistory = function() {
+            historyFilters = {
+                playerName: document.getElementById('historyPlayerFilter')?.value || '',
+                status: document.getElementById('historyStatusFilter')?.value || '',
+                startDate: document.getElementById('historyStartDate')?.value || '',
+                endDate: document.getElementById('historyEndDate')?.value || ''
+            };
+            
+            // Remove empty filters
+            Object.keys(historyFilters).forEach(key => {
+                if (!historyFilters[key]) {
+                    delete historyFilters[key];
+                }
+            });
+            
+            currentHistoryPage = 0;
+            loadNotificationHistory();
+        };
+        
+        // Make functions globally available
+        window.switchAppTab = switchAppTab;
+        window.updateGlobalSettings = updateGlobalSettings;
+        window.togglePlayerNotifications = togglePlayerNotifications;
+        window.bulkEnableNotifications = bulkEnableNotifications;
+        window.bulkDisableNotifications = bulkDisableNotifications;
+        window.changeHistoryPage = changeHistoryPage;
         
         // Initialize on page load
         initAuth();
