@@ -39,3 +39,8 @@ export async function authenticateUser(request: Request, env: Env): Promise<Resp
     return error(401, 'Invalid or expired token')
   }
 }
+
+// Middleware function for itty-router
+export async function authenticate(request: Request, env: Env): Promise<Response | void> {
+  return await authenticateUser(request, env)
+}

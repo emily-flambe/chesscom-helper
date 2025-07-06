@@ -909,6 +909,16 @@ function getHTML() {
         background: rgba(255, 152, 0, 0.2);
         color: var(--warning-amber);
       }
+
+      .status-badge.playing {
+        background: rgba(255, 152, 0, 0.2);
+        color: var(--warning-amber);
+      }
+
+      .status-badge.offline {
+        background: rgba(158, 158, 158, 0.2);
+        color: var(--text-secondary);
+      }
       
       .status-indicator {
         width: 8px;
@@ -1421,7 +1431,7 @@ function getHTML() {
             setButtonLoading(button, true, 'Sign In');
             
             try {
-                const response = await fetch('/api/auth/login', {
+                const response = await fetch('/api/v1/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -1457,7 +1467,7 @@ function getHTML() {
             setButtonLoading(button, true, 'Create Account');
             
             try {
-                const response = await fetch('/api/auth/register', {
+                const response = await fetch('/api/v1/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -1498,7 +1508,33 @@ function getHTML() {
             return \`\${diffDays}d ago\`;
         }
         
-        // Main sorting function
+        // Phase 2: Enhanced sorting function for subscriptions with status
+        function sortPlayersWithStatus(subscriptions, column, direction) {
+            return [...subscriptions].sort((a, b) => {
+                let aVal, bVal;
+                
+                switch (column) {
+                    case 'player':
+                        aVal = a.chessComUsername.toLowerCase();
+                        bVal = b.chessComUsername.toLowerCase();
+                        break;
+                    case 'lastSeen':
+                        const aTime = a.status?.lastSeen || a.status?.lastChecked || '1970-01-01';
+                        const bTime = b.status?.lastSeen || b.status?.lastChecked || '1970-01-01';
+                        aVal = new Date(aTime).getTime();
+                        bVal = new Date(bTime).getTime();
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        // Legacy sorting function for backwards compatibility
         function sortPlayers(players, column, direction) {
             return [...players].sort((a, b) => {
                 let aVal, bVal;
@@ -1509,7 +1545,6 @@ function getHTML() {
                         bVal = b.toLowerCase();
                         break;
                     case 'lastSeen':
-                        // Mock data - all players are "Just now" for now
                         aVal = new Date();
                         bVal = new Date();
                         break;
@@ -1540,14 +1575,15 @@ function getHTML() {
             });
             
             try {
-                const response = await fetch('/api/players', {
+                // Phase 2: Use new API with status information
+                const response = await fetch('/api/v1/users/me/subscriptions?includeStatus=true', {
                     headers: {
                         'Authorization': \`Bearer \${currentToken}\`
                     }
                 });
                 const data = await response.json();
                 
-                if (data.players.length === 0) {
+                if (data.subscriptions.length === 0) {
                     tbody.innerHTML = '';
                     table.style.display = 'none';
                     emptyState.classList.remove('hidden');
@@ -1556,10 +1592,16 @@ function getHTML() {
                     emptyState.classList.add('hidden');
                     
                     // Sort players based on current sort settings
-                    const sortedPlayers = sortPlayers(data.players, currentSortColumn, currentSortDirection);
+                    const sortedPlayers = sortPlayersWithStatus(data.subscriptions, currentSortColumn, currentSortDirection);
                     
-                    tbody.innerHTML = sortedPlayers.map((player, index) => 
-                        \`<tr>
+                    tbody.innerHTML = sortedPlayers.map((subscription, index) => {
+                        const player = subscription.chessComUsername;
+                        const status = subscription.status;
+                        const lastSeen = status ? formatLastSeen(status.lastSeen || status.lastChecked) : 'Unknown';
+                        const isOnline = status?.isOnline || false;
+                        const isPlaying = status?.isPlaying || false;
+                        
+                        return \`<tr>
                             <td class="checkbox-column">
                                 <input type="checkbox" class="player-checkbox" data-player="\${player}" onchange="updateBulkActions()">
                             </td>
@@ -1568,23 +1610,27 @@ function getHTML() {
                                     <span class="player-name">\${player}</span>
                                 </div>
                             </td>
-                            <td class="last-seen-cell">Just now</td>
+                            <td class="last-seen-cell">\${lastSeen}</td>
                             <td class="alerts-cell">
-                                <span class="status-badge">
+                                <span class="status-badge \${isOnline ? (isPlaying ? 'playing' : 'online') : 'offline'}">
                                     <span class="status-indicator"></span>
-                                    Enabled
+                                    \${isPlaying ? 'In Game' : (isOnline ? 'Online' : 'Offline')}
                                 </span>
                             </td>
                             <td class="actions-cell">
                                 <div class="action-buttons">
+                                    <button class="action-btn alert" onclick="toggleAlert('\${player}')" title="Toggle notifications">
+                                        🔔 Alert Me
+                                    </button>
                                     <button class="action-btn outline" onclick="viewDetails('\${player}')">View Details</button>
                                     <button class="action-btn secondary" onclick="removePlayer('\${player}')">Remove</button>
                                 </div>
                             </td>
-                        </tr>\`
-                    ).join('');
+                        </tr>\`;
+                    }).join('');
                 }
             } catch (error) {
+                console.error('Error loading players:', error);
                 tbody.innerHTML = '<tr><td colspan="5" class="error-cell">Error loading players. Please try refreshing the page.</td></tr>';
             }
         }
@@ -1600,25 +1646,27 @@ function getHTML() {
             setButtonLoading(button, true, 'Start Monitoring');
             
             try {
-                const response = await fetch('/api/monitor', {
+                // Phase 2: Use new subscription API
+                const response = await fetch('/api/v1/users/me/subscriptions', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
                         'Authorization': \`Bearer \${currentToken}\`
                     },
-                    body: JSON.stringify({ username })
+                    body: JSON.stringify({ chessComUsername: username })
                 });
                 
                 const data = await response.json();
                 
                 if (response.ok) {
-                    showNotification(data.message, 'success');
+                    showNotification(\`Started monitoring \${username}\`, 'success');
                     usernameInput.value = '';
                     loadPlayers();
                 } else {
                     showNotification(data.error, 'error');
                 }
             } catch (error) {
+                console.error('Add player error:', error);
                 showNotification('Error connecting to server. Please try again.', 'error');
             } finally {
                 setButtonLoading(button, false, 'Start Monitoring');
@@ -1657,15 +1705,66 @@ function getHTML() {
             const checkedBoxes = document.querySelectorAll('.player-checkbox:checked');
             const players = Array.from(checkedBoxes).map(cb => cb.dataset.player);
             
-            // TODO: Implement bulk remove API
-            showNotification(\`Removed \${players.length} player(s)\`, 'success');
+            if (!confirm(\`Remove \${players.length} player(s) from monitoring?\`)) {
+                return;
+            }
+            
+            try {
+                // Phase 2: Use bulk remove API
+                const response = await fetch('/api/v1/users/me/subscriptions/bulk-remove', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': \`Bearer \${currentToken}\`
+                    },
+                    body: JSON.stringify({ chessComUsernames: players })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification(data.message, 'success');
+                    if (data.errors.length > 0) {
+                        console.warn('Some removals failed:', data.errors);
+                    }
+                } else {
+                    showNotification(data.error || 'Failed to remove players', 'error');
+                }
+            } catch (error) {
+                console.error('Bulk remove error:', error);
+                showNotification('Error removing players. Please try again.', 'error');
+            }
+            
             clearSelection();
             loadPlayers();
         }
         
         window.removePlayer = async function(username) {
-            // TODO: Implement remove API
-            showNotification(\`Stopped monitoring \${username}\`, 'success');
+            if (!confirm(\`Remove \${username} from monitoring?\`)) {
+                return;
+            }
+            
+            try {
+                // Phase 2: Use individual remove API
+                const response = await fetch(\`/api/v1/users/me/subscriptions/\${encodeURIComponent(username)}\`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': \`Bearer \${currentToken}\`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification(\`Stopped monitoring \${username}\`, 'success');
+                } else {
+                    showNotification(data.error || 'Failed to remove player', 'error');
+                }
+            } catch (error) {
+                console.error('Remove player error:', error);
+                showNotification('Error removing player. Please try again.', 'error');
+            }
+            
             loadPlayers();
         }
         
@@ -1675,7 +1774,7 @@ function getHTML() {
             showNotification('Player details coming soon!', 'info');
         }
         
-        window.toggleAlert = function(username) {
+        window.toggleAlert = async function(username) {
             // Find the alert button for this player
             const buttons = document.querySelectorAll('.action-btn.alert');
             let targetButton = null;
@@ -1686,18 +1785,43 @@ function getHTML() {
                 }
             });
             
-            if (targetButton) {
-                // Toggle the active class
-                const isActive = targetButton.classList.toggle('active');
+            if (!targetButton) return;
+            
+            const wasActive = targetButton.classList.contains('active');
+            const willBeActive = !wasActive;
+            
+            try {
+                // Phase 2: Update per-player notification preferences
+                const response = await fetch(\`/api/v1/notifications/player-preferences/\${encodeURIComponent(username)}\`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': \`Bearer \${currentToken}\`
+                    },
+                    body: JSON.stringify({
+                        notifyGameStart: willBeActive,
+                        notifyGameEnd: willBeActive,
+                        notifyOnline: willBeActive
+                    })
+                });
                 
-                // Show appropriate notification
-                if (isActive) {
-                    showNotification(\`Alert notifications enabled for \${username}\`, 'success');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Update UI to reflect change
+                    if (willBeActive) {
+                        targetButton.classList.add('active');
+                        showNotification(\`Alert notifications enabled for \${username}\`, 'success');
+                    } else {
+                        targetButton.classList.remove('active');
+                        showNotification(\`Alert notifications disabled for \${username}\`, 'info');
+                    }
                 } else {
-                    showNotification(\`Alert notifications disabled for \${username}\`, 'info');
+                    showNotification(data.error || 'Failed to update notification preference', 'error');
                 }
-                
-                // TODO: In the future, this would persist the alert preference to the backend
+            } catch (error) {
+                console.error('Toggle alert error:', error);
+                showNotification('Error updating notification preference. Please try again.', 'error');
             }
         }
         
