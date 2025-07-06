@@ -12,16 +12,7 @@ export function validatePassword(password: string): boolean {
 return false
 }
   
-  if (password.length < 8 || password.length > 128) {
-return false
-}
-  
-  const hasUppercase = /[A-Z]/.test(password)
-  const hasLowercase = /[a-z]/.test(password)
-  const hasNumber = /\d/.test(password)
-  const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
-  
-  return hasUppercase && hasLowercase && hasNumber && hasSpecialChar
+  return password.length >= 8 && password.length <= 128
 }
 
 export function validateChessComUsername(username: string): boolean {

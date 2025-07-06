@@ -4,6 +4,8 @@ export interface Env {
   ENVIRONMENT?: string
 }
 
+import { validateEmail, validatePassword } from './utils/validation'
+
 // Simple password hashing using Web Crypto API
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder()
@@ -57,14 +59,14 @@ async function verifyJWT(token: string, secret: string): Promise<{ userId: strin
       ['verify']
     )
     
-    const signatureBuffer = Uint8Array.from(atob(signatureB64), c => c.charCodeAt(0))
+    const signatureBuffer = Uint8Array.from(atob(signatureB64) || '', c => c.charCodeAt(0))
     const isValid = await crypto.subtle.verify('HMAC', key, signatureBuffer, encoder.encode(message))
     
     if (!isValid) {
       return null
     }
     
-    const payload = JSON.parse(atob(payloadB64))
+    const payload = JSON.parse(atob(payloadB64) || '{}')
     if (payload.exp < Math.floor(Date.now() / 1000)) {
       return null
     }
@@ -141,6 +143,18 @@ export default {
         
         if (!body.email || !body.password) {
           return new Response(JSON.stringify({ error: 'Email and password required' }), 
+            { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+
+        // Validate email format
+        if (!validateEmail(body.email)) {
+          return new Response(JSON.stringify({ error: 'Invalid email format' }), 
+            { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+
+        // Validate password length
+        if (!validatePassword(body.password)) {
+          return new Response(JSON.stringify({ error: 'Password must be at least 8 characters long' }), 
             { status: 400, headers: { 'Content-Type': 'application/json' } })
         }
         
