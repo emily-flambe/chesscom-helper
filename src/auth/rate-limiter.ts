@@ -52,14 +52,14 @@ export class AdvancedRateLimiter {
   
   constructor(config: RateLimitConfig) {
     this.config = {
-      windowMs: 900000, // 15 minutes default
-      maxRequests: 100,
-      message: 'Too many requests',
-      standardHeaders: true,
-      legacyHeaders: false,
-      exponentialBackoff: true,
-      suspiciousActivityThreshold: 5,
-      ...config
+      ...config,
+      windowMs: config.windowMs ?? 900000, // 15 minutes default
+      maxRequests: config.maxRequests ?? 100,
+      message: config.message ?? 'Too many requests',
+      standardHeaders: config.standardHeaders ?? true,
+      legacyHeaders: config.legacyHeaders ?? false,
+      exponentialBackoff: config.exponentialBackoff ?? true,
+      suspiciousActivityThreshold: config.suspiciousActivityThreshold ?? 5
     }
   }
 
@@ -204,7 +204,12 @@ export class AdvancedRateLimiter {
       }
     }
     
-    return JSON.parse(data)
+    const parsedData = JSON.parse(data) as {
+      requests: number[];
+      violations: number;
+      suspiciousActivity: SuspiciousActivityMetrics;
+    }
+    return parsedData
   }
 
   /**
@@ -316,12 +321,18 @@ export class AdvancedRateLimiter {
     if (data.requests.length > 2) {
       const intervals = []
       for (let i = 1; i < data.requests.length; i++) {
-        intervals.push(data.requests[i] - data.requests[i-1])
+        const current = data.requests[i]
+        const previous = data.requests[i-1]
+        if (current !== undefined && previous !== undefined) {
+          intervals.push(current - previous)
+        }
       }
       
-      const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length
-      if (avgInterval < 100) { // Less than 100ms average
-        reasons.push('abnormal_timing')
+      if (intervals.length > 0) {
+        const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length
+        if (avgInterval < 100) { // Less than 100ms average
+          reasons.push('abnormal_timing')
+        }
       }
     }
     
@@ -402,10 +413,22 @@ export class AdvancedRateLimiter {
     
     try {
       const existingData = await env.SUSPICIOUS_ACTIVITY?.get(suspiciousKey)
-      const data = existingData ? JSON.parse(existingData) : {
+      const data = existingData ? JSON.parse(existingData) as {
+        firstSeen: number;
+        lastSeen: number;
+        incidents: Array<{
+          timestamp: number;
+          reason: string;
+          severity: number;
+        }>;
+      } : {
         firstSeen: now,
         lastSeen: now,
-        incidents: []
+        incidents: [] as Array<{
+          timestamp: number;
+          reason: string;
+          severity: number;
+        }>
       }
       
       data.lastSeen = now

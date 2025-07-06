@@ -140,7 +140,7 @@ export class SecureErrorHandler {
       httpStatus: 403,
       correlationId,
       timestamp,
-      context
+      ...(context && { context })
     }
     
     // SECURITY: Log authorization failure
@@ -234,7 +234,7 @@ export class SecureErrorHandler {
       httpStatus: rateLimitResult.suspended ? 403 : 429,
       correlationId,
       timestamp,
-      context
+      ...(context && { context })
     }
     
     // SECURITY: Log rate limiting event
@@ -278,7 +278,7 @@ export class SecureErrorHandler {
       httpStatus: 500,
       correlationId,
       timestamp,
-      context,
+      ...(context && { context }),
       loggingDetails: {
         stack: error.stack,
         name: error.name

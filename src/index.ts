@@ -59,14 +59,14 @@ async function verifyJWT(token: string, secret: string): Promise<{ userId: strin
       ['verify']
     )
     
-    const signatureBuffer = Uint8Array.from(atob(signatureB64) || '', c => c.charCodeAt(0))
+    const signatureBuffer = Uint8Array.from(atob(signatureB64 || ''), c => c.charCodeAt(0))
     const isValid = await crypto.subtle.verify('HMAC', key, signatureBuffer, encoder.encode(message))
     
     if (!isValid) {
       return null
     }
     
-    const payload = JSON.parse(atob(payloadB64) || '{}')
+    const payload = JSON.parse(atob(payloadB64 || ''))
     if (payload.exp < Math.floor(Date.now() / 1000)) {
       return null
     }
