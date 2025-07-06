@@ -1,0 +1,54 @@
+================================================================================
+                              CHESS.COM HELPER
+                          Elevate Your Chess Game
+================================================================================
+
+Hello {{playerName}},
+
+🎯 NEW GAME STARTED!
+
+A new chess game has been detected on your Chess.com account. Get ready to make your moves!
+
+OPPONENT INFORMATION:
+- Name: {{opponentName}}
+- Rating: {{opponentRating}}
+- Title: {{opponentTitle}}
+
+GAME DETAILS:
+- Game Type: {{gameType}}
+- Your Color: {{playerColor}}
+- Game ID: {{gameId}}
+- Started: {{gameStartTime}}
+- Time Control: {{timeControl}}
+
+⏱️ Time Control: {{timeControl}}
+
+ANALYSIS READY:
+Once your game is complete, Chess.com Helper will automatically analyze your performance and provide detailed insights to help you improve.
+
+View Game on Chess.com: {{gameUrl}}
+
+Good luck with your game! Remember, every game is an opportunity to learn and improve. We'll be here to help you analyze your performance once the game is complete.
+
+This notification was sent because you have game start notifications enabled in your preferences. You can update your notification settings at: {{preferencesUrl}}
+
+================================================================================
+
+Chess.com Helper - Your Personal Chess Analysis Companion
+Get insights, track progress, and improve your game
+
+Dashboard: {{baseUrl}}/dashboard
+Settings: {{baseUrl}}/settings  
+Support: {{baseUrl}}/support
+
+================================================================================
+
+Email Preferences: {{preferencesUrl}}
+Unsubscribe: {{unsubscribeUrl}}
+
+This email was sent to {{userEmail}}.
+If you no longer wish to receive these emails, you can unsubscribe at any time.
+
+================================================================================
+Chess.com Helper - Making chess analysis simple and accessible
+================================================================================
