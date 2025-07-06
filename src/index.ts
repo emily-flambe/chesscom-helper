@@ -2688,11 +2688,169 @@ function getHTML() {
             document.getElementById('sentCount').textContent = status.sent || 0;
         }
         
-        // Real-time updates
-        let realTimeInterval;
+        // Real-time updates with Server-Sent Events
+        let eventSource = null;
+        let realTimeInterval = null;
         
         function startRealTimeUpdates() {
-            // Update queue status every 30 seconds
+            // Try to use SSE for real-time updates
+            if (typeof EventSource !== 'undefined' && currentToken) {
+                try {
+                    eventSource = new EventSource(\`/api/v1/notifications/stream?token=\${currentToken}\`, {
+                        withCredentials: false
+                    });
+                    
+                    // Add authorization header (for compatible browsers)
+                    if (eventSource.readyState === EventSource.CONNECTING) {
+                        // Some browsers don't support custom headers in EventSource
+                        // Fall back to token in URL or use fetch-based SSE
+                        eventSource.close();
+                        startFetchBasedSSE();
+                        return;
+                    }
+                    
+                    eventSource.onopen = function(event) {
+                        console.log('SSE connection opened');
+                    };
+                    
+                    eventSource.onmessage = function(event) {
+                        console.log('SSE message:', event.data);
+                    };
+                    
+                    eventSource.addEventListener('queue-status', function(event) {
+                        const status = JSON.parse(event.data);
+                        updateQueueStatus(status);
+                    });
+                    
+                    eventSource.addEventListener('dashboard-stats', function(event) {
+                        const stats = JSON.parse(event.data);
+                        updateDashboardStats(stats);
+                    });
+                    
+                    eventSource.addEventListener('connected', function(event) {
+                        console.log('SSE connected:', event.data);
+                        showToast('Real-time updates connected', 'success');
+                    });
+                    
+                    eventSource.addEventListener('heartbeat', function(event) {
+                        console.log('SSE heartbeat:', event.data);
+                    });
+                    
+                    eventSource.onerror = function(event) {
+                        console.error('SSE error:', event);
+                        if (eventSource.readyState === EventSource.CLOSED) {
+                            console.log('SSE connection closed, falling back to polling');
+                            startPollingUpdates();
+                        }
+                    };
+                    
+                } catch (error) {
+                    console.error('Error starting SSE:', error);
+                    startPollingUpdates();
+                }
+            } else {
+                // Fallback to polling if SSE not supported
+                startPollingUpdates();
+            }
+        }
+        
+        function startFetchBasedSSE() {
+            // Fetch-based SSE for better header control
+            const controller = new AbortController();
+            
+            fetch('/api/v1/notifications/stream', {
+                headers: { 
+                    'Authorization': \`Bearer \${currentToken}\`,
+                    'Accept': 'text/event-stream'
+                },
+                signal: controller.signal
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error(\`SSE request failed: \${response.status}\`);
+                }
+                
+                const reader = response.body?.getReader();
+                if (!reader) {
+                    throw new Error('No response body reader');
+                }
+                
+                const decoder = new TextDecoder();
+                let buffer = '';
+                
+                function readStream() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            console.log('SSE stream ended');
+                            startPollingUpdates();
+                            return;
+                        }
+                        
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\\n');
+                        buffer = lines.pop() || '';
+                        
+                        let currentEvent = '';
+                        let currentData = '';
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('event: ')) {
+                                currentEvent = line.slice(7);
+                            } else if (line.startsWith('data: ')) {
+                                currentData = line.slice(6);
+                            } else if (line === '' && currentEvent && currentData) {
+                                handleSSEEvent(currentEvent, currentData);
+                                currentEvent = '';
+                                currentData = '';
+                            }
+                        }
+                        
+                        readStream();
+                    }).catch(error => {
+                        console.error('SSE read error:', error);
+                        startPollingUpdates();
+                    });
+                }
+                
+                readStream();
+                
+            }).catch(error => {
+                console.error('Fetch-based SSE error:', error);
+                startPollingUpdates();
+            });
+            
+            // Store controller for cleanup
+            eventSource = { close: () => controller.abort() };
+        }
+        
+        function handleSSEEvent(eventType, data) {
+            try {
+                const eventData = JSON.parse(data);
+                
+                switch (eventType) {
+                    case 'queue-status':
+                        updateQueueStatus(eventData);
+                        break;
+                    case 'dashboard-stats':
+                        updateDashboardStats(eventData);
+                        break;
+                    case 'connected':
+                        console.log('SSE connected:', eventData);
+                        showToast('Real-time updates connected', 'success');
+                        break;
+                    case 'heartbeat':
+                        console.log('SSE heartbeat:', eventData);
+                        break;
+                    default:
+                        console.log('Unknown SSE event:', eventType, eventData);
+                }
+            } catch (error) {
+                console.error('Error handling SSE event:', error);
+            }
+        }
+        
+        function startPollingUpdates() {
+            // Fallback polling method
+            console.log('Starting polling updates (SSE fallback)');
             realTimeInterval = setInterval(async () => {
                 if (currentAppTab === 'notifications') {
                     await loadQueueStatus();
@@ -2702,6 +2860,10 @@ function getHTML() {
         }
         
         function stopRealTimeUpdates() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
             if (realTimeInterval) {
                 clearInterval(realTimeInterval);
                 realTimeInterval = null;
