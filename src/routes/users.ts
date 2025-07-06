@@ -135,7 +135,7 @@ router.delete('/me/subscriptions', async (request: Request, env: Env) => {
       return error(400, 'Invalid Chess.com username')
     }
 
-    await deletePlayerSubscription(env.DB, userId, body.chessComUsername)
+    await deletePlayerSubscription(env.DB, userId, body.chessComUsername, env)
     return json({ message: 'Subscription removed successfully' })
 
   } catch (err) {

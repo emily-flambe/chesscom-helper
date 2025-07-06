@@ -71,7 +71,11 @@ function getClientId(request: Request): string {
 }
 
 function getEndpointType(url: string): keyof typeof RATE_LIMITS {
-  if (url.includes('/auth/')) return 'auth'
-  if (url.includes('/api/')) return 'api'
+  if (url.includes('/auth/')) {
+return 'auth'
+}
+  if (url.includes('/api/')) {
+return 'api'
+}
   return 'default'
 }

@@ -4,6 +4,8 @@ export interface Env {
   ENVIRONMENT?: string
 }
 
+import { validateEmail, validatePassword } from './utils/validation'
+
 // Simple password hashing using Web Crypto API
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder()
@@ -42,20 +44,68 @@ async function createJWT(userId: string, secret: string): Promise<string> {
   return `${message}.${signatureB64}`
 }
 
+// Simple JWT verification
+async function verifyJWT(token: string, secret: string): Promise<{ userId: string } | null> {
+  try {
+    const [headerB64, payloadB64, signatureB64] = token.split('.')
+    const message = `${headerB64}.${payloadB64}`
+    
+    const encoder = new TextEncoder()
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    )
+    
+    const signatureBuffer = Uint8Array.from(atob(signatureB64) || '', c => c.charCodeAt(0))
+    const isValid = await crypto.subtle.verify('HMAC', key, signatureBuffer, encoder.encode(message))
+    
+    if (!isValid) {
+      return null
+    }
+    
+    const payload = JSON.parse(atob(payloadB64) || '{}')
+    if (payload.exp < Math.floor(Date.now() / 1000)) {
+      return null
+    }
+    
+    return { userId: payload.sub }
+  } catch {
+    return null
+  }
+}
+
+// Helper to authenticate requests
+async function authenticateRequest(request: Request, env: Env): Promise<{ userId: string } | Response> {
+  const authHeader = request.headers.get('Authorization')
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Authentication required' }), 
+      { status: 401, headers: { 'Content-Type': 'application/json' } })
+  }
+  
+  const token = authHeader.substring(7)
+  const payload = await verifyJWT(token, env.JWT_SECRET)
+  if (!payload) {
+    return new Response(JSON.stringify({ error: 'Invalid or expired token' }), 
+      { status: 401, headers: { 'Content-Type': 'application/json' } })
+  }
+  
+  return payload
+}
+
 // Generate secure ID
 function generateId(): string {
   return crypto.randomUUID()
 }
-
-// In-memory storage for monitored players (will be moved to D1 later)
-let monitoredPlayers: string[] = []
 
 // Chess.com validation
 async function validateChessComUser(username: string): Promise<{ exists: boolean, data?: any }> {
   try {
     const normalizedUsername = username.toLowerCase()
     const response = await fetch(`https://api.chess.com/pub/player/${normalizedUsername}`, {
-      headers: { 'User-Agent': 'Chess.com-Helper/1.0' }
+      headers: { 'User-Agent': 'Chesscom-Helper/1.0' }
     })
     
     if (response.status === 200) {
@@ -80,7 +130,7 @@ export default {
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({ 
         status: 'ok', 
-        message: 'Chess.com Helper running with D1'
+        message: 'Chesscom Helper running with D1 and secure user isolation'
       }), {
         headers: { 'Content-Type': 'application/json' }
       })
@@ -93,6 +143,18 @@ export default {
         
         if (!body.email || !body.password) {
           return new Response(JSON.stringify({ error: 'Email and password required' }), 
+            { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+
+        // Validate email format
+        if (!validateEmail(body.email)) {
+          return new Response(JSON.stringify({ error: 'Invalid email format' }), 
+            { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+
+        // Validate password length
+        if (!validatePassword(body.password)) {
+          return new Response(JSON.stringify({ error: 'Password must be at least 8 characters long' }), 
             { status: 400, headers: { 'Content-Type': 'application/json' } })
         }
         
@@ -176,18 +238,41 @@ export default {
       }
     }
 
-    // Get players API
+    // Get players API - NOW WITH AUTHENTICATION AND USER ISOLATION
     if (url.pathname === '/api/players' && request.method === 'GET') {
-      return new Response(JSON.stringify({ 
-        players: monitoredPlayers,
-        count: monitoredPlayers.length
-      }), {
-        headers: { 'Content-Type': 'application/json' }
-      })
+      const authResult = await authenticateRequest(request, env)
+      if (authResult instanceof Response) {
+        return authResult
+      }
+      
+      try {
+        // Get user-specific subscriptions from database
+        const subscriptions = await env.DB.prepare(`
+          SELECT chess_com_username FROM player_subscriptions WHERE user_id = ?
+        `).bind(authResult.userId).all()
+        
+        const players = subscriptions.results.map((row: any) => row.chess_com_username)
+        
+        return new Response(JSON.stringify({ 
+          players,
+          count: players.length
+        }), {
+          headers: { 'Content-Type': 'application/json' }
+        })
+      } catch (error) {
+        console.error('Get players error:', error)
+        return new Response(JSON.stringify({ error: 'Failed to fetch players' }), 
+          { status: 500, headers: { 'Content-Type': 'application/json' } })
+      }
     }
 
-    // Monitor player API
+    // Monitor player API - NOW WITH AUTHENTICATION AND USER ISOLATION
     if (url.pathname === '/api/monitor' && request.method === 'POST') {
+      const authResult = await authenticateRequest(request, env)
+      if (authResult instanceof Response) {
+        return authResult
+      }
+      
       try {
         const body = await request.json() as { username: string }
         
@@ -196,7 +281,12 @@ export default {
             { status: 400, headers: { 'Content-Type': 'application/json' } })
         }
         
-        if (monitoredPlayers.includes(body.username)) {
+        // Check if user already monitors this player
+        const existing = await env.DB.prepare(`
+          SELECT id FROM player_subscriptions WHERE user_id = ? AND chess_com_username = ?
+        `).bind(authResult.userId, body.username).first()
+        
+        if (existing) {
           return new Response(JSON.stringify({ error: `Already monitoring ${body.username}` }), 
             { status: 400, headers: { 'Content-Type': 'application/json' } })
         }
@@ -209,7 +299,14 @@ export default {
           }), { status: 404, headers: { 'Content-Type': 'application/json' } })
         }
         
-        monitoredPlayers.push(body.username)
+        // Add to user's subscriptions in database
+        const subscriptionId = generateId()
+        const now = new Date().toISOString()
+        
+        await env.DB.prepare(`
+          INSERT INTO player_subscriptions (id, user_id, chess_com_username, created_at)
+          VALUES (?, ?, ?, ?)
+        `).bind(subscriptionId, authResult.userId, body.username, now).run()
         
         return new Response(JSON.stringify({ 
           success: true,
@@ -218,27 +315,21 @@ export default {
         }), { headers: { 'Content-Type': 'application/json' } })
         
       } catch (error) {
-        return new Response(JSON.stringify({ error: 'Invalid request' }), 
-          { status: 400, headers: { 'Content-Type': 'application/json' } })
+        console.error('Monitor player error:', error)
+        return new Response(JSON.stringify({ error: 'Failed to add player monitoring' }), 
+          { status: 500, headers: { 'Content-Type': 'application/json' } })
       }
     }
     
-    // Favicon
-    if (url.pathname === '/favicon.png') {
-      try {
-        const faviconFile = await fetch('https://raw.githubusercontent.com/emily-flambe/chesscom-helper/feature/development/majestic-knight.png')
-        if (faviconFile.ok) {
-          return new Response(faviconFile.body, {
-            headers: { 
-              'Content-Type': 'image/png',
-              'Cache-Control': 'public, max-age=86400'
-            }
-          })
+    // Serve the knight image
+    if (url.pathname === '/majestic-knight-small.png') {
+      return new Response('', {
+        status: 302,
+        headers: {
+          'Location': 'https://raw.githubusercontent.com/emily-flambe/chesscom-helper/feature/ui-overhaul-green-theme/public/majestic-knight-small.png',
+          'Cache-Control': 'public, max-age=86400'
         }
-      } catch (error) {
-        console.error('Error fetching favicon:', error)
-      }
-      return new Response('Not Found', { status: 404 })
+      })
     }
     
     // Main page
@@ -254,100 +345,930 @@ export default {
 
 function getHTML() {
   return `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Chess.com Helper</title>
+    <title>Chesscom Helper</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="icon" type="image/png" href="/majestic-knight-small.png">
     <style>
-      body { font-family: system-ui; margin: 0; background: #0f0f23; color: #e8eaed; padding: 2rem; }
-      .container { max-width: 600px; margin: 0 auto; background: #16213e; padding: 2rem; border-radius: 20px; }
-      h1 { text-align: center; color: #64b5f6; }
-      .form-group { margin: 1rem 0; }
-      label { display: block; margin-bottom: 0.5rem; color: #9aa0a6; }
-      input { width: 100%; padding: 0.8rem; background: #1a1a2e; border: 1px solid #333; border-radius: 8px; color: #e8eaed; }
-      button { width: 100%; padding: 0.8rem; background: #64b5f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 0.5rem; }
-      button:hover { background: #90caf9; }
-      button.secondary { background: #666; }
-      button.secondary:hover { background: #777; }
-      .players { margin-top: 2rem; }
-      .player { background: #1a1a2e; padding: 0.8rem; margin: 0.5rem 0; border-radius: 8px; }
-      .hidden { display: none; }
-      .auth-section { margin-bottom: 2rem; }
-      .user-info { background: #1a1a2e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-      .tabs { display: flex; margin-bottom: 1rem; }
-      .tab { flex: 1; padding: 0.5rem; text-align: center; background: #1a1a2e; cursor: pointer; }
-      .tab.active { background: #64b5f6; }
-      .tab:first-child { border-radius: 8px 0 0 8px; }
-      .tab:last-child { border-radius: 0 8px 8px 0; }
+      /* CSS Variables for Green Color Palette */
+      :root {
+        /* Primary Greens (replacing blues) */
+        --primary-green: #66bb6a;
+        --primary-green-light: #81c784;
+        --primary-green-dark: #4caf50;
+        
+        /* Background Greens (replacing blue-grays) */
+        --bg-dark-forest: #0f1f0f;
+        --bg-dark-green: #1b2e1b;
+        --bg-green-gray: #1a2e1a;
+        
+        /* Semantic Colors */
+        --success-green: #4caf50;
+        --warning-amber: #ff9800;
+        --error-red: #f44336;
+        
+        /* Text & Neutrals */
+        --text-primary: #e8eaed;
+        --text-secondary: #9aa0a6;
+        --border-gray: #333;
+        --border-green: #2e5d32;
+        
+        /* Spacing */
+        --spacing-xs: 0.25rem;
+        --spacing-sm: 0.5rem;
+        --spacing-md: 1rem;
+        --spacing-lg: 1.5rem;
+        --spacing-xl: 2rem;
+        
+        /* Border Radius */
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-xl: 20px;
+      }
+      
+      /* Reset & Base Styles */
+      * {
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        background: var(--bg-dark-forest);
+        color: var(--text-primary);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* Header Navigation */
+      .header {
+        background: var(--bg-dark-green);
+        border-bottom: 1px solid var(--border-green);
+        padding: var(--spacing-md) var(--spacing-xl);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+      
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        text-decoration: none;
+      }
+      
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+      }
+      
+      .logo-text {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.2;
+      }
+      
+      .logo-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary-green);
+      }
+      
+      .logo-tagline {
+        font-size: 0.75rem;
+        font-style: italic;
+        color: var(--text-secondary);
+        margin-top: -2px;
+      }
+      
+      .nav-user {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+      }
+      
+      .nav-user.auth-nav {
+        gap: var(--spacing-sm);
+      }
+      
+      .nav-user .welcome {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+      
+      .nav-user .username {
+        color: var(--primary-green);
+        font-weight: 600;
+      }
+      
+      .nav-button {
+        background: var(--primary-green);
+        color: white;
+        border: none;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+      }
+      
+      .nav-button:hover {
+        background: var(--primary-green-light);
+        transform: translateY(-1px);
+      }
+      
+      .nav-button.secondary {
+        background: var(--bg-green-gray);
+        color: var(--text-primary);
+        border: 1px solid var(--border-green);
+      }
+      
+      .nav-button.secondary:hover {
+        background: var(--border-green);
+      }
+      
+      /* Main Layout */
+      .main-layout {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: var(--spacing-xl);
+      }
+      
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xl);
+      }
+      
+      /* Auth Section */
+      .auth-container {
+        background: var(--bg-dark-green);
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-xl);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      
+      .auth-header {
+        text-align: center;
+        margin-bottom: var(--spacing-xl);
+      }
+      
+      .auth-title {
+        color: var(--primary-green);
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 var(--spacing-sm) 0;
+      }
+      
+      .auth-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin: 0;
+      }
+      
+      .auth-tabs {
+        display: flex;
+        margin-bottom: var(--spacing-lg);
+        background: var(--bg-green-gray);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-xs);
+      }
+      
+      .auth-tab {
+        flex: 1;
+        padding: var(--spacing-sm) var(--spacing-md);
+        text-align: center;
+        background: transparent;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
+      
+      .auth-tab.active {
+        background: var(--primary-green);
+        color: white;
+      }
+      
+      .auth-tab:hover:not(.active) {
+        color: var(--text-primary);
+      }
+      
+      /* Forms */
+      .form-group {
+        margin-bottom: var(--spacing-md);
+      }
+      
+      .form-label {
+        display: block;
+        margin-bottom: var(--spacing-sm);
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+      
+      .form-input {
+        width: 100%;
+        padding: var(--spacing-md);
+        background: var(--bg-green-gray);
+        border: 1px solid var(--border-green);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all 0.2s ease;
+      }
+      
+      .form-input:focus {
+        outline: none;
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 2px rgba(102, 187, 106, 0.2);
+      }
+      
+      .form-input::placeholder {
+        color: var(--text-secondary);
+      }
+      
+      .form-button {
+        width: 100%;
+        padding: var(--spacing-md);
+        background: var(--primary-green);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: var(--spacing-sm);
+      }
+      
+      .form-button:hover:not(:disabled) {
+        background: var(--primary-green-light);
+        transform: translateY(-1px);
+      }
+      
+      .form-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+      
+      /* Main App Content */
+      .app-content {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xl);
+      }
+      
+      .welcome-card {
+        background: var(--bg-dark-green);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-green);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-md);
+      }
+      
+      .welcome-text {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+      
+      .welcome-user {
+        color: var(--primary-green);
+        font-weight: 600;
+      }
+      
+      /* Player Tracking Section */
+      .tracking-section {
+        background: var(--bg-dark-green);
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-green);
+      }
+      
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-lg);
+      }
+      
+      .section-title {
+        color: var(--primary-green);
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0;
+      }
+      
+      .section-icon {
+        font-size: 1.5rem;
+      }
+      
+      .add-player-form {
+        background: var(--bg-green-gray);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-xl);
+      }
+      
+      .add-player-title {
+        color: var(--text-primary);
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 var(--spacing-md) 0;
+      }
+      
+      .input-group {
+        display: flex;
+        gap: var(--spacing-md);
+      }
+      
+      .input-group .form-input {
+        flex: 1;
+      }
+      
+      .input-group .form-button {
+        width: auto;
+        padding: var(--spacing-md) var(--spacing-lg);
+        margin-top: 0;
+      }
+      
+      /* Players Table Container */
+      .players-container {
+        margin-top: var(--spacing-lg);
+      }
+      
+      /* Bulk Actions Bar */
+      .bulk-actions {
+        background: var(--bg-green-gray);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-md);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .bulk-actions-count {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+      
+      .bulk-actions-buttons {
+        display: flex;
+        gap: var(--spacing-sm);
+      }
+      
+      .bulk-action-btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: var(--primary-green);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .bulk-action-btn:hover {
+        background: var(--primary-green-light);
+      }
+      
+      .bulk-action-btn.secondary {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-green);
+      }
+      
+      .bulk-action-btn.secondary:hover {
+        background: var(--bg-green-gray);
+        color: var(--text-primary);
+      }
+      
+      /* Table Wrapper */
+      .table-wrapper {
+        overflow-x: auto;
+        background: var(--bg-green-gray);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-green);
+      }
+      
+      /* Players Table */
+      .players-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      
+      .players-table thead {
+        background: var(--bg-dark-green);
+        border-bottom: 1px solid var(--border-green);
+      }
+      
+      .players-table th {
+        padding: var(--spacing-md) var(--spacing-lg);
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      
+      .players-table th.sortable {
+        cursor: pointer;
+        user-select: none;
+        transition: color 0.2s ease;
+      }
+      
+      .players-table th.sortable:hover {
+        color: var(--primary-green);
+      }
+      
+      .players-table th.sortable::after {
+        content: '↕';
+        margin-left: var(--spacing-xs);
+        opacity: 0.5;
+        font-size: 0.8em;
+      }
+      
+      .players-table th.sortable.sort-asc::after {
+        content: '↑';
+        opacity: 1;
+      }
+      
+      .players-table th.sortable.sort-desc::after {
+        content: '↓';
+        opacity: 1;
+      }
+      
+      .players-table tbody tr {
+        border-bottom: 1px solid var(--border-green);
+        transition: background-color 0.2s ease;
+      }
+      
+      .players-table tbody tr:hover {
+        background: rgba(102, 187, 106, 0.1);
+      }
+      
+      .players-table td {
+        padding: var(--spacing-md) var(--spacing-lg);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+      }
+      
+      .checkbox-column {
+        width: 40px;
+        text-align: center;
+      }
+      
+      .player-info-table {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+      }
+      
+      .player-avatar-small {
+        font-size: 1.2rem;
+      }
+      
+      .player-name {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+      
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        background: rgba(76, 175, 80, 0.2);
+        color: var(--success-green);
+        border-radius: var(--radius-sm);
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      
+      .status-badge.inactive {
+        background: rgba(255, 152, 0, 0.2);
+        color: var(--warning-amber);
+      }
+      
+      .status-indicator {
+        width: 8px;
+        height: 8px;
+        background: currentColor;
+        border-radius: 50%;
+      }
+      
+      .actions-cell {
+        text-align: left;
+        min-width: 280px;
+        padding-left: var(--spacing-md);
+      }
+      
+      /* Action Buttons Container */
+      .action-buttons {
+        display: flex;
+        gap: var(--spacing-xs);
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+      }
+      
+      .action-btn {
+        padding: 6px 12px;
+        background: var(--primary-green);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 85px;
+        justify-content: center;
+      }
+      
+      .action-btn:hover {
+        background: var(--primary-green-light);
+      }
+      
+      .action-btn.secondary {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-green);
+      }
+      
+      .action-btn.secondary:hover {
+        background: var(--bg-green-gray);
+        color: var(--error-red);
+        border-color: var(--error-red);
+      }
+      
+      .action-btn.alert {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-gray);
+      }
+      
+      .action-btn.alert:hover {
+        background: var(--bg-green-gray);
+        color: var(--primary-green);
+        border-color: var(--primary-green);
+      }
+      
+      .action-btn.alert.active {
+        background: var(--primary-green);
+        color: white;
+        border-color: var(--primary-green);
+      }
+      
+      .action-btn.alert.active:hover {
+        background: var(--primary-green-light);
+        border-color: var(--primary-green-light);
+      }
+      
+      .action-btn.outline {
+        background: transparent;
+        color: var(--primary-green);
+        border: 1px solid var(--primary-green);
+      }
+      
+      .action-btn.outline:hover {
+        background: var(--primary-green);
+        color: white;
+        border-color: var(--primary-green);
+      }
+      
+      /* Loading and Error States */
+      .loading-cell, .error-cell {
+        text-align: center;
+        padding: var(--spacing-xl);
+        color: var(--text-secondary);
+      }
+      
+      .error-cell {
+        color: var(--error-red);
+      }
+      
+      .error-message {
+        background: rgba(244, 67, 54, 0.1);
+        border: 1px solid var(--error-red);
+        border-radius: 4px;
+        padding: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+        color: var(--error-red);
+        font-size: 0.9rem;
+        text-align: center;
+      }
+      
+      .empty-state {
+        text-align: center;
+        padding: var(--spacing-xl);
+        color: var(--text-secondary);
+      }
+      
+      .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        opacity: 0.5;
+      }
+      
+      .empty-state-text {
+        font-size: 1.1rem;
+        margin-bottom: var(--spacing-sm);
+      }
+      
+      .empty-state-subtext {
+        font-size: 0.9rem;
+        opacity: 0.7;
+      }
+      
+      /* Utility Classes */
+      .hidden {
+        display: none !important;
+      }
+      
+      .loading {
+        opacity: 0.6;
+      }
+      
+      /* Wide Screen Enhancements */
+      @media (min-width: 1000px) {
+        .players-table th,
+        .players-table td {
+          padding: var(--spacing-lg);
+        }
+        
+        .action-btn {
+          padding: 8px 16px;
+          font-size: 0.875rem;
+          min-width: 90px;
+        }
+      }
+      
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .header {
+          padding: var(--spacing-md);
+        }
+        
+        .header-content {
+          flex-direction: column;
+          gap: var(--spacing-md);
+          align-items: stretch;
+        }
+        
+        .nav-user {
+          justify-content: space-between;
+        }
+        
+        .main-layout {
+          padding: var(--spacing-md);
+        }
+        
+        .auth-container {
+          padding: var(--spacing-lg);
+        }
+        
+        .input-group {
+          flex-direction: column;
+        }
+        
+        .input-group .form-button {
+          width: 100%;
+        }
+        
+        .players-table {
+          font-size: 0.85rem;
+        }
+        
+        .players-table th,
+        .players-table td {
+          padding: var(--spacing-sm);
+        }
+        
+        .action-btn {
+          padding: var(--spacing-xs);
+          font-size: 0.75rem;
+        }
+        
+        .welcome-card {
+          flex-direction: column;
+          text-align: center;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .header {
+          padding: var(--spacing-sm);
+        }
+        
+        .main-layout {
+          padding: var(--spacing-sm);
+        }
+        
+        .auth-container {
+          padding: var(--spacing-md);
+        }
+        
+        .tracking-section {
+          padding: var(--spacing-md);
+        }
+        
+        .add-player-form {
+          padding: var(--spacing-md);
+        }
+      }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>♚ Chess.com Helper (D1 Auth)</h1>
-        
-        <!-- Auth Section -->
-        <div id="authSection" class="auth-section">
-            <div class="tabs">
-                <div class="tab active" onclick="switchTab('login')">Login</div>
-                <div class="tab" onclick="switchTab('register')">Register</div>
-            </div>
+    <!-- Header Navigation -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="/majestic-knight-small.png" alt="Chesscom Helper" class="logo-icon">
+                <div class="logo-text">
+                    <span class="logo-title">Chesscom Helper</span>
+                    <span class="logo-tagline">your chesstest friend</span>
+                </div>
+            </a>
             
-            <!-- Login Form -->
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="loginEmail" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="loginPassword" required>
-                </div>
-                <button type="submit">Login</button>
-            </form>
+            <!-- Navigation for unauthenticated users -->
+            <nav id="authNav" class="nav-user auth-nav">
+                <button class="nav-button secondary" onclick="switchTab('login')">Login</button>
+                <button class="nav-button" onclick="switchTab('register')">Register</button>
+            </nav>
             
-            <!-- Register Form -->
-            <form id="registerForm" class="hidden">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="registerEmail" required>
+            <!-- Navigation for authenticated users -->
+            <nav id="userNav" class="nav-user hidden">
+                <div class="nav-user-info">
+                    <span class="welcome">Welcome,</span>
+                    <span class="username" id="navUsername">User</span>
                 </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="registerPassword" required>
-                </div>
-                <button type="submit">Register</button>
-            </form>
+                <button class="nav-button secondary" onclick="logout()">Logout</button>
+            </nav>
         </div>
-        
-        <!-- Main App (hidden until authenticated) -->
-        <div id="mainApp" class="hidden">
-            <div class="user-info">
-                <span>Welcome, <strong id="currentUser"></strong>!</span>
-                <button class="secondary" onclick="logout()" style="float: right; width: auto; padding: 0.4rem 1rem;">Logout</button>
-                <div style="clear: both;"></div>
-            </div>
-            
-            <form id="playerForm">
-                <div class="form-group">
-                    <label>Chess.com Username</label>
-                    <input type="text" id="username" placeholder="e.g. MagnusCarlsen" required>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-layout">
+        <div class="container">
+            <!-- Authentication Section -->
+            <section id="authSection" class="auth-container">
+                <div class="auth-header">
+                    <h1 class="auth-title">Welcome to Chesscom Helper</h1>
+                    <p class="auth-subtitle">Track your favorite Chess.com players</p>
                 </div>
-                <button type="submit">Start Monitoring</button>
-            </form>
+                
+                <div class="auth-tabs">
+                    <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+                    <button class="auth-tab" onclick="switchTab('register')">Register</button>
+                </div>
+                
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form">
+                    <div id="loginError" class="error-message hidden"></div>
+                    <div class="form-group">
+                        <label class="form-label" for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" class="form-input" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="form-button">Sign In</button>
+                </form>
+                
+                <!-- Register Form -->
+                <form id="registerForm" class="auth-form hidden">
+                    <div id="registerError" class="error-message hidden"></div>
+                    <div class="form-group">
+                        <label class="form-label" for="registerEmail">Email Address</label>
+                        <input type="email" id="registerEmail" class="form-input" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" class="form-input" placeholder="Create a password" required>
+                    </div>
+                    <button type="submit" class="form-button">Create Account</button>
+                </form>
+            </section>
             
-            <div class="players">
-                <h3>Monitored Players</h3>
-                <div id="playersList">Loading...</div>
-            </div>
+            <!-- Main Application -->
+            <section id="mainApp" class="app-content hidden">
+                <div class="welcome-card">
+                    <div>
+                        <div class="welcome-text">
+                            Welcome back, <span class="welcome-user" id="currentUser">User</span>!
+                        </div>
+                    </div>
+                    <div class="status-indicator"></div>
+                </div>
+                
+                <div class="tracking-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Player Tracking</h2>
+                    </div>
+                    
+                    <div class="add-player-form">
+                        <h3 class="add-player-title">Add New Player</h3>
+                        <form id="playerForm">
+                            <div class="input-group">
+                                <input type="text" id="username" class="form-input" 
+                                       placeholder="Enter Chess.com username (e.g., MagnusCarlsen)" required>
+                                <button type="submit" class="form-button">Start Monitoring</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="players-container">
+                        <!-- Bulk Actions Bar -->
+                        <div class="bulk-actions hidden" id="bulkActions">
+                            <span class="bulk-actions-count">
+                                <span id="selectedCount">0</span> selected
+                            </span>
+                            <div class="bulk-actions-buttons">
+                                <button class="bulk-action-btn" onclick="bulkRemove()">Remove Selected</button>
+                                <button class="bulk-action-btn secondary" onclick="clearSelection()">Clear Selection</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Table Wrapper for horizontal scroll -->
+                        <div class="table-wrapper">
+                            <table id="playersTable" class="players-table">
+                                <thead>
+                                    <tr>
+                                        <th class="checkbox-column">
+                                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                        </th>
+                                        <th class="sortable" data-sort="player">Player</th>
+                                        <th class="sortable" data-sort="lastSeen">Last Seen on Chess.com</th>
+                                        <th>Alerts</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="playersList">
+                                    <!-- Players will be loaded here -->
+                                </tbody>
+                            </table>
+                            
+                            <!-- Empty State -->
+                            <div class="empty-state hidden" id="emptyState">
+                                <div class="empty-state-icon"></div>
+                                <div class="empty-state-text">No players monitored yet</div>
+                                <div class="empty-state-subtext">Add a Chess.com username above to start tracking</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
-    </div>
+    </main>
     
     <script>
         // Simple auth state management
         let currentToken = localStorage.getItem('authToken');
         let currentUser = localStorage.getItem('currentUser');
+        
+        // Sorting state variables
+        let currentSortColumn = 'player';
+        let currentSortDirection = 'asc';
         
         // Initialize UI based on auth state
         function initAuth() {
@@ -361,27 +1282,41 @@ function getHTML() {
         function showAuthSection() {
             document.getElementById('authSection').classList.remove('hidden');
             document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('authNav').classList.remove('hidden');
+            document.getElementById('userNav').classList.add('hidden');
         }
         
         function showMainApp() {
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
-            document.getElementById('currentUser').textContent = currentUser || 'User';
+            document.getElementById('authNav').classList.add('hidden');
+            document.getElementById('userNav').classList.remove('hidden');
+            
+            const username = currentUser || 'User';
+            document.getElementById('currentUser').textContent = username;
+            document.getElementById('navUsername').textContent = username;
             loadPlayers();
         }
         
         function switchTab(tab) {
-            const tabs = document.querySelectorAll('.tab');
+            const tabs = document.querySelectorAll('.auth-tab');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            
+            // Clear errors when switching tabs
+            clearFormError('loginError');
+            clearFormError('registerError');
+            
             tabs.forEach(t => t.classList.remove('active'));
             
             if (tab === 'login') {
                 tabs[0].classList.add('active');
-                document.getElementById('loginForm').classList.remove('hidden');
-                document.getElementById('registerForm').classList.add('hidden');
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
             } else {
                 tabs[1].classList.add('active');
-                document.getElementById('loginForm').classList.add('hidden');
-                document.getElementById('registerForm').classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
             }
         }
         
@@ -393,11 +1328,65 @@ function getHTML() {
             showAuthSection();
         }
         
+        // Show loading state for buttons
+        function setButtonLoading(button, isLoading, originalText = 'Submit') {
+            if (isLoading) {
+                button.disabled = true;
+                button.textContent = 'Processing...';
+                button.classList.add('loading');
+            } else {
+                button.disabled = false;
+                button.textContent = originalText;
+                button.classList.remove('loading');
+            }
+        }
+        
+        // Show error messages in auth forms
+        function showNotification(message, type = 'info') {
+            console.log(\`[\${type.toUpperCase()}] \${message}\`);
+            
+            if (type === 'error') {
+                // Determine which form is currently visible
+                const loginForm = document.getElementById('loginForm');
+                const registerForm = document.getElementById('registerForm');
+                
+                if (!loginForm.classList.contains('hidden')) {
+                    showFormError('loginError', message);
+                } else if (!registerForm.classList.contains('hidden')) {
+                    showFormError('registerError', message);
+                }
+            }
+        }
+        
+        // Show error in specific form
+        function showFormError(errorElementId, message) {
+            const errorElement = document.getElementById(errorElementId);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+            }
+        }
+        
+        // Clear error from specific form
+        function clearFormError(errorElementId) {
+            const errorElement = document.getElementById(errorElementId);
+            if (errorElement) {
+                errorElement.textContent = '';
+                errorElement.classList.add('hidden');
+            }
+        }
+        
         // Auth form handlers
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+            const button = this.querySelector('button');
+            
+            // Clear any existing errors
+            clearFormError('loginError');
+            
+            setButtonLoading(button, true, 'Sign In');
             
             try {
                 const response = await fetch('/api/auth/login', {
@@ -415,10 +1404,12 @@ function getHTML() {
                     localStorage.setItem('currentUser', currentUser);
                     showMainApp();
                 } else {
-                    alert('❌ ' + data.error);
+                    showNotification(data.error, 'error');
                 }
             } catch (error) {
-                alert('❌ Login failed');
+                showNotification('Login failed. Please try again.', 'error');
+            } finally {
+                setButtonLoading(button, false, 'Sign In');
             }
         });
         
@@ -426,6 +1417,12 @@ function getHTML() {
             e.preventDefault();
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
+            const button = this.querySelector('button');
+            
+            // Clear any existing errors
+            clearFormError('registerError');
+            
+            setButtonLoading(button, true, 'Create Account');
             
             try {
                 const response = await fetch('/api/auth/register', {
@@ -443,62 +1440,263 @@ function getHTML() {
                     localStorage.setItem('currentUser', currentUser);
                     showMainApp();
                 } else {
-                    alert('❌ ' + data.error);
+                    showNotification(data.error, 'error');
                 }
             } catch (error) {
-                alert('❌ Registration failed');
+                showNotification('Registration failed. Please try again.', 'error');
+            } finally {
+                setButtonLoading(button, false, 'Create Account');
             }
         });
         
+        // Helper function to format last seen date
+        function formatLastSeen(lastSeenDate) {
+            if (!lastSeenDate) return 'Just now';
+            
+            const now = new Date();
+            const seen = new Date(lastSeenDate);
+            const diffMs = now - seen;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return \`\${diffMins}m ago\`;
+            if (diffHours < 24) return \`\${diffHours}h ago\`;
+            return \`\${diffDays}d ago\`;
+        }
+        
+        // Main sorting function
+        function sortPlayers(players, column, direction) {
+            return [...players].sort((a, b) => {
+                let aVal, bVal;
+                
+                switch (column) {
+                    case 'player':
+                        aVal = a.toLowerCase();
+                        bVal = b.toLowerCase();
+                        break;
+                    case 'lastSeen':
+                        // Mock data - all players are "Just now" for now
+                        aVal = new Date();
+                        bVal = new Date();
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        
         async function loadPlayers() {
+            const tbody = document.getElementById('playersList');
+            const emptyState = document.getElementById('emptyState');
+            const table = document.getElementById('playersTable');
+            
+            tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">Loading players...</td></tr>';
+            
+            // Update sort indicators
+            const sortableHeaders = document.querySelectorAll('.sortable');
+            sortableHeaders.forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+                if (header.dataset.sort === currentSortColumn) {
+                    header.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+            
             try {
-                const response = await fetch('/api/players');
+                const response = await fetch('/api/players', {
+                    headers: {
+                        'Authorization': \`Bearer \${currentToken}\`
+                    }
+                });
                 const data = await response.json();
-                const list = document.getElementById('playersList');
+                
                 if (data.players.length === 0) {
-                    list.innerHTML = '<p>No players yet</p>';
+                    tbody.innerHTML = '';
+                    table.style.display = 'none';
+                    emptyState.classList.remove('hidden');
                 } else {
-                    list.innerHTML = data.players.map(p => 
-                        '<div class="player">♟️ ' + p + '</div>'
+                    table.style.display = 'table';
+                    emptyState.classList.add('hidden');
+                    
+                    // Sort players based on current sort settings
+                    const sortedPlayers = sortPlayers(data.players, currentSortColumn, currentSortDirection);
+                    
+                    tbody.innerHTML = sortedPlayers.map((player, index) => 
+                        \`<tr>
+                            <td class="checkbox-column">
+                                <input type="checkbox" class="player-checkbox" data-player="\${player}" onchange="updateBulkActions()">
+                            </td>
+                            <td class="player-name-cell">
+                                <div class="player-info-table">
+                                    <span class="player-name">\${player}</span>
+                                </div>
+                            </td>
+                            <td class="last-seen-cell">Just now</td>
+                            <td class="alerts-cell">
+                                <span class="status-badge">
+                                    <span class="status-indicator"></span>
+                                    Enabled
+                                </span>
+                            </td>
+                            <td class="actions-cell">
+                                <div class="action-buttons">
+                                    <button class="action-btn outline" onclick="viewDetails('\${player}')">View Details</button>
+                                    <button class="action-btn secondary" onclick="removePlayer('\${player}')">Remove</button>
+                                </div>
+                            </td>
+                        </tr>\`
                     ).join('');
                 }
             } catch (error) {
-                document.getElementById('playersList').innerHTML = '<p>Error loading</p>';
+                tbody.innerHTML = '<tr><td colspan="5" class="error-cell">Error loading players. Please try refreshing the page.</td></tr>';
             }
         }
         
         document.getElementById('playerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const username = document.getElementById('username').value.trim();
-            const btn = this.querySelector('button');
+            const usernameInput = document.getElementById('username');
+            const username = usernameInput.value.trim();
+            const button = this.querySelector('button');
             
             if (!username) return;
             
-            btn.disabled = true;
-            btn.textContent = 'Checking...';
+            setButtonLoading(button, true, 'Start Monitoring');
             
             try {
                 const response = await fetch('/api/monitor', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': \`Bearer \${currentToken}\`
+                    },
                     body: JSON.stringify({ username })
                 });
                 
                 const data = await response.json();
                 
                 if (response.ok) {
-                    alert('✅ ' + data.message);
-                    document.getElementById('username').value = '';
+                    showNotification(data.message, 'success');
+                    usernameInput.value = '';
                     loadPlayers();
                 } else {
-                    alert('❌ ' + data.error);
+                    showNotification(data.error, 'error');
                 }
             } catch (error) {
-                alert('❌ Error connecting to server');
+                showNotification('Error connecting to server. Please try again.', 'error');
             } finally {
-                btn.disabled = false;
-                btn.textContent = 'Start Monitoring';
+                setButtonLoading(button, false, 'Start Monitoring');
             }
+        });
+        
+        // Table functionality functions (added to window for global access)
+        window.toggleSelectAll = function() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.player-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateBulkActions();
+        }
+        
+        window.updateBulkActions = function() {
+            const checkedBoxes = document.querySelectorAll('.player-checkbox:checked');
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (checkedBoxes.length > 0) {
+                bulkActions.classList.remove('hidden');
+                selectedCount.textContent = checkedBoxes.length;
+            } else {
+                bulkActions.classList.add('hidden');
+                document.getElementById('selectAll').checked = false;
+            }
+        }
+        
+        window.clearSelection = function() {
+            document.getElementById('selectAll').checked = false;
+            document.querySelectorAll('.player-checkbox').forEach(cb => cb.checked = false);
+            updateBulkActions();
+        }
+        
+        window.bulkRemove = async function() {
+            const checkedBoxes = document.querySelectorAll('.player-checkbox:checked');
+            const players = Array.from(checkedBoxes).map(cb => cb.dataset.player);
+            
+            // TODO: Implement bulk remove API
+            showNotification(\`Removed \${players.length} player(s)\`, 'success');
+            clearSelection();
+            loadPlayers();
+        }
+        
+        window.removePlayer = async function(username) {
+            // TODO: Implement remove API
+            showNotification(\`Stopped monitoring \${username}\`, 'success');
+            loadPlayers();
+        }
+        
+        
+        window.viewDetails = function(username) {
+            // Phase 1: Show coming soon notification
+            showNotification('Player details coming soon!', 'info');
+        }
+        
+        window.toggleAlert = function(username) {
+            // Find the alert button for this player
+            const buttons = document.querySelectorAll('.action-btn.alert');
+            let targetButton = null;
+            
+            buttons.forEach(button => {
+                if (button.getAttribute('onclick') === \`toggleAlert('\${username}')\`) {
+                    targetButton = button;
+                }
+            });
+            
+            if (targetButton) {
+                // Toggle the active class
+                const isActive = targetButton.classList.toggle('active');
+                
+                // Show appropriate notification
+                if (isActive) {
+                    showNotification(\`Alert notifications enabled for \${username}\`, 'success');
+                } else {
+                    showNotification(\`Alert notifications disabled for \${username}\`, 'info');
+                }
+                
+                // TODO: In the future, this would persist the alert preference to the backend
+            }
+        }
+        
+        // Table sorting
+        document.addEventListener('DOMContentLoaded', function() {
+            const sortableHeaders = document.querySelectorAll('.sortable');
+            sortableHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const sortKey = this.dataset.sort;
+                    
+                    // If clicking the same column, toggle direction
+                    if (currentSortColumn === sortKey) {
+                        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        // If clicking a different column, reset to ascending
+                        currentSortColumn = sortKey;
+                        currentSortDirection = 'asc';
+                    }
+                    
+                    // Remove sorting classes from all headers
+                    sortableHeaders.forEach(h => {
+                        h.classList.remove('sort-asc', 'sort-desc');
+                    });
+                    
+                    // Add appropriate class to clicked header
+                    this.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                    
+                    // Re-render the table with sorted data
+                    loadPlayers();
+                });
+            });
         });
         
         // Initialize on page load

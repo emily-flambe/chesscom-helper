@@ -22,7 +22,9 @@ export async function getPlayerSubscriptions(db: D1Database, userId: string): Pr
       ORDER BY created_at DESC
     `).bind(userId).all()
 
-    if (!result.results) return []
+    if (!result.results) {
+return []
+}
 
     return result.results.map(row => ({
       id: row.id as string,
@@ -76,7 +78,7 @@ export async function createPlayerSubscription(db: D1Database, subscriptionData:
   }
 }
 
-export async function deletePlayerSubscription(db: D1Database, userId: string, chessComUsername: string): Promise<void> {
+export async function deletePlayerSubscription(db: D1Database, userId: string, chessComUsername: string, env?: { ENVIRONMENT?: string }): Promise<void> {
   try {
     const result = await db.prepare(`
       DELETE FROM player_subscriptions
@@ -87,7 +89,10 @@ export async function deletePlayerSubscription(db: D1Database, userId: string, c
       throw createApiError('Failed to delete subscription', 500, 'SUBSCRIPTION_DELETE_FAILED')
     }
 
-    await cleanupUnusedPlayerFromMonitoring(db, chessComUsername)
+    // Skip cleanup in development mode to preserve test data
+    if (env?.ENVIRONMENT !== 'development') {
+      await cleanupUnusedPlayerFromMonitoring(db, chessComUsername)
+    }
   } catch (error) {
     console.error('Delete subscription error:', error)
     throw createApiError('Failed to delete subscription', 500, 'SUBSCRIPTION_DELETE_FAILED', error)
@@ -102,7 +107,9 @@ export async function getSubscribersForPlayer(db: D1Database, chessComUsername: 
       WHERE chess_com_username = ?
     `).bind(chessComUsername).all()
 
-    if (!result.results) return []
+    if (!result.results) {
+return []
+}
 
     return result.results.map(row => row.user_id as string)
   } catch (error) {

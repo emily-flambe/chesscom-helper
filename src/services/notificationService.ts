@@ -36,7 +36,9 @@ export async function getNotificationPreferences(db: D1Database, userId: string)
       WHERE user_id = ?
     `).bind(userId).first()
 
-    if (!result) return null
+    if (!result) {
+return null
+}
 
     return {
       userId: result.user_id as string,
@@ -109,7 +111,9 @@ export async function getNotificationHistory(db: D1Database, userId: string, opt
       LIMIT ? OFFSET ?
     `).bind(userId, options.limit, options.offset).all()
 
-    if (!result.results) return []
+    if (!result.results) {
+return []
+}
 
     return result.results.map(row => ({
       id: row.id as string,

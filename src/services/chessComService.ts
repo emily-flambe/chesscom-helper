@@ -174,7 +174,9 @@ export async function batchGetPlayerStatuses(usernames: string[], baseUrl?: stri
 }
 
 function isPlayerOnline(lastOnline?: number): boolean {
-  if (!lastOnline) return false
+  if (!lastOnline) {
+return false
+}
   
   const fiveMinutesAgo = Date.now() / 1000 - 300
   return lastOnline > fiveMinutesAgo

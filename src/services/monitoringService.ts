@@ -27,7 +27,9 @@ export async function getPlayerStatus(db: D1Database, chessComUsername: string):
       WHERE chess_com_username = ?
     `).bind(chessComUsername).first()
 
-    if (!result) return null
+    if (!result) {
+return null
+}
 
     return {
       chessComUsername: result.chess_com_username as string,
@@ -93,7 +95,9 @@ export async function getAllMonitoredPlayers(db: D1Database): Promise<string[]> 
       ORDER BY chess_com_username
     `).all()
 
-    if (!result.results) return []
+    if (!result.results) {
+return []
+}
 
     return result.results.map(row => row.chess_com_username as string)
   } catch (error) {
@@ -112,7 +116,9 @@ export async function getPlayersWithStatusChanges(db: D1Database, since: string)
       ORDER BY updated_at DESC
     `).bind(since).all()
 
-    if (!result.results) return []
+    if (!result.results) {
+return []
+}
 
     return result.results.map(row => ({
       chessComUsername: row.chess_com_username as string,
@@ -197,7 +203,9 @@ async function getRecentMonitoringJobs(db: D1Database): Promise<Array<{
     LIMIT 10
   `).all()
 
-  if (!result.results) return []
+  if (!result.results) {
+return []
+}
 
   return result.results.map(row => ({
     id: row.id as string,

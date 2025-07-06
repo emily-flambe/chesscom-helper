@@ -98,3 +98,7 @@ wrangler deploy
 ## License
 
 MIT License - see LICENSE file for details.
+
+## CLAUDE.md
+
+Borrowed from https://github.com/Veraticus/nix-config/blob/main/home-manager/claude-code/CLAUDE.md !

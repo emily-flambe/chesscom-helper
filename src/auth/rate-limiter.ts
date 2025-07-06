@@ -48,7 +48,7 @@ export interface SuspiciousActivityMetrics {
  * SECURITY MEASURE: Advanced rate limiter with multiple protection layers
  */
 export class AdvancedRateLimiter {
-  private readonly config: RateLimitConfig;
+  private readonly config: RateLimitConfig
   
   constructor(config: RateLimitConfig) {
     this.config = {
@@ -60,7 +60,7 @@ export class AdvancedRateLimiter {
       exponentialBackoff: true,
       suspiciousActivityThreshold: 5,
       ...config
-    };
+    }
   }
 
   /**
@@ -72,8 +72,8 @@ export class AdvancedRateLimiter {
     identifier?: string
   ): Promise<RateLimitResult> {
     
-    const key = identifier || this.generateKey(request);
-    const now = Date.now();
+    const key = identifier || this.generateKey(request)
+    const now = Date.now()
     
     try {
       // SECURITY: Check if IP is blacklisted
@@ -86,42 +86,42 @@ export class AdvancedRateLimiter {
           retryAfter: 86400,
           totalHits: 0,
           suspended: true
-        };
+        }
       }
       
       // SECURITY: Get current rate limit data
-      const rateLimitData = await this.getRateLimitData(key, env);
+      const rateLimitData = await this.getRateLimitData(key, env)
       
       // SECURITY: Check suspicious activity
-      const suspiciousMetrics = await this.checkSuspiciousActivity(key, request, env);
+      const suspiciousMetrics = await this.checkSuspiciousActivity(key, request, env)
       
       // SECURITY: Apply exponential backoff if enabled
       const backoffMultiplier = this.config.exponentialBackoff 
         ? await this.getBackoffMultiplier(key, env)
-        : 1;
+        : 1
       
-      const effectiveLimit = Math.floor(this.config.maxRequests / backoffMultiplier);
-      const windowStart = now - this.config.windowMs;
+      const effectiveLimit = Math.floor(this.config.maxRequests / backoffMultiplier)
+      const windowStart = now - this.config.windowMs
       
       // SECURITY: Clean old entries and count current requests
       const currentRequests = rateLimitData.requests.filter(
         timestamp => timestamp > windowStart
-      ).length;
+      ).length
       
       // SECURITY: Check if limit exceeded
       if (currentRequests >= effectiveLimit) {
         // SECURITY: Increment violation count for exponential backoff
         if (this.config.exponentialBackoff) {
-          await this.incrementViolationCount(key, env);
+          await this.incrementViolationCount(key, env)
         }
         
         // SECURITY: Check for excessive violations (potential attack)
         if (currentRequests > effectiveLimit * 2) {
-          await this.flagSuspiciousActivity(key, env, 'excessive_rate_limit_violations');
+          await this.flagSuspiciousActivity(key, env, 'excessive_rate_limit_violations')
         }
         
-        const resetTime = Math.min(...rateLimitData.requests) + this.config.windowMs;
-        const retryAfter = Math.ceil((resetTime - now) / 1000);
+        const resetTime = Math.min(...rateLimitData.requests) + this.config.windowMs
+        const retryAfter = Math.ceil((resetTime - now) / 1000)
         
         return {
           allowed: false,
@@ -131,14 +131,14 @@ export class AdvancedRateLimiter {
           retryAfter,
           totalHits: currentRequests,
           suspiciousActivity: suspiciousMetrics.isSuspicious
-        };
+        }
       }
       
       // SECURITY: Record this request
-      await this.recordRequest(key, now, env);
+      await this.recordRequest(key, now, env)
       
-      const remaining = effectiveLimit - currentRequests - 1;
-      const resetTime = windowStart + this.config.windowMs;
+      const remaining = effectiveLimit - currentRequests - 1
+      const resetTime = windowStart + this.config.windowMs
       
       return {
         allowed: true,
@@ -147,10 +147,10 @@ export class AdvancedRateLimiter {
         resetTime,
         totalHits: currentRequests + 1,
         suspiciousActivity: suspiciousMetrics.isSuspicious
-      };
+      }
       
     } catch (error) {
-      console.error('Rate limiting error:', error);
+      console.error('Rate limiting error:', error)
       
       // SECURITY: Fail open to prevent complete service disruption
       return {
@@ -159,7 +159,7 @@ export class AdvancedRateLimiter {
         remaining: this.config.maxRequests,
         resetTime: now + this.config.windowMs,
         totalHits: 0
-      };
+      }
     }
   }
 
@@ -168,15 +168,15 @@ export class AdvancedRateLimiter {
    */
   private generateKey(request: Request): string {
     if (this.config.keyGenerator) {
-      return this.config.keyGenerator(request);
+      return this.config.keyGenerator(request)
     }
     
     // SECURITY: Use CF-Connecting-IP (real client IP behind Cloudflare)
     const clientIP = request.headers.get('CF-Connecting-IP') || 
                      request.headers.get('X-Forwarded-For') || 
-                     'unknown';
+                     'unknown'
     
-    return `rate_limit:${clientIP}`;
+    return `rate_limit:${clientIP}`
   }
 
   /**
@@ -188,7 +188,7 @@ export class AdvancedRateLimiter {
     suspiciousActivity: SuspiciousActivityMetrics;
   }> {
     
-    const data = await env.RATE_LIMIT_KV?.get(key);
+    const data = await env.RATE_LIMIT_KV?.get(key)
     
     if (!data) {
       return {
@@ -201,10 +201,10 @@ export class AdvancedRateLimiter {
           suspiciousPatterns: 0,
           lastActivity: Date.now()
         }
-      };
+      }
     }
     
-    return JSON.parse(data);
+    return JSON.parse(data)
   }
 
   /**
@@ -212,42 +212,42 @@ export class AdvancedRateLimiter {
    */
   private async recordRequest(key: string, timestamp: number, env: any): Promise<void> {
     if (!env.RATE_LIMIT_KV) {
-      return;
+      return
     }
     
-    const data = await this.getRateLimitData(key, env);
+    const data = await this.getRateLimitData(key, env)
     
     // SECURITY: Add current request timestamp
-    data.requests.push(timestamp);
+    data.requests.push(timestamp)
     
     // SECURITY: Keep only recent requests (sliding window)
-    const windowStart = timestamp - this.config.windowMs;
-    data.requests = data.requests.filter(ts => ts > windowStart);
+    const windowStart = timestamp - this.config.windowMs
+    data.requests = data.requests.filter(ts => ts > windowStart)
     
     // SECURITY: Detect rapid-fire requests
-    const recentRequests = data.requests.filter(ts => ts > timestamp - 1000); // Last second
+    const recentRequests = data.requests.filter(ts => ts > timestamp - 1000) // Last second
     if (recentRequests.length > 10) {
-      data.suspiciousActivity.rapidFireRequests++;
+      data.suspiciousActivity.rapidFireRequests++
     }
     
-    data.suspiciousActivity.lastActivity = timestamp;
+    data.suspiciousActivity.lastActivity = timestamp
     
     // SECURITY: Store with appropriate TTL
-    const ttl = Math.ceil(this.config.windowMs / 1000) + 300; // Window + 5 minutes buffer
+    const ttl = Math.ceil(this.config.windowMs / 1000) + 300 // Window + 5 minutes buffer
     await env.RATE_LIMIT_KV.put(key, JSON.stringify(data), {
       expirationTtl: ttl
-    });
+    })
   }
 
   /**
    * SECURITY MEASURE: Exponential backoff implementation
    */
   private async getBackoffMultiplier(key: string, env: any): Promise<number> {
-    const data = await this.getRateLimitData(key, env);
+    const data = await this.getRateLimitData(key, env)
     
     // SECURITY: Exponential backoff based on violation count
-    const violations = data.violations || 0;
-    return Math.min(Math.pow(2, violations), 16); // Cap at 16x
+    const violations = data.violations || 0
+    return Math.min(Math.pow(2, violations), 16) // Cap at 16x
   }
 
   /**
@@ -255,19 +255,19 @@ export class AdvancedRateLimiter {
    */
   private async incrementViolationCount(key: string, env: any): Promise<void> {
     if (!env.RATE_LIMIT_KV) {
-      return;
+      return
     }
     
-    const data = await this.getRateLimitData(key, env);
-    data.violations = (data.violations || 0) + 1;
+    const data = await this.getRateLimitData(key, env)
+    data.violations = (data.violations || 0) + 1
     
     // SECURITY: Cap violations to prevent integer overflow
-    data.violations = Math.min(data.violations, 10);
+    data.violations = Math.min(data.violations, 10)
     
-    const ttl = Math.ceil(this.config.windowMs / 1000) + 300;
+    const ttl = Math.ceil(this.config.windowMs / 1000) + 300
     await env.RATE_LIMIT_KV.put(key, JSON.stringify(data), {
       expirationTtl: ttl
-    });
+    })
   }
 
   /**
@@ -279,70 +279,70 @@ export class AdvancedRateLimiter {
     env: any
   ): Promise<{ isSuspicious: boolean; reasons: string[] }> {
     
-    const data = await this.getRateLimitData(key, env);
-    const metrics = data.suspiciousActivity;
-    const reasons: string[] = [];
+    const data = await this.getRateLimitData(key, env)
+    const metrics = data.suspiciousActivity
+    const reasons: string[] = []
     
     // SECURITY: Check for rapid-fire requests
     if (metrics.rapidFireRequests > 3) {
-      reasons.push('rapid_fire_requests');
+      reasons.push('rapid_fire_requests')
     }
     
     // SECURITY: Check for excessive failed auth attempts
     if (metrics.failedAuthAttempts > 5) {
-      reasons.push('excessive_failed_auth');
+      reasons.push('excessive_failed_auth')
     }
     
     // SECURITY: Check for user agent switching (potential bot)
-    const userAgent = request.headers.get('User-Agent') || '';
-    const userAgentHash = await this.hashString(userAgent);
+    const userAgent = request.headers.get('User-Agent') || ''
+    const userAgentHash = await this.hashString(userAgent)
     
     if (await this.isNewUserAgent(key, userAgentHash, env)) {
-      metrics.differentUserAgents++;
+      metrics.differentUserAgents++
       if (metrics.differentUserAgents > 3) {
-        reasons.push('multiple_user_agents');
+        reasons.push('multiple_user_agents')
       }
     }
     
     // SECURITY: Check for suspicious patterns in request
-    const suspiciousPatterns = await this.detectSuspiciousPatterns(request);
+    const suspiciousPatterns = await this.detectSuspiciousPatterns(request)
     if (suspiciousPatterns.length > 0) {
-      metrics.suspiciousPatterns++;
-      reasons.push(...suspiciousPatterns);
+      metrics.suspiciousPatterns++
+      reasons.push(...suspiciousPatterns)
     }
     
     // SECURITY: Check for abnormal request timing
-    const now = Date.now();
+    const now = Date.now()
     if (data.requests.length > 2) {
-      const intervals = [];
+      const intervals = []
       for (let i = 1; i < data.requests.length; i++) {
-        intervals.push(data.requests[i] - data.requests[i-1]);
+        intervals.push(data.requests[i] - data.requests[i-1])
       }
       
-      const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+      const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length
       if (avgInterval < 100) { // Less than 100ms average
-        reasons.push('abnormal_timing');
+        reasons.push('abnormal_timing')
       }
     }
     
-    const isSuspicious = reasons.length >= (this.config.suspiciousActivityThreshold || 2);
+    const isSuspicious = reasons.length >= (this.config.suspiciousActivityThreshold || 2)
     
     // SECURITY: Update metrics
     if (isSuspicious) {
-      await this.flagSuspiciousActivity(key, env, reasons.join(','));
+      await this.flagSuspiciousActivity(key, env, reasons.join(','))
     }
     
-    return { isSuspicious, reasons };
+    return { isSuspicious, reasons }
   }
 
   /**
    * SECURITY MEASURE: Detect suspicious patterns in requests
    */
   private async detectSuspiciousPatterns(request: Request): Promise<string[]> {
-    const patterns: string[] = [];
+    const patterns: string[] = []
     
     // SECURITY: Check for common attack patterns in URL
-    const url = new URL(request.url);
+    const url = new URL(request.url)
     const suspiciousUrlPatterns = [
       /\.\./,           // Directory traversal
       /<script/i,       // XSS attempts
@@ -351,17 +351,17 @@ export class AdvancedRateLimiter {
       /javascript:/i,   // JavaScript protocol
       /data:/i,         // Data URI
       /vbscript:/i      // VBScript
-    ];
+    ]
     
     for (const pattern of suspiciousUrlPatterns) {
       if (pattern.test(url.pathname + url.search)) {
-        patterns.push('suspicious_url_pattern');
-        break;
+        patterns.push('suspicious_url_pattern')
+        break
       }
     }
     
     // SECURITY: Check for suspicious headers
-    const userAgent = request.headers.get('User-Agent') || '';
+    const userAgent = request.headers.get('User-Agent') || ''
     const suspiciousUserAgents = [
       /bot/i,
       /crawler/i,
@@ -371,21 +371,21 @@ export class AdvancedRateLimiter {
       /curl/i,
       /wget/i,
       /postman/i
-    ];
+    ]
     
     for (const pattern of suspiciousUserAgents) {
       if (pattern.test(userAgent)) {
-        patterns.push('suspicious_user_agent');
-        break;
+        patterns.push('suspicious_user_agent')
+        break
       }
     }
     
     // SECURITY: Check for missing common headers
     if (!request.headers.get('Accept') || !request.headers.get('Accept-Language')) {
-      patterns.push('missing_browser_headers');
+      patterns.push('missing_browser_headers')
     }
     
-    return patterns;
+    return patterns
   }
 
   /**
@@ -397,51 +397,51 @@ export class AdvancedRateLimiter {
     reason: string
   ): Promise<void> {
     
-    const suspiciousKey = `suspicious:${key}`;
-    const now = Date.now();
+    const suspiciousKey = `suspicious:${key}`
+    const now = Date.now()
     
     try {
-      const existingData = await env.SUSPICIOUS_ACTIVITY?.get(suspiciousKey);
+      const existingData = await env.SUSPICIOUS_ACTIVITY?.get(suspiciousKey)
       const data = existingData ? JSON.parse(existingData) : {
         firstSeen: now,
         lastSeen: now,
         incidents: []
-      };
+      }
       
-      data.lastSeen = now;
+      data.lastSeen = now
       data.incidents.push({
         timestamp: now,
         reason,
         severity: this.calculateSeverity(reason)
-      });
+      })
       
       // SECURITY: Keep only recent incidents
       data.incidents = data.incidents.filter(
         incident => incident.timestamp > now - 86400000 // 24 hours
-      );
+      )
       
       // SECURITY: Auto-blacklist if too many high-severity incidents
       const highSeverityIncidents = data.incidents.filter(
         incident => incident.severity >= 8
-      ).length;
+      ).length
       
       if (highSeverityIncidents >= 3) {
-        await this.blacklistKey(key, env, 'excessive_suspicious_activity');
+        await this.blacklistKey(key, env, 'excessive_suspicious_activity')
       }
       
       await env.SUSPICIOUS_ACTIVITY?.put(suspiciousKey, JSON.stringify(data), {
         expirationTtl: 86400 // 24 hours
-      });
+      })
       
       console.warn('Suspicious activity detected:', {
         key: key.replace(/rate_limit:/, ''),
         reason,
         timestamp: new Date().toISOString(),
         totalIncidents: data.incidents.length
-      });
+      })
       
     } catch (error) {
-      console.error('Suspicious activity flagging error:', error);
+      console.error('Suspicious activity flagging error:', error)
     }
   }
 
@@ -458,9 +458,9 @@ export class AdvancedRateLimiter {
       'missing_browser_headers': 4,
       'abnormal_timing': 6,
       'excessive_rate_limit_violations': 8
-    };
+    }
     
-    return severityMap[reason] || 5;
+    return severityMap[reason] || 5
   }
 
   /**
@@ -468,13 +468,13 @@ export class AdvancedRateLimiter {
    */
   private async isBlacklisted(key: string, env: any): Promise<boolean> {
     if (!env.BLACKLIST_KV) {
-      return false;
+      return false
     }
     
-    const blacklistKey = `blacklist:${key}`;
-    const blacklistData = await env.BLACKLIST_KV.get(blacklistKey);
+    const blacklistKey = `blacklist:${key}`
+    const blacklistData = await env.BLACKLIST_KV.get(blacklistKey)
     
-    return blacklistData !== null;
+    return blacklistData !== null
   }
 
   /**
@@ -482,25 +482,25 @@ export class AdvancedRateLimiter {
    */
   private async blacklistKey(key: string, env: any, reason: string): Promise<void> {
     if (!env.BLACKLIST_KV) {
-      return;
+      return
     }
     
-    const blacklistKey = `blacklist:${key}`;
+    const blacklistKey = `blacklist:${key}`
     const blacklistData = {
       reason,
       timestamp: Date.now(),
       expiresAt: Date.now() + 86400000 // 24 hours
-    };
+    }
     
     await env.BLACKLIST_KV.put(blacklistKey, JSON.stringify(blacklistData), {
       expirationTtl: 86400 // 24 hours
-    });
+    })
     
     console.error('Key blacklisted:', {
       key: key.replace(/rate_limit:/, ''),
       reason,
       timestamp: new Date().toISOString()
-    });
+    })
   }
 
   /**
@@ -508,77 +508,77 @@ export class AdvancedRateLimiter {
    */
   private async isNewUserAgent(key: string, userAgentHash: string, env: any): Promise<boolean> {
     if (!env.USER_AGENTS_KV) {
-      return false;
+      return false
     }
     
-    const userAgentKey = `ua:${key}`;
-    const knownUserAgents = await env.USER_AGENTS_KV.get(userAgentKey);
+    const userAgentKey = `ua:${key}`
+    const knownUserAgents = await env.USER_AGENTS_KV.get(userAgentKey)
     
     if (!knownUserAgents) {
       await env.USER_AGENTS_KV.put(userAgentKey, JSON.stringify([userAgentHash]), {
         expirationTtl: 86400 // 24 hours
-      });
-      return false;
+      })
+      return false
     }
     
-    const userAgentList = JSON.parse(knownUserAgents);
+    const userAgentList = JSON.parse(knownUserAgents)
     
     if (!userAgentList.includes(userAgentHash)) {
-      userAgentList.push(userAgentHash);
+      userAgentList.push(userAgentHash)
       
       // SECURITY: Limit stored user agents
       if (userAgentList.length > 5) {
-        userAgentList.shift(); // Remove oldest
+        userAgentList.shift() // Remove oldest
       }
       
       await env.USER_AGENTS_KV.put(userAgentKey, JSON.stringify(userAgentList), {
         expirationTtl: 86400 // 24 hours
-      });
+      })
       
-      return true;
+      return true
     }
     
-    return false;
+    return false
   }
 
   /**
    * SECURITY MEASURE: Hash string for comparison
    */
   private async hashString(input: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(input);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const encoder = new TextEncoder()
+    const data = encoder.encode(input)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
   }
 
   /**
    * SECURITY MEASURE: Create HTTP response with rate limit headers
    */
   createRateLimitResponse(result: RateLimitResult): Response {
-    const headers = new Headers();
+    const headers = new Headers()
     
     if (this.config.standardHeaders) {
-      headers.set('RateLimit-Limit', result.limit.toString());
-      headers.set('RateLimit-Remaining', result.remaining.toString());
-      headers.set('RateLimit-Reset', Math.ceil(result.resetTime / 1000).toString());
+      headers.set('RateLimit-Limit', result.limit.toString())
+      headers.set('RateLimit-Remaining', result.remaining.toString())
+      headers.set('RateLimit-Reset', Math.ceil(result.resetTime / 1000).toString())
     }
     
     if (this.config.legacyHeaders) {
-      headers.set('X-RateLimit-Limit', result.limit.toString());
-      headers.set('X-RateLimit-Remaining', result.remaining.toString());
-      headers.set('X-RateLimit-Reset', Math.ceil(result.resetTime / 1000).toString());
+      headers.set('X-RateLimit-Limit', result.limit.toString())
+      headers.set('X-RateLimit-Remaining', result.remaining.toString())
+      headers.set('X-RateLimit-Reset', Math.ceil(result.resetTime / 1000).toString())
     }
     
     if (result.retryAfter) {
-      headers.set('Retry-After', result.retryAfter.toString());
+      headers.set('Retry-After', result.retryAfter.toString())
     }
     
-    headers.set('Content-Type', 'application/json');
+    headers.set('Content-Type', 'application/json')
     
-    const status = result.suspended ? 403 : 429;
+    const status = result.suspended ? 403 : 429
     const message = result.suspended ? 'Access suspended due to suspicious activity' : 
-                   this.config.message || 'Too many requests';
+                   this.config.message || 'Too many requests'
     
     return new Response(JSON.stringify({
       error: message,
@@ -592,7 +592,7 @@ export class AdvancedRateLimiter {
     }), {
       status,
       headers
-    });
+    })
   }
 }
 
@@ -607,7 +607,7 @@ export class AuthRateLimiter extends AdvancedRateLimiter {
       exponentialBackoff: true,
       suspiciousActivityThreshold: 3,
       message: 'Too many authentication attempts'
-    });
+    })
   }
 }
 
@@ -619,7 +619,7 @@ export class APIRateLimiter extends AdvancedRateLimiter {
       exponentialBackoff: false,
       suspiciousActivityThreshold: 5,
       message: 'API rate limit exceeded'
-    });
+    })
   }
 }
 
@@ -631,6 +631,6 @@ export class GlobalRateLimiter extends AdvancedRateLimiter {
       exponentialBackoff: true,
       suspiciousActivityThreshold: 10,
       message: 'Global rate limit exceeded'
-    });
+    })
   }
 }

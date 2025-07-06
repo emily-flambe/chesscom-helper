@@ -100,6 +100,12 @@ async function cleanupOldMonitoringJobs(db: D1Database): Promise<number> {
 }
 
 export async function cleanupOrphanedPlayerStatuses(env: Env): Promise<number> {
+  // Skip cleanup in development mode to preserve test data
+  if (env.ENVIRONMENT === 'development') {
+    console.log('Skipping orphaned player status cleanup in development mode')
+    return 0
+  }
+
   try {
     const result = await env.DB.prepare(`
       DELETE FROM player_status
