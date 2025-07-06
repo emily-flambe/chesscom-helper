@@ -4,6 +4,10 @@ We're building production-quality code together. Your role is to create maintain
 
 When you seem stuck or overly complex, I'll redirect you - my guidance helps you stay on track.
 
+## Phase 4: User Interface & Controls
+
+This branch implements Phase 4 of the Chess.com Helper development, focusing on creating a comprehensive user interface and control system for notification management.
+
 ## 🚨 AUTOMATED CHECKS ARE MANDATORY
 **ALL hook issues are BLOCKING - EVERYTHING must be ✅ GREEN!**  
 No errors. No formatting issues. No linting problems. Zero tolerance.  
