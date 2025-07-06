@@ -321,12 +321,15 @@ export default {
       }
     }
     
-    // Serve the knight image
-    if (url.pathname === '/majestic-knight-small.png') {
+    // Serve static assets
+    if (url.pathname === '/majestic-knight-small.png' || url.pathname === '/favicon.png') {
+      // In production, these should be served by CDN or static hosting
+      // For now, redirect to the current branch where files exist
+      const imageName = url.pathname.substring(1) // remove leading slash
       return new Response('', {
         status: 302,
         headers: {
-          'Location': 'https://raw.githubusercontent.com/emily-flambe/chesscom-helper/feature/ui-overhaul-green-theme/public/majestic-knight-small.png',
+          'Location': `https://raw.githubusercontent.com/emily-flambe/chesscom-helper/feature/ui-overhaul-green-theme/public/${imageName}`,
           'Cache-Control': 'public, max-age=86400'
         }
       })
@@ -657,6 +660,7 @@ function getHTML() {
         align-items: center;
         justify-content: space-between;
         gap: var(--spacing-md);
+        position: relative;
       }
       
       .welcome-text {
@@ -667,6 +671,27 @@ function getHTML() {
       .welcome-user {
         color: var(--primary-green);
         font-weight: 600;
+      }
+      
+      .welcome-dismiss {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: var(--spacing-xs);
+        border-radius: var(--radius-sm);
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+      }
+      
+      .welcome-dismiss:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
       }
       
       /* Player Tracking Section */
@@ -1091,6 +1116,13 @@ function getHTML() {
         .welcome-card {
           flex-direction: column;
           text-align: center;
+          position: relative;
+        }
+        
+        .welcome-dismiss {
+          position: absolute;
+          top: var(--spacing-sm);
+          right: var(--spacing-sm);
         }
       }
       
@@ -1192,13 +1224,13 @@ function getHTML() {
             
             <!-- Main Application -->
             <section id="mainApp" class="app-content hidden">
-                <div class="welcome-card">
+                <div class="welcome-card" id="welcomeCard">
                     <div>
                         <div class="welcome-text">
                             Welcome back, <span class="welcome-user" id="currentUser">User</span>!
                         </div>
                     </div>
-                    <div class="status-indicator"></div>
+                    <button class="welcome-dismiss" onclick="dismissWelcome()" title="Dismiss">×</button>
                 </div>
                 
                 <div class="tracking-section">
@@ -1699,8 +1731,38 @@ function getHTML() {
             });
         });
         
+        // Welcome card dismiss functionality
+        window.dismissWelcome = function() {
+            const welcomeCard = document.getElementById('welcomeCard');
+            if (welcomeCard) {
+                welcomeCard.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                welcomeCard.style.opacity = '0';
+                welcomeCard.style.transform = 'translateY(-10px)';
+                
+                setTimeout(() => {
+                    welcomeCard.style.display = 'none';
+                    // Remember the user's preference
+                    localStorage.setItem('welcomeCardDismissed', 'true');
+                }, 300);
+            }
+        }
+        
+        // Check if welcome card should be hidden on load
+        function checkWelcomeCardVisibility() {
+            const dismissed = localStorage.getItem('welcomeCardDismissed');
+            if (dismissed === 'true') {
+                const welcomeCard = document.getElementById('welcomeCard');
+                if (welcomeCard) {
+                    welcomeCard.style.display = 'none';
+                }
+            }
+        }
+        
         // Initialize on page load
         initAuth();
+        
+        // Check welcome card visibility after DOM is ready
+        setTimeout(checkWelcomeCardVisibility, 100);
     </script>
 </body>
 </html>`
