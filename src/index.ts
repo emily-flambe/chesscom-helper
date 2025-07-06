@@ -321,12 +321,15 @@ export default {
       }
     }
     
-    // Serve the knight image
-    if (url.pathname === '/majestic-knight-small.png') {
+    // Serve static assets
+    if (url.pathname === '/majestic-knight-small.png' || url.pathname === '/favicon.png') {
+      // In production, these should be served by CDN or static hosting
+      // For now, redirect to the current branch where files exist
+      const imageName = url.pathname.substring(1) // remove leading slash
       return new Response('', {
         status: 302,
         headers: {
-          'Location': 'https://raw.githubusercontent.com/emily-flambe/chesscom-helper/feature/ui-overhaul-green-theme/public/majestic-knight-small.png',
+          'Location': `https://raw.githubusercontent.com/emily-flambe/chesscom-helper/feature/ui-overhaul-green-theme/public/${imageName}`,
           'Cache-Control': 'public, max-age=86400'
         }
       })
