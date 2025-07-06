@@ -1,6 +1,12 @@
 import { Router, json, error } from 'itty-router'
-import { getNotificationPreferences, updateNotificationPreferences } from '../services/notificationService'
-import { getNotificationHistory } from '../services/notificationService'
+import { 
+  getNotificationPreferences, 
+  updateNotificationPreferences,
+  getNotificationHistory,
+  getPlayerNotificationPreferences,
+  updatePlayerNotificationPreferences,
+  getAllPlayerNotificationPreferences
+} from '../services/notificationService'
 import type { Env } from '../index'
 
 const router = Router({ base: '/api/v1/notifications' })
@@ -129,6 +135,80 @@ router.post('/internal/queue', async (request: Request, env: Env) => {
   } catch (err) {
     console.error('Queue notification error:', err)
     return error(500, 'Failed to queue notification')
+  }
+})
+
+// Per-player notification preferences
+
+router.get('/player-preferences', async (request: Request, env: Env) => {
+  try {
+    const userId = request.user?.id
+    if (!userId) {
+      return error(401, 'Unauthorized')
+    }
+
+    const allPreferences = await getAllPlayerNotificationPreferences(env.DB, userId)
+    return json({ playerPreferences: allPreferences })
+
+  } catch (err) {
+    console.error('Get all player notification preferences error:', err)
+    return error(500, 'Failed to fetch player notification preferences')
+  }
+})
+
+router.get('/player-preferences/:username', async (request: Request, env: Env) => {
+  try {
+    const userId = request.user?.id
+    if (!userId) {
+      return error(401, 'Unauthorized')
+    }
+
+    const { username } = request.params
+    if (!username) {
+      return error(400, 'Username parameter required')
+    }
+
+    const preferences = await getPlayerNotificationPreferences(env.DB, userId, username)
+    return json({ playerPreferences: preferences })
+
+  } catch (err) {
+    console.error('Get player notification preferences error:', err)
+    return error(500, 'Failed to fetch player notification preferences')
+  }
+})
+
+router.put('/player-preferences/:username', async (request: Request, env: Env) => {
+  try {
+    const userId = request.user?.id
+    if (!userId) {
+      return error(401, 'Unauthorized')
+    }
+
+    const { username } = request.params
+    if (!username) {
+      return error(400, 'Username parameter required')
+    }
+
+    const body = await request.json() as {
+      notifyOnline?: boolean
+      notifyGameStart?: boolean
+      notifyGameEnd?: boolean
+    }
+
+    // Validate at least one field is provided
+    if (body.notifyOnline === undefined && body.notifyGameStart === undefined && body.notifyGameEnd === undefined) {
+      return error(400, 'At least one notification preference must be specified')
+    }
+
+    const preferences = await updatePlayerNotificationPreferences(env.DB, userId, username, body)
+    return json({ playerPreferences: preferences })
+
+  } catch (err) {
+    console.error('Update player notification preferences error:', err)
+    if (err instanceof Error && err.message.includes('SUBSCRIPTION_NOT_FOUND')) {
+      return error(404, 'Player subscription not found')
+    }
+    return error(500, 'Failed to update player notification preferences')
   }
 })
 

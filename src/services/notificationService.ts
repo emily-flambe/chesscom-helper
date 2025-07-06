@@ -28,6 +28,16 @@ export interface QueuedNotification {
   queuedAt: string
 }
 
+export interface PlayerNotificationPreferences {
+  id: string
+  subscriptionId: string
+  notifyOnline: boolean
+  notifyGameStart: boolean
+  notifyGameEnd: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 export async function getNotificationPreferences(db: D1Database, userId: string): Promise<NotificationPreferences | null> {
   try {
     const result = await db.prepare(`
@@ -228,6 +238,15 @@ export async function shouldSendNotification(db: D1Database, userId: string, pla
       return false
     }
 
+    // Check per-player preferences
+    const playerPrefs = await getPlayerNotificationPreferences(db, userId, playerName)
+    if (playerPrefs) {
+      const shouldNotify = eventType === 'game_started' ? playerPrefs.notifyGameStart : playerPrefs.notifyGameEnd
+      if (!shouldNotify) {
+        return false
+      }
+    }
+
     const recentNotification = await db.prepare(`
       SELECT id FROM notification_log
       WHERE user_id = ? AND chess_com_username = ? AND notification_type = ?
@@ -239,5 +258,153 @@ export async function shouldSendNotification(db: D1Database, userId: string, pla
   } catch (error) {
     console.error('Should send notification check error:', error)
     return false
+  }
+}
+
+// Per-player notification preference functions
+
+export async function getPlayerNotificationPreferences(db: D1Database, userId: string, chessComUsername: string): Promise<PlayerNotificationPreferences | null> {
+  try {
+    const result = await db.prepare(`
+      SELECT pnp.id, pnp.subscription_id, pnp.notify_online, pnp.notify_game_start, pnp.notify_game_end, pnp.created_at, pnp.updated_at
+      FROM player_notification_preferences pnp
+      JOIN player_subscriptions ps ON pnp.subscription_id = ps.id
+      WHERE ps.user_id = ? AND ps.chess_com_username = ?
+    `).bind(userId, chessComUsername).first()
+
+    if (!result) {
+      return null
+    }
+
+    return {
+      id: result.id as string,
+      subscriptionId: result.subscription_id as string,
+      notifyOnline: Boolean(result.notify_online),
+      notifyGameStart: Boolean(result.notify_game_start),
+      notifyGameEnd: Boolean(result.notify_game_end),
+      createdAt: result.created_at as string,
+      updatedAt: result.updated_at as string
+    }
+  } catch (error) {
+    console.error('Get player notification preferences error:', error)
+    throw createApiError('Failed to fetch player notification preferences', 500, 'PLAYER_NOTIFICATION_PREFERENCES_FETCH_FAILED', error)
+  }
+}
+
+export async function updatePlayerNotificationPreferences(db: D1Database, userId: string, chessComUsername: string, updates: {
+  notifyOnline?: boolean
+  notifyGameStart?: boolean
+  notifyGameEnd?: boolean
+}): Promise<PlayerNotificationPreferences> {
+  const now = new Date().toISOString()
+
+  try {
+    // First find the subscription
+    const subscription = await db.prepare(`
+      SELECT id FROM player_subscriptions 
+      WHERE user_id = ? AND chess_com_username = ?
+    `).bind(userId, chessComUsername).first()
+
+    if (!subscription) {
+      throw createApiError('Player subscription not found', 404, 'SUBSCRIPTION_NOT_FOUND')
+    }
+
+    const subscriptionId = subscription.id as string
+
+    // Check if preferences already exist
+    const existing = await db.prepare(`
+      SELECT id FROM player_notification_preferences 
+      WHERE subscription_id = ?
+    `).bind(subscriptionId).first()
+
+    if (existing) {
+      // Update existing preferences
+      const updateFields: string[] = []
+      const values: any[] = []
+
+      if (updates.notifyOnline !== undefined) {
+        updateFields.push('notify_online = ?')
+        values.push(updates.notifyOnline)
+      }
+
+      if (updates.notifyGameStart !== undefined) {
+        updateFields.push('notify_game_start = ?')
+        values.push(updates.notifyGameStart)
+      }
+
+      if (updates.notifyGameEnd !== undefined) {
+        updateFields.push('notify_game_end = ?')
+        values.push(updates.notifyGameEnd)
+      }
+
+      if (updateFields.length === 0) {
+        throw createApiError('No valid fields to update', 400, 'INVALID_UPDATE_DATA')
+      }
+
+      updateFields.push('updated_at = ?')
+      values.push(now, subscriptionId)
+
+      await db.prepare(`
+        UPDATE player_notification_preferences 
+        SET ${updateFields.join(', ')}
+        WHERE subscription_id = ?
+      `).bind(...values).run()
+    } else {
+      // Create new preferences
+      const id = await generateSecureId()
+      
+      await db.prepare(`
+        INSERT INTO player_notification_preferences 
+        (id, subscription_id, notify_online, notify_game_start, notify_game_end, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        id,
+        subscriptionId,
+        updates.notifyOnline ?? false,
+        updates.notifyGameStart ?? false,
+        updates.notifyGameEnd ?? false,
+        now,
+        now
+      ).run()
+    }
+
+    const preferences = await getPlayerNotificationPreferences(db, userId, chessComUsername)
+    if (!preferences) {
+      throw createApiError('Failed to retrieve updated player preferences', 500, 'PLAYER_PREFERENCES_UPDATE_FAILED')
+    }
+
+    return preferences
+  } catch (error) {
+    console.error('Update player notification preferences error:', error)
+    throw createApiError('Failed to update player notification preferences', 500, 'PLAYER_NOTIFICATION_PREFERENCES_UPDATE_FAILED', error)
+  }
+}
+
+export async function getAllPlayerNotificationPreferences(db: D1Database, userId: string): Promise<PlayerNotificationPreferences[]> {
+  try {
+    const result = await db.prepare(`
+      SELECT pnp.id, pnp.subscription_id, pnp.notify_online, pnp.notify_game_start, pnp.notify_game_end, pnp.created_at, pnp.updated_at
+      FROM player_notification_preferences pnp
+      JOIN player_subscriptions ps ON pnp.subscription_id = ps.id
+      WHERE ps.user_id = ?
+      ORDER BY pnp.created_at DESC
+    `).bind(userId).all()
+
+    if (!result.results) {
+      return []
+    }
+
+    return result.results.map(row => ({
+      id: row.id as string,
+      subscriptionId: row.subscription_id as string,
+      notifyOnline: Boolean(row.notify_online),
+      notifyGameStart: Boolean(row.notify_game_start),
+      notifyGameEnd: Boolean(row.notify_game_end),
+      createdAt: row.created_at as string,
+      updatedAt: row.updated_at as string
+    }))
+  } catch (error) {
+    console.error('Get all player notification preferences error:', error)
+    throw createApiError('Failed to fetch all player notification preferences', 500, 'ALL_PLAYER_NOTIFICATION_PREFERENCES_FETCH_FAILED', error)
   }
 }
