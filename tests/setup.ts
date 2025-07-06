@@ -1,4 +1,5 @@
 import { beforeEach } from 'vitest'
+import type { TestEnv, TestD1Database, TestKVNamespace, MockD1Result } from './types'
 
 // Test environment setup
 beforeEach(async () => {
@@ -7,7 +8,7 @@ beforeEach(async () => {
 })
 
 // Global test utilities
-export const createTestEnv = (): Env => ({
+export const createTestEnv = (): TestEnv => ({
   DB: createMockD1Database(),
   CACHE: createMockKVNamespace(),
   JWT_SECRET: 'test-jwt-secret',
@@ -16,29 +17,97 @@ export const createTestEnv = (): Env => ({
   RESEND_API_KEY: 'test-resend-key'
 })
 
-export const createMockD1Database = (): D1Database => ({
-  prepare: (query: string) => ({
-    bind: (...params: any[]) => ({
+export const createMockD1Database = (): TestD1Database => {
+  const createMockResult = (): MockD1Result => ({
+    results: [],
+    success: true,
+    meta: { duration: 0, rows_read: 0, rows_written: 0 }
+  })
+
+  return {
+    prepare: (query: string) => ({
+      bind: (...params: any[]) => ({
+        bind: (...moreParams: any[]) => ({
+          first: async () => null,
+          all: async () => createMockResult(),
+          run: async () => ({ ...createMockResult(), changes: 0 }),
+          raw: async () => ({ query, params: [...params, ...moreParams] })
+        }),
+        first: async () => null,
+        all: async () => createMockResult(),
+        run: async () => ({ ...createMockResult(), changes: 0 }),
+        raw: async () => ({ query, params })
+      }),
       first: async () => null,
-      all: async () => ({ results: [] }),
-      run: async () => ({ success: true, changes: 0 })
+      all: async () => createMockResult(),
+      run: async () => ({ ...createMockResult(), changes: 0 }),
+      raw: async () => ({ query, params: [] })
     }),
-    first: async () => null,
-    all: async () => ({ results: [] }),
-    run: async () => ({ success: true, changes: 0 })
+    dump: async () => new ArrayBuffer(0),
+    batch: async (statements: any[]) => statements.map(() => createMockResult()),
+    exec: async (query: string) => ({ count: 0, duration: 0 }),
+    withSession: (callback: (session: any) => Promise<any>) => callback({}),
+    raw: (query: string, ...params: any[]) => ({ query, params })
+  }
+}
+
+export const createMockKVNamespace = (): TestKVNamespace => ({
+  get: async (key: string, options?: any) => null,
+  put: async (key: string, value: string | ArrayBuffer | ArrayBufferView | ReadableStream, options?: any) => undefined,
+  delete: async (key: string) => undefined,
+  list: async (options?: any) => ({ 
+    keys: [], 
+    list_complete: true, 
+    cursor: '',
+    cacheStatus: null
   }),
-  dump: async () => new ArrayBuffer(0),
-  batch: async () => [],
-  exec: async () => ({ count: 0, duration: 0 })
+  getWithMetadata: async (key: string, options?: any) => ({ 
+    value: null, 
+    metadata: null,
+    cacheStatus: null
+  })
 })
 
-export const createMockKVNamespace = (): KVNamespace => ({
-  get: async () => null,
-  put: async () => undefined,
-  delete: async () => undefined,
-  list: async () => ({ keys: [], list_complete: true, cursor: '' }),
-  getWithMetadata: async () => ({ value: null, metadata: null })
-})
+// Helper function to create a mock D1Database with custom behavior
+export const createCustomMockD1Database = (options: {
+  firstResult?: any
+  allResults?: any[]
+  runChanges?: number
+} = {}): TestD1Database => {
+  const { firstResult = null, allResults = [], runChanges = 0 } = options
+
+  const createMockResult = (results: any[] = allResults): MockD1Result => ({
+    results,
+    success: true,
+    meta: { duration: 0, rows_read: 0, rows_written: 0 }
+  })
+
+  return {
+    prepare: (query: string) => ({
+      bind: (...params: any[]) => ({
+        bind: (...moreParams: any[]) => ({
+          first: async () => firstResult,
+          all: async () => createMockResult(),
+          run: async () => ({ ...createMockResult(), changes: runChanges }),
+          raw: async () => ({ query, params: [...params, ...moreParams] })
+        }),
+        first: async () => firstResult,
+        all: async () => createMockResult(),
+        run: async () => ({ ...createMockResult(), changes: runChanges }),
+        raw: async () => ({ query, params })
+      }),
+      first: async () => firstResult,
+      all: async () => createMockResult(),
+      run: async () => ({ ...createMockResult(), changes: runChanges }),
+      raw: async () => ({ query, params: [] })
+    }),
+    dump: async () => new ArrayBuffer(0),
+    batch: async (statements: any[]) => statements.map(() => createMockResult()),
+    exec: async (query: string) => ({ count: 0, duration: 0 }),
+    withSession: (callback: (session: any) => Promise<any>) => callback({}),
+    raw: (query: string, ...params: any[]) => ({ query, params })
+  }
+}
 
 export const createMockRequest = (url: string, options: RequestInit = {}): Request => {
   return new Request(url, {
@@ -62,14 +131,5 @@ export const createTestPlayerSubscription = () => ({
   createdAt: new Date().toISOString()
 })
 
-// Type declarations for tests
-declare global {
-  interface Env {
-    DB: D1Database
-    CACHE: KVNamespace
-    JWT_SECRET: string
-    CHESS_COM_API_URL: string
-    EMAIL_API_KEY: string
-    RESEND_API_KEY: string
-  }
-}
+// Import types for tests
+import './types'

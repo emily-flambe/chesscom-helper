@@ -130,8 +130,12 @@ async function decryptSessionData(encryptedData: string, key: string): Promise<S
       ['decrypt']
     )
     
+    const decodedData = atob(encryptedData)
+    if (decodedData === null) {
+      throw new Error('Invalid encrypted session data')
+    }
     const combined = new Uint8Array(
-      atob(encryptedData).split('').map(c => c.charCodeAt(0))
+      decodedData.split('').map(c => c.charCodeAt(0))
     )
     
     const iv = combined.slice(0, 12)

@@ -12,6 +12,8 @@
  * - Contextual error handling based on security level
  */
 
+import type { SecurityIncident } from './rate-limiter.js'
+
 export enum ErrorCode {
   // Authentication Errors
   INVALID_CREDENTIALS = 'AUTH_001',
@@ -53,10 +55,10 @@ export interface ErrorDetails {
   userMessage: string;
   securityLevel: SecurityLevel;
   httpStatus: number;
-  loggingDetails?: Record<string, any>;
+  loggingDetails?: Record<string, unknown>;
   correlationId?: string;
   timestamp: number;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 export interface SecurityEvent {
@@ -64,9 +66,20 @@ export interface SecurityEvent {
   severity: 'low' | 'medium' | 'high' | 'critical';
   source: string;
   description: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   timestamp: number;
   correlationId: string;
+}
+
+export interface RateLimitResult {
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  resetTime: number;
+  retryAfter?: number;
+  totalHits: number;
+  suspended?: boolean;
+  suspiciousActivity?: boolean;
 }
 
 /**
@@ -87,7 +100,7 @@ export class SecureErrorHandler {
   handleAuthenticationError(
     error: Error | string,
     request: Request,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): ErrorDetails {
     
     const correlationId = this.generateCorrelationId()
@@ -126,7 +139,7 @@ export class SecureErrorHandler {
     error: Error | string,
     request: Request,
     requiredPermission?: string,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): ErrorDetails {
     
     const correlationId = this.generateCorrelationId()
@@ -169,7 +182,7 @@ export class SecureErrorHandler {
    */
   handleValidationError(
     field: string,
-    value: any,
+    value: unknown,
     validationRule: string,
     request: Request
   ): ErrorDetails {
@@ -203,9 +216,9 @@ export class SecureErrorHandler {
    * SECURITY MEASURE: Handle rate limiting errors
    */
   handleRateLimitError(
-    rateLimitResult: any,
+    rateLimitResult: RateLimitResult,
     request: Request,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): ErrorDetails {
     
     const correlationId = this.generateCorrelationId()
@@ -264,7 +277,7 @@ export class SecureErrorHandler {
   handleSystemError(
     error: Error,
     request: Request,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): ErrorDetails {
     
     const correlationId = this.generateCorrelationId()
@@ -319,8 +332,11 @@ export class SecureErrorHandler {
     })
     
     // SECURITY: Include retry headers for rate limiting
-    if (errorDetails.code === ErrorCode.RATE_LIMIT_EXCEEDED && errorDetails.context?.retryAfter) {
-      headers.set('Retry-After', errorDetails.context.retryAfter.toString())
+    if (errorDetails.code === ErrorCode.RATE_LIMIT_EXCEEDED && errorDetails.context && 'retryAfter' in errorDetails.context) {
+      const retryAfter = errorDetails.context.retryAfter
+      if (typeof retryAfter === 'number') {
+        headers.set('Retry-After', retryAfter.toString())
+      }
     }
     
     const responseBody = {
@@ -483,7 +499,7 @@ export class SecureErrorHandler {
   /**
    * SECURITY MEASURE: Redact sensitive data from logs
    */
-  private redactSensitiveData(data: Record<string, any>): Record<string, any> {
+  private redactSensitiveData(data: Record<string, unknown>): Record<string, unknown> {
     const redacted = { ...data }
     
     const sensitiveFields = [
@@ -587,7 +603,7 @@ export function handleSecureError(
   error: Error | string,
   request: Request,
   type: 'auth' | 'validation' | 'rate_limit' | 'system' = 'system',
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ): Response {
   
   let errorDetails: ErrorDetails
@@ -597,7 +613,15 @@ export function handleSecureError(
       errorDetails = secureErrorHandler.handleAuthenticationError(error, request, context)
       break
     case 'rate_limit':
-      errorDetails = secureErrorHandler.handleRateLimitError(context, request)
+      if (context && 'allowed' in context) {
+        errorDetails = secureErrorHandler.handleRateLimitError(context as RateLimitResult, request)
+      } else {
+        errorDetails = secureErrorHandler.handleSystemError(
+          new Error('Invalid rate limit context'),
+          request,
+          context
+        )
+      }
       break
     case 'system':
       errorDetails = secureErrorHandler.handleSystemError(
