@@ -2,6 +2,9 @@ name = "chesscom-helper"
 main = "src/index.ts"
 compatibility_date = "2024-01-15"
 
+[dev]
+port = 8788
+
 # Environment Variables
 [vars]
 JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production"

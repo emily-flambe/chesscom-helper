@@ -329,7 +329,7 @@ export default {
       return new Response('', {
         status: 302,
         headers: {
-          'Location': `https://raw.githubusercontent.com/emily-flambe/chesscom-helper/feature/ui-overhaul-green-theme/public/${imageName}`,
+          'Location': `https://raw.githubusercontent.com/emily-flambe/chesscom-helper/favicon-troubleshoot/public/${imageName}`,
           'Cache-Control': 'public, max-age=86400'
         }
       })

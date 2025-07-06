@@ -104,10 +104,10 @@ else
     fi
 fi
 
-# Check if port 8787 is already in use
-if lsof -Pi :8787 -sTCP:LISTEN -t >/dev/null 2>&1; then
-    print_error "Port 8787 is already in use. Please stop the process using this port."
-    echo "You can find the process with: lsof -i :8787"
+# Check if port 8788 is already in use
+if lsof -Pi :8788 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    print_error "Port 8788 is already in use. Please stop the process using this port."
+    echo "You can find the process with: lsof -i :8788"
     exit 1
 fi
 
@@ -120,9 +120,9 @@ echo ""
 print_status "Starting Wrangler development server..."
 echo ""
 echo "📋 Local development URLs:"
-echo "  • API: http://localhost:8787"
-echo "  • Chess.com endpoint: http://localhost:8787/api/chess"
-echo "  • Health check: http://localhost:8787/health"
+echo "  • API: http://localhost:8788"
+echo "  • Chess.com endpoint: http://localhost:8788/api/chess"
+echo "  • Health check: http://localhost:8788/health"
 echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""
