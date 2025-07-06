@@ -355,7 +355,7 @@ export class NotificationAuditService {
       const params = [fromDate, toDate]
 
       if (options.userId) {
-        query += ` AND user_id = ?`
+        query += ' AND user_id = ?'
         params.push(options.userId)
       }
 
@@ -389,49 +389,49 @@ export class NotificationAuditService {
       const offset = options.offset || 0
 
       // Build query
-      let query = `SELECT * FROM notification_audit WHERE 1=1`
-      let countQuery = `SELECT COUNT(*) as count FROM notification_audit WHERE 1=1`
+      let query = 'SELECT * FROM notification_audit WHERE 1=1'
+      let countQuery = 'SELECT COUNT(*) as count FROM notification_audit WHERE 1=1'
       const params: any[] = []
 
       if (options.userId) {
-        query += ` AND user_id = ?`
-        countQuery += ` AND user_id = ?`
+        query += ' AND user_id = ?'
+        countQuery += ' AND user_id = ?'
         params.push(options.userId)
       }
 
       if (options.notificationType) {
-        query += ` AND notification_type = ?`
-        countQuery += ` AND notification_type = ?`
+        query += ' AND notification_type = ?'
+        countQuery += ' AND notification_type = ?'
         params.push(options.notificationType)
       }
 
       if (options.emailAddress) {
-        query += ` AND email_address = ?`
-        countQuery += ` AND email_address = ?`
+        query += ' AND email_address = ?'
+        countQuery += ' AND email_address = ?'
         params.push(options.emailAddress)
       }
 
       if (options.chessComUsername) {
-        query += ` AND chess_com_username = ?`
-        countQuery += ` AND chess_com_username = ?`
+        query += ' AND chess_com_username = ?'
+        countQuery += ' AND chess_com_username = ?'
         params.push(options.chessComUsername)
       }
 
       if (options.status) {
-        query += ` AND status = ?`
-        countQuery += ` AND status = ?`
+        query += ' AND status = ?'
+        countQuery += ' AND status = ?'
         params.push(options.status)
       }
 
       if (options.fromDate) {
-        query += ` AND created_at >= ?`
-        countQuery += ` AND created_at >= ?`
+        query += ' AND created_at >= ?'
+        countQuery += ' AND created_at >= ?'
         params.push(options.fromDate)
       }
 
       if (options.toDate) {
-        query += ` AND created_at <= ?`
-        countQuery += ` AND created_at <= ?`
+        query += ' AND created_at <= ?'
+        countQuery += ' AND created_at <= ?'
         params.push(options.toDate)
       }
 
@@ -440,7 +440,7 @@ export class NotificationAuditService {
       const totalCount = countResult?.count || 0
 
       // Get paginated results
-      query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
+      query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?'
       const queryParams = [...params, limit, offset]
       
       const result = await this.db.prepare(query).bind(...queryParams).all()

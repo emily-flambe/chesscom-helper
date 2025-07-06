@@ -330,8 +330,9 @@ export async function retryWithBackoff<T>(
 ): Promise<T> {
   const backoff = new ExponentialBackoff(options)
   let lastError: Error | null = null
+  let shouldContinue = true
   
-  while (true) {
+  while (shouldContinue) {
     try {
       return await fn()
     } catch (error) {
@@ -340,12 +341,16 @@ export async function retryWithBackoff<T>(
       const retryResult = backoff.getNextDelay()
       
       if (!retryResult.shouldRetry) {
+        shouldContinue = false
         throw lastError
       }
       
       await sleep(retryResult.delay)
     }
   }
+  
+  // This should never be reached, but TypeScript requires it
+  throw lastError || new Error('Retry function failed without error')
 }
 
 /**

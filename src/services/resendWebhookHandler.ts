@@ -588,7 +588,9 @@ export class ResendWebhookHandler {
    * Update email queue status based on webhook event
    */
   private async updateEmailQueueStatus(payload: ResendWebhookPayload): Promise<void> {
-    if (!this.dependencies.emailQueueService) return
+    if (!this.dependencies.emailQueueService) {
+return
+}
     
     const messageId = payload.data.message_id || payload.data.id
     
@@ -843,20 +845,15 @@ export class ResendWebhookHandler {
     averageProcessingTime: number
     validationFailures: number
   }> {
-    try {
-      // Implementation would query the database for webhook statistics
-      // This is a placeholder structure
-      return {
-        totalWebhooks: 0,
-        successfulWebhooks: 0,
-        failedWebhooks: 0,
-        eventTypeBreakdown: {},
-        averageProcessingTime: 0,
-        validationFailures: 0
-      }
-    } catch (error) {
-      console.error('Failed to get webhook statistics:', error)
-      throw createApiError('Failed to get webhook statistics', 500, 'WEBHOOK_STATS_FAILED', error)
+    // Implementation would query the database for webhook statistics
+    // This is a placeholder structure
+    return {
+      totalWebhooks: 0,
+      successfulWebhooks: 0,
+      failedWebhooks: 0,
+      eventTypeBreakdown: {},
+      averageProcessingTime: 0,
+      validationFailures: 0
     }
   }
 }

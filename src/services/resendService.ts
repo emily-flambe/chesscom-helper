@@ -220,7 +220,7 @@ export class ResendService {
   async sendEmail(emailRequest: ResendEmailRequest): Promise<ResendEmailSendResult> {
     const requestId = await generateSecureId()
     const startTime = Date.now()
-    let retryCount = 0
+    const retryCount = 0
     
     try {
       // Validate email request
@@ -793,10 +793,18 @@ export class ResendService {
    * Get error type from status code
    */
   private getErrorType(status: number): ResendApiError['type'] {
-    if (status === 429) return 'rate_limit_error'
-    if (status === 401 || status === 403) return 'authentication_error'
-    if (status >= 400 && status < 500) return 'validation_error'
-    if (status >= 500) return 'api_error'
+    if (status === 429) {
+return 'rate_limit_error'
+}
+    if (status === 401 || status === 403) {
+return 'authentication_error'
+}
+    if (status >= 400 && status < 500) {
+return 'validation_error'
+}
+    if (status >= 500) {
+return 'api_error'
+}
     return 'network_error'
   }
   
@@ -881,7 +889,9 @@ export class ResendService {
    * Save email event to database
    */
   private async saveEmailEvent(event: ResendEmailEvent): Promise<void> {
-    if (!this.dependencies.db) return
+    if (!this.dependencies.db) {
+return
+}
     
     try {
       await this.dependencies.db.prepare(`

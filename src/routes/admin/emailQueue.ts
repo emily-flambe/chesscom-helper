@@ -133,31 +133,31 @@ router.get('/items', requireAdmin, async (request: Request, env: Env) => {
     const offset = parseInt(url.searchParams.get('offset') || '0')
 
     // Build query
-    let query = `SELECT * FROM email_queue WHERE 1=1`
-    let countQuery = `SELECT COUNT(*) as count FROM email_queue WHERE 1=1`
+    let query = 'SELECT * FROM email_queue WHERE 1=1'
+    let countQuery = 'SELECT COUNT(*) as count FROM email_queue WHERE 1=1'
     const params: any[] = []
 
     if (status) {
-      query += ` AND status = ?`
-      countQuery += ` AND status = ?`
+      query += ' AND status = ?'
+      countQuery += ' AND status = ?'
       params.push(status)
     }
 
     if (priority) {
-      query += ` AND priority = ?`
-      countQuery += ` AND priority = ?`
+      query += ' AND priority = ?'
+      countQuery += ' AND priority = ?'
       params.push(priority)
     }
 
     if (templateType) {
-      query += ` AND template_type = ?`
-      countQuery += ` AND template_type = ?`
+      query += ' AND template_type = ?'
+      countQuery += ' AND template_type = ?'
       params.push(templateType)
     }
 
     if (userId) {
-      query += ` AND user_id = ?`
-      countQuery += ` AND user_id = ?`
+      query += ' AND user_id = ?'
+      countQuery += ' AND user_id = ?'
       params.push(userId)
     }
 
@@ -166,7 +166,7 @@ router.get('/items', requireAdmin, async (request: Request, env: Env) => {
     const totalCount = countResult?.count || 0
 
     // Get paginated results
-    query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
+    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?'
     const queryParams = [...params, limit, offset]
     
     const result = await env.DB.prepare(query).bind(...queryParams).all()

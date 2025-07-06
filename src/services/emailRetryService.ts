@@ -153,7 +153,7 @@ export class EmailRetryService {
       
       // Check if failure type is retryable
       if (effectivePolicy.nonRetryableFailures.includes(failureType)) {
-        const suppressionRecommendation = this.getSuppres sionRecommendation(failureType)
+        const suppressionRecommendation = this.getSuppressionRecommendation(failureType)
         
         return {
           shouldRetry: false,
@@ -561,7 +561,7 @@ export class EmailRetryService {
   /**
    * Get suppression recommendation for failure type
    */
-  private getSuppres sionRecommendation(failureType: EmailFailureType): {
+  private getSuppressionRecommendation(failureType: EmailFailureType): {
     shouldSuppress: boolean
     reason?: EmailSuppressionReason
   } {

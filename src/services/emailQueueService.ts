@@ -645,27 +645,27 @@ export class EmailQueueService {
       
       // Filter by priority
       if (options.priority) {
-        query += ` AND priority = ?`
+        query += ' AND priority = ?'
         params.push(options.priority)
       }
       
       // Filter by scheduled time
       if (options.scheduledBefore) {
-        query += ` AND scheduled_at <= ?`
+        query += ' AND scheduled_at <= ?'
         params.push(options.scheduledBefore)
       }
       
       // Exclude retries if requested
       if (options.excludeRetries) {
-        query += ` AND retry_count = 0`
+        query += ' AND retry_count = 0'
       }
       
       // Order by priority and scheduled time
-      query += ` ORDER BY priority ASC, scheduled_at ASC`
+      query += ' ORDER BY priority ASC, scheduled_at ASC'
       
       // Limit batch size
       const batchSize = options.maxBatchSize || this.config.batchSize
-      query += ` LIMIT ?`
+      query += ' LIMIT ?'
       params.push(batchSize)
       
       const result = await this.dependencies.db.prepare(query).bind(...params).all()
@@ -818,7 +818,7 @@ export class EmailQueueService {
         },
         recipientHistory: {
           totalFailures: 1, // Would need to calculate from database
-          recentFailures: 1,
+          recentFailures: 1
         },
         serviceProvider: 'resend',
         policyId: 'standard'
@@ -979,7 +979,9 @@ export class EmailQueueService {
       }
     })
     
-    if (fields.length === 0) return
+    if (fields.length === 0) {
+return
+}
     
     fields.push('updated_at = ?')
     values.push(new Date().toISOString(), id)

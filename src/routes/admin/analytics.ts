@@ -76,20 +76,20 @@ router.get('/trends', requireAdmin, async (request: Request, env: Env) => {
 
     switch (period) {
       case 'hour':
-        groupFormat = "strftime('%Y-%m-%d %H:00', created_at)"
-        orderBy = "datetime(created_at)"
+        groupFormat = 'strftime(\'%Y-%m-%d %H:00\', created_at)'
+        orderBy = 'datetime(created_at)'
         break
       case 'day':
-        groupFormat = "strftime('%Y-%m-%d', created_at)"
-        orderBy = "date(created_at)"
+        groupFormat = 'strftime(\'%Y-%m-%d\', created_at)'
+        orderBy = 'date(created_at)'
         break
       case 'week':
-        groupFormat = "strftime('%Y-W%W', created_at)"
-        orderBy = "strftime('%Y-%W', created_at)"
+        groupFormat = 'strftime(\'%Y-W%W\', created_at)'
+        orderBy = 'strftime(\'%Y-%W\', created_at)'
         break
       default:
-        groupFormat = "strftime('%Y-%m-%d', created_at)"
-        orderBy = "date(created_at)"
+        groupFormat = 'strftime(\'%Y-%m-%d\', created_at)'
+        orderBy = 'date(created_at)'
     }
 
     const trendsQuery = `
