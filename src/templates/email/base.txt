@@ -1,0 +1,27 @@
+================================================================================
+                              CHESS.COM HELPER
+                          Elevate Your Chess Game
+================================================================================
+
+{{content}}
+
+================================================================================
+
+Chess.com Helper - Your Personal Chess Analysis Companion
+Get insights, track progress, and improve your game
+
+Dashboard: {{baseUrl}}/dashboard
+Settings: {{baseUrl}}/settings  
+Support: {{baseUrl}}/support
+
+================================================================================
+
+Email Preferences: {{preferencesUrl}}
+Unsubscribe: {{unsubscribeUrl}}
+
+This email was sent to {{userEmail}}.
+If you no longer wish to receive these emails, you can unsubscribe at any time.
+
+================================================================================
+Chess.com Helper - Making chess analysis simple and accessible
+================================================================================
