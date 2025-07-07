@@ -616,4 +616,115 @@ router.post('/webhook/delivery', async (request: Request, env: Env) => {
   }
 })
 
+// =============================================================================
+// UNSUBSCRIBE SYSTEM
+// =============================================================================
+
+// Generate unsubscribe token
+router.post('/unsubscribe/tokens/generate', async (request: Request, env: Env) => {
+  try {
+    const userId = request.user?.id
+    if (!userId) {
+      return error(401, 'Unauthorized')
+    }
+
+    const body = await request.json() as {
+      type: 'global' | 'player_specific' | 'notification_type'
+      playerName?: string
+      notificationType?: string
+    }
+
+    if (!body.type) {
+      return error(400, 'Token type is required')
+    }
+
+    const { generateUnsubscribeToken, generateUnsubscribeUrl } = await import('../services/unsubscribeService')
+    
+    const token = await generateUnsubscribeToken(env.DB, {
+      type: body.type,
+      playerName: body.playerName,
+      notificationType: body.notificationType,
+      userId
+    })
+
+    const unsubscribeUrl = generateUnsubscribeUrl(
+      new URL(request.url).origin,
+      token.token
+    )
+
+    return json({
+      token: token.token,
+      unsubscribeUrl,
+      expiresAt: token.expiresAt,
+      type: token.tokenType
+    })
+
+  } catch (err) {
+    console.error('Generate unsubscribe token error:', err)
+    return error(500, 'Failed to generate unsubscribe token')
+  }
+})
+
+// Validate unsubscribe token (for preview)
+router.get('/unsubscribe/tokens/:token', async (request: Request, env: Env) => {
+  try {
+    const token = request.params.token
+    if (!token) {
+      return error(400, 'Token is required')
+    }
+
+    const { validateUnsubscribeToken } = await import('../services/unsubscribeService')
+    const unsubscribeToken = await validateUnsubscribeToken(env.DB, token)
+
+    if (!unsubscribeToken) {
+      return error(404, 'Invalid or expired token')
+    }
+
+    // Return token info without sensitive data
+    return json({
+      tokenType: unsubscribeToken.tokenType,
+      scopeData: unsubscribeToken.scopeData,
+      expiresAt: unsubscribeToken.expiresAt,
+      isValid: true
+    })
+
+  } catch (err) {
+    console.error('Validate unsubscribe token error:', err)
+    return error(500, 'Failed to validate token')
+  }
+})
+
+// Process unsubscribe request
+router.post('/unsubscribe/process', async (request: Request, env: Env) => {
+  try {
+    const body = await request.json() as {
+      token: string
+      preferences?: {
+        unsubscribeFromAll?: boolean
+        unsubscribeFromPlayer?: string
+        unsubscribeFromType?: string
+        newFrequency?: 'disabled' | 'digest_daily' | 'digest_hourly'
+      }
+    }
+
+    if (!body.token) {
+      return error(400, 'Token is required')
+    }
+
+    const { processUnsubscribe } = await import('../services/unsubscribeService')
+    
+    const result = await processUnsubscribe(env.DB, body.token, {
+      ipAddress: request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown',
+      userAgent: request.headers.get('User-Agent') || 'unknown',
+      preferences: body.preferences
+    })
+
+    return json(result)
+
+  } catch (err) {
+    console.error('Process unsubscribe error:', err)
+    return error(500, 'Failed to process unsubscribe request')
+  }
+})
+
 export { router as notificationRoutes }

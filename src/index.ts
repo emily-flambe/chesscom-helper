@@ -1053,6 +1053,19 @@ function getHTML() {
         opacity: 0.6;
       }
       
+      /* Screen reader only content */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      
       /* Wide Screen Enhancements */
       @media (min-width: 1000px) {
         .players-table th,
@@ -1578,6 +1591,127 @@ function getHTML() {
         cursor: not-allowed;
       }
       
+      /* Enhanced Mobile Optimization and Accessibility */
+      
+      /* Touch-friendly interactions */
+      .form-button,
+      .nav-button,
+      .app-tab,
+      .action-btn,
+      .bulk-action-btn,
+      .pagination-btn {
+        min-height: 44px; /* Apple's minimum touch target */
+        min-width: 44px;
+        touch-action: manipulation; /* Prevent zoom on touch */
+      }
+      
+      /* Improved focus states for accessibility */
+      .form-input:focus,
+      .form-button:focus,
+      .nav-button:focus,
+      .app-tab:focus,
+      .action-btn:focus,
+      .setting-checkbox:focus,
+      .setting-select:focus {
+        outline: 2px solid var(--primary-green);
+        outline-offset: 2px;
+      }
+      
+      /* Skip to content link for screen readers */
+      .skip-link {
+        position: absolute;
+        top: -40px;
+        left: 6px;
+        background: var(--primary-green);
+        color: white;
+        padding: 8px;
+        text-decoration: none;
+        z-index: 1000;
+        border-radius: 4px;
+      }
+      
+      .skip-link:focus {
+        top: 6px;
+      }
+      
+      /* Enhanced mobile table handling */
+      @media (max-width: 640px) {
+        .players-table {
+          display: block;
+          width: 100%;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+        
+        .players-table thead {
+          display: none; /* Hide headers on mobile */
+        }
+        
+        .players-table tbody {
+          display: block;
+        }
+        
+        .players-table tr {
+          display: block;
+          border: 1px solid var(--border-green);
+          border-radius: var(--radius-md);
+          margin-bottom: var(--spacing-md);
+          padding: var(--spacing-md);
+          background: var(--bg-green-gray);
+        }
+        
+        .players-table td {
+          display: block;
+          text-align: left;
+          padding: var(--spacing-xs) 0;
+          border: none;
+        }
+        
+        .players-table td:before {
+          content: attr(data-label) ": ";
+          font-weight: 600;
+          color: var(--text-secondary);
+        }
+        
+        .checkbox-column {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        
+        .checkbox-column:before {
+          content: "Select";
+        }
+      }
+      
+      /* Mobile-optimized form layouts */
+      @media (max-width: 480px) {
+        .time-range {
+          flex-direction: column;
+          gap: var(--spacing-sm);
+        }
+        
+        .time-separator {
+          align-self: center;
+        }
+        
+        .input-group {
+          gap: var(--spacing-sm);
+        }
+        
+        .bulk-actions {
+          flex-direction: column;
+          gap: var(--spacing-sm);
+          text-align: center;
+        }
+        
+        .bulk-actions-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: var(--spacing-sm);
+        }
+      }
+      
       /* Responsive Design for Phase 4 */
       @media (min-width: 1000px) {
         .settings-grid {
@@ -1596,24 +1730,36 @@ function getHTML() {
       
       @media (max-width: 768px) {
         .app-tab {
-          padding: var(--spacing-sm) var(--spacing-md);
+          padding: var(--spacing-md) var(--spacing-sm);
           font-size: 0.9rem;
+          flex: 1;
+          min-width: 0; /* Allow shrinking */
+        }
+        
+        .app-navigation {
+          margin-bottom: var(--spacing-lg);
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
         }
         
         .settings-grid {
           grid-template-columns: 1fr;
+          gap: var(--spacing-md);
         }
         
         .dashboard-stats {
           flex-direction: column;
+          gap: var(--spacing-sm);
         }
         
         .queue-status {
           flex-direction: column;
+          gap: var(--spacing-sm);
         }
         
         .history-filters {
           flex-direction: column;
+          gap: var(--spacing-sm);
         }
         
         .analytics-grid {
@@ -1630,15 +1776,84 @@ function getHTML() {
           width: 100%;
           justify-content: space-between;
         }
+        
+        .notification-history {
+          max-height: 400px;
+          overflow-y: auto;
+        }
+        
+        .history-item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: var(--spacing-sm);
+        }
+        
+        .pagination {
+          flex-wrap: wrap;
+          gap: var(--spacing-xs);
+        }
+        
+        .pagination-btn {
+          padding: var(--spacing-xs) var(--spacing-sm);
+          font-size: 0.8rem;
+        }
+      }
+      
+      /* Extra small devices */
+      @media (max-width: 380px) {
+        .app-tab {
+          font-size: 0.8rem;
+          padding: var(--spacing-sm) var(--spacing-xs);
+        }
+        
+        .settings-card {
+          padding: var(--spacing-md);
+        }
+        
+        .form-input,
+        .setting-select,
+        .filter-select,
+        .filter-input {
+          font-size: 16px; /* Prevent zoom on iOS */
+        }
+      }
+      
+      /* Reduce motion for users who prefer it */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+      
+      /* High contrast mode support */
+      @media (prefers-contrast: high) {
+        :root {
+          --border-green: #ffffff;
+          --text-secondary: #ffffff;
+        }
+      }
+      
+      /* Dark mode improvements */
+      @media (prefers-color-scheme: dark) {
+        .form-input,
+        .setting-select,
+        .filter-select {
+          color-scheme: dark;
+        }
       }
     </style>
 </head>
 <body>
+    <!-- Skip to content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
     <!-- Header Navigation -->
-    <header class="header">
+    <header class="header" role="banner">
         <div class="header-content">
-            <a href="/" class="logo">
-                <img src="/majestic-knight-small.png" alt="Chesscom Helper" class="logo-icon">
+            <a href="/" class="logo" aria-label="Chesscom Helper - Home">
+                <img src="/majestic-knight-small.png" alt="Chesscom Helper Logo" class="logo-icon">
                 <div class="logo-text">
                     <span class="logo-title">Chesscom Helper</span>
                     <span class="logo-tagline">your chesstest friend</span>
@@ -1646,63 +1861,74 @@ function getHTML() {
             </a>
             
             <!-- Navigation for unauthenticated users -->
-            <nav id="authNav" class="nav-user auth-nav">
-                <button class="nav-button secondary" onclick="switchTab('login')">Login</button>
-                <button class="nav-button" onclick="switchTab('register')">Register</button>
+            <nav id="authNav" class="nav-user auth-nav" role="navigation" aria-label="Authentication navigation">
+                <button class="nav-button secondary" onclick="switchTab('login')" aria-describedby="auth-help">Login</button>
+                <button class="nav-button" onclick="switchTab('register')" aria-describedby="auth-help">Register</button>
             </nav>
             
             <!-- Navigation for authenticated users -->
-            <nav id="userNav" class="nav-user hidden">
-                <div class="nav-user-info">
+            <nav id="userNav" class="nav-user hidden" role="navigation" aria-label="User navigation">
+                <div class="nav-user-info" role="status" aria-live="polite">
                     <span class="welcome">Welcome,</span>
                     <span class="username" id="navUsername">User</span>
                 </div>
-                <button class="nav-button secondary" onclick="logout()">Logout</button>
+                <button class="nav-button secondary" onclick="logout()" aria-label="Sign out of your account">Logout</button>
             </nav>
         </div>
+        <div id="auth-help" class="sr-only">Choose login to sign into your existing account or register to create a new account</div>
     </header>
     
     <!-- Main Content -->
-    <main class="main-layout">
+    <main class="main-layout" id="main-content" role="main">
         <div class="container">
             <!-- Authentication Section -->
-            <section id="authSection" class="auth-container">
+            <section id="authSection" class="auth-container" aria-labelledby="auth-title">
                 <div class="auth-header">
-                    <h1 class="auth-title">Welcome to Chesscom Helper</h1>
+                    <h1 id="auth-title" class="auth-title">Welcome to Chesscom Helper</h1>
                     <p class="auth-subtitle">Track your favorite Chess.com players</p>
                 </div>
                 
-                <div class="auth-tabs">
-                    <button class="auth-tab active" onclick="switchTab('login')">Login</button>
-                    <button class="auth-tab" onclick="switchTab('register')">Register</button>
+                <div class="auth-tabs" role="tablist" aria-label="Authentication method">
+                    <button class="auth-tab active" onclick="switchTab('login')" role="tab" aria-selected="true" aria-controls="loginForm" id="login-tab">Login</button>
+                    <button class="auth-tab" onclick="switchTab('register')" role="tab" aria-selected="false" aria-controls="registerForm" id="register-tab">Register</button>
                 </div>
                 
                 <!-- Login Form -->
-                <form id="loginForm" class="auth-form">
-                    <div id="loginError" class="error-message hidden"></div>
+                <form id="loginForm" class="auth-form" role="tabpanel" aria-labelledby="login-tab" novalidate>
+                    <div id="loginError" class="error-message hidden" role="alert" aria-live="assertive"></div>
                     <div class="form-group">
                         <label class="form-label" for="loginEmail">Email Address</label>
-                        <input type="email" id="loginEmail" class="form-input" placeholder="Enter your email" required>
+                        <input type="email" id="loginEmail" class="form-input" placeholder="Enter your email" required 
+                               aria-describedby="loginEmailHelp" autocomplete="email">
+                        <div id="loginEmailHelp" class="sr-only">Enter your registered email address</div>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
+                        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required
+                               aria-describedby="loginPasswordHelp" autocomplete="current-password">
+                        <div id="loginPasswordHelp" class="sr-only">Enter your account password</div>
                     </div>
-                    <button type="submit" class="form-button">Sign In</button>
+                    <button type="submit" class="form-button" aria-describedby="login-submit-help">Sign In</button>
+                    <div id="login-submit-help" class="sr-only">Sign in to access your player tracking dashboard</div>
                 </form>
                 
                 <!-- Register Form -->
-                <form id="registerForm" class="auth-form hidden">
-                    <div id="registerError" class="error-message hidden"></div>
+                <form id="registerForm" class="auth-form hidden" role="tabpanel" aria-labelledby="register-tab" novalidate>
+                    <div id="registerError" class="error-message hidden" role="alert" aria-live="assertive"></div>
                     <div class="form-group">
                         <label class="form-label" for="registerEmail">Email Address</label>
-                        <input type="email" id="registerEmail" class="form-input" placeholder="Enter your email" required>
+                        <input type="email" id="registerEmail" class="form-input" placeholder="Enter your email" required
+                               aria-describedby="registerEmailHelp" autocomplete="email">
+                        <div id="registerEmailHelp" class="sr-only">Enter a valid email address for your new account</div>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="registerPassword">Password</label>
-                        <input type="password" id="registerPassword" class="form-input" placeholder="Create a password" required>
+                        <input type="password" id="registerPassword" class="form-input" placeholder="Create a password" required
+                               aria-describedby="registerPasswordHelp" autocomplete="new-password" minlength="8">
+                        <div id="registerPasswordHelp" class="sr-only">Password must be at least 8 characters long</div>
                     </div>
-                    <button type="submit" class="form-button">Create Account</button>
+                    <button type="submit" class="form-button" aria-describedby="register-submit-help">Create Account</button>
+                    <div id="register-submit-help" class="sr-only">Create a new account to start tracking Chess.com players</div>
                 </form>
             </section>
             
@@ -1718,14 +1944,17 @@ function getHTML() {
                 </div>
                 
                 <!-- Main App Navigation -->
-                <div class="app-navigation">
-                    <button class="app-tab active" onclick="switchAppTab('players')">Players</button>
-                    <button class="app-tab" onclick="switchAppTab('notifications')">Notifications</button>
-                    <button class="app-tab" onclick="switchAppTab('analytics')">Analytics</button>
+                <div class="app-navigation" role="tablist" aria-label="Main application sections">
+                    <button class="app-tab active" onclick="switchAppTab('players')" role="tab" 
+                            aria-selected="true" aria-controls="playersTab" id="players-tab">Players</button>
+                    <button class="app-tab" onclick="switchAppTab('notifications')" role="tab" 
+                            aria-selected="false" aria-controls="notificationsTab" id="notifications-tab">Notifications</button>
+                    <button class="app-tab" onclick="switchAppTab('analytics')" role="tab" 
+                            aria-selected="false" aria-controls="analyticsTab" id="analytics-tab">Analytics</button>
                 </div>
                 
                 <!-- Players Tab Content -->
-                <div id="playersTab" class="tab-content">
+                <div id="playersTab" class="tab-content" role="tabpanel" aria-labelledby="players-tab">
                     <div class="tracking-section">
                         <div class="section-header">
                             <h2 class="section-title">Player Tracking</h2>
@@ -1760,10 +1989,17 @@ function getHTML() {
                                 <thead>
                                     <tr>
                                         <th class="checkbox-column">
-                                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" 
+                                                   aria-label="Select all players">
                                         </th>
-                                        <th class="sortable" data-sort="player">Player</th>
-                                        <th class="sortable" data-sort="lastSeen">Last Seen on Chess.com</th>
+                                        <th class="sortable" data-sort="player">
+                                            <button class="sort-button" onclick="sortTable('player')" 
+                                                    aria-label="Sort by player name">Player</button>
+                                        </th>
+                                        <th class="sortable" data-sort="lastSeen">
+                                            <button class="sort-button" onclick="sortTable('lastSeen')" 
+                                                    aria-label="Sort by last seen date">Last Seen on Chess.com</button>
+                                        </th>
                                         <th>Alerts</th>
                                         <th>Actions</th>
                                     </tr>
@@ -1785,7 +2021,7 @@ function getHTML() {
             </div>
             
             <!-- Notifications Tab Content -->
-            <div id="notificationsTab" class="tab-content hidden">
+            <div id="notificationsTab" class="tab-content hidden" role="tabpanel" aria-labelledby="notifications-tab">
                 <div class="notifications-section">
                     <!-- Notification Settings Dashboard -->
                     <div class="notification-dashboard">
@@ -1879,7 +2115,7 @@ function getHTML() {
             </div>
             
             <!-- Analytics Tab Content -->
-            <div id="analyticsTab" class="tab-content hidden">
+            <div id="analyticsTab" class="tab-content hidden" role="tabpanel" aria-labelledby="analytics-tab">
                 <div class="analytics-section">
                     <div class="section-header">
                         <h2 class="section-title">Notification Analytics</h2>
@@ -1969,16 +2205,26 @@ function getHTML() {
             clearFormError('loginError');
             clearFormError('registerError');
             
-            tabs.forEach(t => t.classList.remove('active'));
+            // Update ARIA states
+            tabs.forEach(t => {
+                t.classList.remove('active');
+                t.setAttribute('aria-selected', 'false');
+            });
             
             if (tab === 'login') {
                 tabs[0].classList.add('active');
+                tabs[0].setAttribute('aria-selected', 'true');
                 loginForm.classList.remove('hidden');
                 registerForm.classList.add('hidden');
+                // Focus first input for accessibility
+                setTimeout(() => document.getElementById('loginEmail').focus(), 100);
             } else {
                 tabs[1].classList.add('active');
+                tabs[1].setAttribute('aria-selected', 'true');
                 loginForm.classList.add('hidden');
                 registerForm.classList.remove('hidden');
+                // Focus first input for accessibility
+                setTimeout(() => document.getElementById('registerEmail').focus(), 100);
             }
         }
         
@@ -3098,6 +3344,343 @@ function getHTML() {
             loadNotificationHistory();
         };
         
+        // =============================================================================
+        // MOBILE & ACCESSIBILITY ENHANCEMENTS
+        // =============================================================================
+        
+        // Enhanced app tab switching with accessibility
+        function switchAppTab(tabName) {
+            const tabs = document.querySelectorAll('.app-tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            // Update ARIA states
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                tab.setAttribute('aria-selected', 'false');
+            });
+            
+            contents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Activate selected tab
+            const activeTab = document.querySelector(`[onclick="switchAppTab('${tabName}')"]`);
+            const activeContent = document.getElementById(`${tabName}Tab`);
+            
+            if (activeTab && activeContent) {
+                activeTab.classList.add('active');
+                activeTab.setAttribute('aria-selected', 'true');
+                activeContent.classList.remove('hidden');
+                
+                // Focus management for accessibility
+                const focusTarget = activeContent.querySelector('h2, .section-title');
+                if (focusTarget) {
+                    focusTarget.setAttribute('tabindex', '-1');
+                    focusTarget.focus();
+                }
+            }
+            
+            // Update current tab and load content
+            currentAppTab = tabName;
+            
+            if (tabName === 'notifications') {
+                loadNotificationDashboard();
+                startRealTimeUpdates();
+            } else if (tabName === 'analytics') {
+                loadNotificationAnalytics();
+                stopRealTimeUpdates();
+            } else {
+                stopRealTimeUpdates();
+            }
+        }
+        
+        // Keyboard navigation for tabs
+        function setupKeyboardNavigation() {
+            const appTabs = document.querySelectorAll('.app-tab');
+            
+            appTabs.forEach((tab, index) => {
+                tab.addEventListener('keydown', (e) => {
+                    let targetIndex = index;
+                    
+                    switch (e.key) {
+                        case 'ArrowLeft':
+                            e.preventDefault();
+                            targetIndex = index > 0 ? index - 1 : appTabs.length - 1;
+                            break;
+                        case 'ArrowRight':
+                            e.preventDefault();
+                            targetIndex = index < appTabs.length - 1 ? index + 1 : 0;
+                            break;
+                        case 'Home':
+                            e.preventDefault();
+                            targetIndex = 0;
+                            break;
+                        case 'End':
+                            e.preventDefault();
+                            targetIndex = appTabs.length - 1;
+                            break;
+                        default:
+                            return;
+                    }
+                    
+                    appTabs[targetIndex].focus();
+                    appTabs[targetIndex].click();
+                });
+            });
+        }
+        
+        // Touch gesture support for tab switching
+        function setupTouchGestures() {
+            const tabContainer = document.querySelector('.app-navigation');
+            if (!tabContainer) return;
+            
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            tabContainer.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            
+            tabContainer.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipeGesture();
+            }, { passive: true });
+            
+            function handleSwipeGesture() {
+                const swipeThreshold = 50;
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    const tabs = ['players', 'notifications', 'analytics'];
+                    const currentIndex = tabs.indexOf(currentAppTab);
+                    
+                    if (diff > 0 && currentIndex < tabs.length - 1) {
+                        // Swipe left - next tab
+                        switchAppTab(tabs[currentIndex + 1]);
+                    } else if (diff < 0 && currentIndex > 0) {
+                        // Swipe right - previous tab
+                        switchAppTab(tabs[currentIndex - 1]);
+                    }
+                }
+            }
+        }
+        
+        // Enhanced table sorting with accessibility
+        function sortTable(columnKey) {
+            const sortableHeaders = document.querySelectorAll('.sort-button');
+            
+            // Toggle sort direction
+            if (currentSortColumn === columnKey) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortColumn = columnKey;
+                currentSortDirection = 'asc';
+            }
+            
+            // Update ARIA labels
+            sortableHeaders.forEach(header => {
+                const key = header.parentElement.dataset.sort;
+                if (key === columnKey) {
+                    const direction = currentSortDirection === 'asc' ? 'ascending' : 'descending';
+                    header.setAttribute('aria-label', `Sort by ${key}, currently ${direction}`);
+                    header.classList.add(`sort-${currentSortDirection}`);
+                } else {
+                    header.setAttribute('aria-label', `Sort by ${key}`);
+                    header.classList.remove('sort-asc', 'sort-desc');
+                }
+            });
+            
+            // Reload with new sort
+            loadPlayers();
+        }
+        
+        // Mobile-friendly form validation
+        function enhanceFormValidation() {
+            const forms = document.querySelectorAll('form');
+            
+            forms.forEach(form => {
+                const inputs = form.querySelectorAll('input');
+                
+                inputs.forEach(input => {
+                    // Real-time validation feedback
+                    input.addEventListener('blur', validateInput);
+                    input.addEventListener('input', clearValidationError);
+                    
+                    // Prevent zoom on iOS
+                    if (input.type === 'email' || input.type === 'password') {
+                        input.style.fontSize = '16px';
+                    }
+                });
+            });
+        }
+        
+        function validateInput(e) {
+            const input = e.target;
+            const isValid = input.checkValidity();
+            
+            if (!isValid) {
+                input.setAttribute('aria-invalid', 'true');
+                showInputError(input, input.validationMessage);
+            } else {
+                input.setAttribute('aria-invalid', 'false');
+                clearInputError(input);
+            }
+        }
+        
+        function showInputError(input, message) {
+            const errorId = `${input.id}-error`;
+            let errorEl = document.getElementById(errorId);
+            
+            if (!errorEl) {
+                errorEl = document.createElement('div');
+                errorEl.id = errorId;
+                errorEl.className = 'input-error';
+                errorEl.style.cssText = `
+                    color: var(--error-red);
+                    font-size: 0.8rem;
+                    margin-top: 4px;
+                `;
+                input.parentNode.appendChild(errorEl);
+            }
+            
+            errorEl.textContent = message;
+            input.setAttribute('aria-describedby', errorId);
+        }
+        
+        function clearInputError(input) {
+            const errorId = `${input.id}-error`;
+            const errorEl = document.getElementById(errorId);
+            if (errorEl) {
+                errorEl.remove();
+            }
+            input.removeAttribute('aria-describedby');
+        }
+        
+        function clearValidationError(e) {
+            const input = e.target;
+            if (input.checkValidity()) {
+                clearInputError(input);
+                input.setAttribute('aria-invalid', 'false');
+            }
+        }
+        
+        // Responsive table enhancement for mobile
+        function enhanceMobileTables() {
+            const tables = document.querySelectorAll('.players-table');
+            
+            tables.forEach(table => {
+                const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent.trim());
+                
+                // Add data-label attributes for mobile display
+                const updateTableLabels = () => {
+                    const rows = table.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('td');
+                        cells.forEach((cell, index) => {
+                            if (headers[index]) {
+                                cell.setAttribute('data-label', headers[index]);
+                            }
+                        });
+                    });
+                };
+                
+                // Update labels on load and when table content changes
+                updateTableLabels();
+                
+                // Use MutationObserver to update labels when table content changes
+                const observer = new MutationObserver(updateTableLabels);
+                observer.observe(table.querySelector('tbody') || table, {
+                    childList: true,
+                    subtree: true
+                });
+            });
+        }
+        
+        // Announce page changes to screen readers
+        function announcePageChange(message) {
+            const announcement = document.createElement('div');
+            announcement.setAttribute('aria-live', 'polite');
+            announcement.setAttribute('aria-atomic', 'true');
+            announcement.className = 'sr-only';
+            announcement.textContent = message;
+            
+            document.body.appendChild(announcement);
+            
+            setTimeout(() => {
+                document.body.removeChild(announcement);
+            }, 1000);
+        }
+        
+        // Handle viewport changes (orientation, keyboard)
+        function handleViewportChanges() {
+            let viewportHeight = window.innerHeight;
+            
+            window.addEventListener('resize', () => {
+                const currentHeight = window.innerHeight;
+                const heightDiff = viewportHeight - currentHeight;
+                
+                // Detect virtual keyboard on mobile
+                if (heightDiff > 150) {
+                    document.body.classList.add('keyboard-open');
+                } else {
+                    document.body.classList.remove('keyboard-open');
+                }
+                
+                viewportHeight = currentHeight;
+            });
+        }
+        
+        // Initialize mobile enhancements
+        function initMobileEnhancements() {
+            setupKeyboardNavigation();
+            setupTouchGestures();
+            enhanceFormValidation();
+            enhanceMobileTables();
+            handleViewportChanges();
+            
+            // Add CSS for keyboard handling
+            const style = document.createElement('style');
+            style.textContent = `
+                .keyboard-open {
+                    height: 100vh;
+                    overflow: hidden;
+                }
+                
+                .keyboard-open .main-layout {
+                    height: calc(100vh - 60px);
+                    overflow-y: auto;
+                }
+                
+                .sort-button {
+                    background: none;
+                    border: none;
+                    color: inherit;
+                    font: inherit;
+                    cursor: pointer;
+                    text-align: left;
+                    width: 100%;
+                    padding: 0;
+                }
+                
+                .sort-button:hover {
+                    color: var(--primary-green);
+                }
+                
+                .sort-asc::after {
+                    content: ' ↑';
+                    color: var(--primary-green);
+                }
+                
+                .sort-desc::after {
+                    content: ' ↓';
+                    color: var(--primary-green);
+                }
+            `;
+            document.head.appendChild(style);
+            
+            console.log('Mobile and accessibility enhancements initialized');
+        }
+        
         // Make functions globally available
         window.switchAppTab = switchAppTab;
         window.updateGlobalSettings = updateGlobalSettings;
@@ -3105,9 +3688,11 @@ function getHTML() {
         window.bulkEnableNotifications = bulkEnableNotifications;
         window.bulkDisableNotifications = bulkDisableNotifications;
         window.changeHistoryPage = changeHistoryPage;
+        window.sortTable = sortTable;
         
         // Initialize on page load
         initAuth();
+        initMobileEnhancements();
         
         // Check welcome card visibility after DOM is ready
         setTimeout(checkWelcomeCardVisibility, 100);
