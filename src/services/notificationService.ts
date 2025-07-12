@@ -23,8 +23,8 @@ export interface QueuedNotification {
   userId: string
   playerName: string
   eventType: 'game_started' | 'game_ended'
-  gameUrl?: string
-  result?: string
+  gameUrl?: string | undefined
+  result?: string | undefined
   queuedAt: string
 }
 

@@ -1,7 +1,7 @@
 import { Router, json, error } from 'itty-router'
-import { getUserById, updateUser, deleteUser } from '../services/userService'
+import { getUserById, updateUser, deleteUser, type UpdateUserData } from '../services/userService'
 import { getPlayerSubscriptions, createPlayerSubscription, deletePlayerSubscription } from '../services/subscriptionService'
-import { getUserPreferences, updateUserPreferences } from '../services/preferencesService'
+import { getUserPreferences, updateUserPreferences, type UpdatePreferencesData } from '../services/preferencesService'
 import { validateChessComUsername } from '../utils/validation'
 import { verifyPlayerExists } from '../services/chessComService'
 import type { Env } from '../index'
@@ -41,7 +41,7 @@ router.put('/me', async (request: Request, env: Env) => {
     }
 
     const body = await request.json()
-    const updatedUser = await updateUser(env.DB, userId, body)
+    const updatedUser = await updateUser(env.DB, userId, body as UpdateUserData)
 
     return json({
       id: updatedUser.id,
@@ -168,7 +168,7 @@ router.put('/me/preferences', async (request: Request, env: Env) => {
     }
 
     const body = await request.json()
-    const preferences = await updateUserPreferences(env.DB, userId, body)
+    const preferences = await updateUserPreferences(env.DB, userId, body as UpdatePreferencesData)
 
     return json({ preferences })
 

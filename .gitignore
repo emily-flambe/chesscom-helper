@@ -38,3 +38,6 @@ coverage/
 .env.staging
 .env.production
 .env.*.local
+
+# Claude Code project-specific configuration
+.claude/

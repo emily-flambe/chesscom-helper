@@ -21,14 +21,14 @@ router.get('/status', async (request: Request, env: Env) => {
   }
 })
 
-router.get('/players/:username', async (request: Request, env: Env) => {
+router.get('/players/:username', async (request: Request, env: Env, context: any) => {
   try {
     const userId = request.user?.id
     if (!userId) {
       return error(401, 'Unauthorized')
     }
 
-    const username = request.params?.username
+    const username = context.params?.username
     if (!username || !validateChessComUsername(username)) {
       return error(400, 'Invalid Chess.com username')
     }

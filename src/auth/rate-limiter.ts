@@ -52,8 +52,6 @@ export class AdvancedRateLimiter {
   
   constructor(config: RateLimitConfig) {
     this.config = {
-      windowMs: 900000, // 15 minutes default
-      maxRequests: 100,
       message: 'Too many requests',
       standardHeaders: true,
       legacyHeaders: false,
@@ -316,7 +314,11 @@ export class AdvancedRateLimiter {
     if (data.requests.length > 2) {
       const intervals = []
       for (let i = 1; i < data.requests.length; i++) {
-        intervals.push(data.requests[i] - data.requests[i-1])
+        const current = data.requests[i]
+        const previous = data.requests[i-1]
+        if (current !== undefined && previous !== undefined) {
+          intervals.push(current - previous)
+        }
       }
       
       const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length
@@ -417,12 +419,12 @@ export class AdvancedRateLimiter {
       
       // SECURITY: Keep only recent incidents
       data.incidents = data.incidents.filter(
-        incident => incident.timestamp > now - 86400000 // 24 hours
+        (incident: any) => incident.timestamp > now - 86400000 // 24 hours
       )
       
       // SECURITY: Auto-blacklist if too many high-severity incidents
       const highSeverityIncidents = data.incidents.filter(
-        incident => incident.severity >= 8
+        (incident: any) => incident.severity >= 8
       ).length
       
       if (highSeverityIncidents >= 3) {

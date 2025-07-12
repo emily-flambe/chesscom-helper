@@ -21,23 +21,35 @@ export const createMockD1Database = (): D1Database => ({
     bind: (...params: any[]) => ({
       first: async () => null,
       all: async () => ({ results: [] }),
-      run: async () => ({ success: true, changes: 0 })
+      run: async () => ({ success: true, meta: { changes: 0 } }),
+      raw: async () => []
     }),
     first: async () => null,
     all: async () => ({ results: [] }),
-    run: async () => ({ success: true, changes: 0 })
+    run: async () => ({ success: true, meta: { changes: 0 } }),
+    raw: async () => []
   }),
   dump: async () => new ArrayBuffer(0),
   batch: async () => [],
-  exec: async () => ({ count: 0, duration: 0 })
+  exec: async () => ({ count: 0, duration: 0 }),
+  withSession: async (fn: any) => await fn()
 })
 
 export const createMockKVNamespace = (): KVNamespace => ({
   get: async () => null,
   put: async () => undefined,
   delete: async () => undefined,
-  list: async () => ({ keys: [], list_complete: true, cursor: '' }),
-  getWithMetadata: async () => ({ value: null, metadata: null })
+  list: async () => ({ 
+    keys: [], 
+    list_complete: true, 
+    cursor: '',
+    cacheStatus: null
+  }),
+  getWithMetadata: async () => ({ 
+    value: null, 
+    metadata: null,
+    cacheStatus: null
+  })
 })
 
 export const createMockRequest = (url: string, options: RequestInit = {}): Request => {

@@ -26,6 +26,10 @@ export async function getUserPreferences(db: D1Database, userId: string): Promis
       result = await createDefaultUserPreferences(db, userId)
     }
 
+    if (!result) {
+      throw createApiError('Failed to create or fetch user preferences', 500, 'PREFERENCES_CREATION_FAILED')
+    }
+
     return {
       userId: result.user_id as string,
       emailNotifications: Boolean(result.email_notifications),

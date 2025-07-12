@@ -12,15 +12,15 @@ export interface EmailTemplate {
 
 export interface NotificationEmailData {
   playerName: string
-  gameUrl?: string
-  result?: string
+  gameUrl?: string | undefined
+  result?: string | undefined
 }
 
 export interface EmailSendResult {
   notificationId: string
   delivered: boolean
-  messageId?: string
-  error?: string
+  messageId?: string | undefined
+  error?: string | undefined
 }
 
 const EMAIL_TEMPLATES = {
@@ -202,7 +202,7 @@ async function sendWithResend(email: {
       )
     }
 
-    const result = await response.json()
+    const result = await response.json() as any
     return {
       success: true,
       messageId: result.id
