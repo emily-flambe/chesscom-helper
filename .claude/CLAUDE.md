@@ -1,5 +1,9 @@
-# Development Partnership
+# Claude Code Project Configuration
 
+## Project Overview
+This is a TypeScript/Node.js Cloudflare Workers application for Chess.com player tracking and notifications.
+
+## Development Partnership
 We're building production-quality code together. Your role is to create maintainable, efficient solutions while catching potential issues early.
 
 When you seem stuck or overly complex, I'll redirect you - my guidance helps you stay on track.
@@ -39,7 +43,7 @@ Say: "I'll spawn agents to tackle different aspects of this problem" whenever a 
 - Before declaring "done"
 - **WHEN HOOKS FAIL WITH ERRORS** ❌
 
-Run: `make fmt && make test && make lint`
+Run: `npm run lint && npm run test && npm run build`
 
 > Why: You can lose track of what's actually working. These checkpoints prevent cascading failures.
 
@@ -52,9 +56,10 @@ Run: `make fmt && make test && make lint`
 5. **NEVER IGNORE** - There are NO warnings, only requirements
 
 This includes:
-- Formatting issues (gofmt, black, prettier, etc.)
-- Linting violations (golangci-lint, eslint, etc.)
-- Forbidden patterns (time.Sleep, panic(), interface{})
+- Formatting issues (prettier, eslint formatting)
+- Linting violations (eslint, typescript-eslint)
+- Type errors (tsc --noEmit)
+- Forbidden patterns (any types, console.log in production)
 - ALL other checks
 
 Your code must be 100% clean. No exceptions.
@@ -83,50 +88,53 @@ Your code must be 100% clean. No exceptions.
 - [ ] What comes next
 ```
 
-## Go-Specific Rules
+## TypeScript/Node.js-Specific Rules
 
 ### FORBIDDEN - NEVER DO THESE:
-- **NO interface{}** or **any{}** - use concrete types!
-- **NO time.Sleep()** or busy waits - use channels for synchronization!
+- **NO any or unknown types** - use concrete types!
+- **NO console.log() in production** - use proper logging!
 - **NO** keeping old and new code together
 - **NO** migration functions or compatibility layers
 - **NO** versioned function names (processV2, handleNew)
-- **NO** custom error struct hierarchies
+- **NO** unhandled promise rejections
 - **NO** TODOs in final code
 
-> **AUTOMATED ENFORCEMENT**: The smart-lint hook will BLOCK commits that violate these rules.  
+> **AUTOMATED ENFORCEMENT**: The lint hooks will BLOCK commits that violate these rules.  
 > When you see `❌ FORBIDDEN PATTERN`, you MUST fix it immediately!
 
 ### Required Standards:
 - **Delete** old code when replacing it
-- **Meaningful names**: `userID` not `id`
+- **Meaningful names**: `userId` not `id`
 - **Early returns** to reduce nesting
-- **Concrete types** from constructors: `func NewServer() *Server`
-- **Simple errors**: `return fmt.Errorf("context: %w", err)`
-- **Table-driven tests** for complex logic
-- **Channels for synchronization**: Use channels to signal readiness, not sleep
-- **Select for timeouts**: Use `select` with timeout channels, not sleep loops
+- **Concrete types** from constructors: `function createServer(): Server`
+- **Proper error handling**: `throw new Error('context: message')`
+- **Async/await patterns** for asynchronous operations
+- **Type-safe database queries** with proper validation
 
 ## Implementation Standards
 
 ### Our code is complete when:
-- ? All linters pass with zero issues
-- ? All tests pass  
-- ? Feature works end-to-end
-- ? Old code is deleted
-- ? Godoc on all exported symbols
+- ✅ All linters pass with zero issues
+- ✅ All tests pass  
+- ✅ Feature works end-to-end
+- ✅ Old code is deleted
+- ✅ JSDoc on all exported functions
 
 ### Testing Strategy
-- Complex business logic ? Write tests first
-- Simple CRUD ? Write tests after
-- Hot paths ? Add benchmarks
-- Skip tests for main() and simple CLI parsing
+- Complex business logic → Write tests first
+- Simple CRUD → Write tests after
+- Hot paths → Add performance tests
+- Skip tests for simple configuration and basic setup
 
 ### Project Structure
 ```
-cmd/        # Application entrypoints
-internal/   # Private code (the majority goes here)
-pkg/        # Public libraries (only if truly reusable)
+src/        # Application source code
+  routes/   # API route handlers
+  services/ # Business logic services
+  auth/     # Authentication modules
+  utils/    # Shared utilities
+tests/      # Test files
+scripts/    # Build and deployment scripts
 ```
 
 ## Problem-Solving Together
@@ -146,12 +154,13 @@ My insights on better approaches are valued - please ask for them!
 ### **Measure First**:
 - No premature optimization
 - Benchmark before claiming something is faster
-- Use pprof for real bottlenecks
+- Use Worker analytics for real bottlenecks
 
 ### **Security Always**:
 - Validate all inputs
-- Use crypto/rand for randomness
+- Use crypto.getRandomValues() for randomness
 - Prepared statements for SQL (never concatenate!)
+- Rate limiting on all endpoints
 
 ## Communication Protocol
 
