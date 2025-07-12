@@ -56,7 +56,7 @@ export interface ErrorDetails {
   loggingDetails?: Record<string, any>;
   correlationId?: string;
   timestamp: number;
-  context?: Record<string, any>;
+  context?: Record<string, any> | undefined;
 }
 
 export interface SecurityEvent {

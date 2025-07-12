@@ -45,7 +45,7 @@ export async function checkPlayerStatus(env: Env, ctx: ExecutionContext): Promis
               isOnline: status.isOnline,
               isPlaying: status.isPlaying,
               currentGameUrl: status.currentGames[0]?.url || null,
-              lastSeen: status.isOnline ? new Date().toISOString() : undefined
+              lastSeen: status.isOnline ? new Date().toISOString() : null
             })
 
             playersChecked++
@@ -132,7 +132,7 @@ export async function checkSpecificPlayers(env: Env, playernames?: string[]): Pr
           isOnline: status.isOnline,
           isPlaying: status.isPlaying,
           currentGameUrl: status.currentGames[0]?.url || null,
-          lastSeen: status.isOnline ? new Date().toISOString() : undefined
+          lastSeen: status.isOnline ? new Date().toISOString() : null
         })
 
         playersChecked++
@@ -189,7 +189,7 @@ async function sendGameStartedNotifications(env: Env, playerName: string, gameUr
             userId,
             playerName,
             eventType: 'game_started',
-            gameUrl
+            ...(gameUrl && { gameUrl })
           })
           notificationsSent++
         }

@@ -143,7 +143,7 @@ export async function getMonitoringStatus(db: D1Database): Promise<MonitoringSta
       getRecentMonitoringJobs(db)
     ])
 
-    const lastFullCheck = recentJobs.length > 0 ? recentJobs[0].completedAt : null
+    const lastFullCheck = recentJobs.length > 0 ? recentJobs[0]?.completedAt || null : null
     const checksLast24Hours = recentJobs.filter(job => {
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
       return new Date(job.completedAt || job.createdAt) > twentyFourHoursAgo

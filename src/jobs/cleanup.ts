@@ -56,8 +56,8 @@ async function cleanupOldAgentTasks(db: D1Database): Promise<number> {
          OR (status = 'pending' AND created_at < ?)
     `).bind(thirtyDaysAgo, thirtyDaysAgo).run()
 
-    console.log(`Cleaned up ${result.changes || 0} old agent tasks`)
-    return result.changes || 0
+    console.log(`Cleaned up ${result.meta.changes || 0} old agent tasks`)
+    return result.meta.changes || 0
   } catch (error) {
     console.error('Failed to cleanup old agent tasks:', error)
     return 0
@@ -73,8 +73,8 @@ async function cleanupOldNotificationLogs(db: D1Database): Promise<number> {
       WHERE sent_at < ?
     `).bind(ninetyDaysAgo).run()
 
-    console.log(`Cleaned up ${result.changes || 0} old notification logs`)
-    return result.changes || 0
+    console.log(`Cleaned up ${result.meta.changes || 0} old notification logs`)
+    return result.meta.changes || 0
   } catch (error) {
     console.error('Failed to cleanup old notification logs:', error)
     return 0
@@ -91,8 +91,8 @@ async function cleanupOldMonitoringJobs(db: D1Database): Promise<number> {
          OR (status = 'pending' AND created_at < ?)
     `).bind(sevenDaysAgo, sevenDaysAgo).run()
 
-    console.log(`Cleaned up ${result.changes || 0} old monitoring jobs`)
-    return result.changes || 0
+    console.log(`Cleaned up ${result.meta.changes || 0} old monitoring jobs`)
+    return result.meta.changes || 0
   } catch (error) {
     console.error('Failed to cleanup old monitoring jobs:', error)
     return 0
@@ -114,8 +114,8 @@ export async function cleanupOrphanedPlayerStatuses(env: Env): Promise<number> {
       )
     `).run()
 
-    console.log(`Cleaned up ${result.changes || 0} orphaned player statuses`)
-    return result.changes || 0
+    console.log(`Cleaned up ${result.meta.changes || 0} orphaned player statuses`)
+    return result.meta.changes || 0
   } catch (error) {
     console.error('Failed to cleanup orphaned player statuses:', error)
     return 0
@@ -134,8 +134,8 @@ export async function cleanupExpiredAgentResults(env: Env): Promise<number> {
         )
     `).bind(sevenDaysAgo).run()
 
-    console.log(`Cleaned up ${result.changes || 0} expired agent results`)
-    return result.changes || 0
+    console.log(`Cleaned up ${result.meta.changes || 0} expired agent results`)
+    return result.meta.changes || 0
   } catch (error) {
     console.error('Failed to cleanup expired agent results:', error)
     return 0

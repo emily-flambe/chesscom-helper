@@ -34,6 +34,11 @@ export async function verifyToken(token: string, secret: string): Promise<JWTPay
     }
 
     const [encodedHeader, encodedPayload, signature] = parts
+    
+    if (!encodedHeader || !encodedPayload || !signature) {
+      return null
+    }
+    
     const signatureInput = `${encodedHeader}.${encodedPayload}`
     
     const expectedSignature = await sign(signatureInput, secret)

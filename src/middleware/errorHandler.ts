@@ -2,7 +2,7 @@ import { json } from 'itty-router'
 
 export interface ApiError extends Error {
   status?: number
-  code?: string
+  code?: string | undefined
   details?: unknown
 }
 

@@ -21,15 +21,22 @@ export async function rateLimiter(request: Request, env: Env): Promise<Response 
   const windowStart = now - limit.window
 
   try {
+    if (!env.CACHE) {
+      console.warn('CACHE not available, skipping rate limiting')
+      return
+    }
+
     const current = await env.CACHE.get(key)
     let requests: number[] = current ? JSON.parse(current) : []
 
     requests = requests.filter(timestamp => timestamp > windowStart)
 
     if (requests.length >= limit.requests) {
-      const resetTime = requests[0] + limit.window
-      return error(429, 'Rate limit exceeded', {
+      const resetTime = (requests[0] || now) + limit.window
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+        status: 429,
         headers: {
+          'Content-Type': 'application/json',
           'Retry-After': String(resetTime - now),
           'X-RateLimit-Limit': String(limit.requests),
           'X-RateLimit-Remaining': '0',
@@ -42,7 +49,7 @@ export async function rateLimiter(request: Request, env: Env): Promise<Response 
     await env.CACHE.put(key, JSON.stringify(requests), { expirationTtl: limit.window })
 
     const remaining = limit.requests - requests.length
-    const resetTime = requests[0] + limit.window
+    const resetTime = (requests[0] || now) + limit.window
 
     request.headers.set('X-RateLimit-Limit', String(limit.requests))
     request.headers.set('X-RateLimit-Remaining', String(remaining))
@@ -59,7 +66,7 @@ function getClientId(request: Request): string {
                    request.headers.get('X-Real-IP')
   
   if (forwarded) {
-    return forwarded.split(',')[0].trim()
+    return forwarded.split(',')[0]?.trim() || 'unknown'
   }
 
   const authHeader = request.headers.get('Authorization')
