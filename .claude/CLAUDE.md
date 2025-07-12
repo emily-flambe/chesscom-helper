@@ -1,20 +1,20 @@
 # Claude Code Project Configuration
 
 ## Project Identity & Configuration
-@include .claude/project-config.yml#ProjectIdentity
-@include .claude/project-config.yml#ProjectStructure
-@include .claude/project-config.yml#WranglerCommands
+@include project-config.yml#ProjectIdentity
+@include project-config.yml#ProjectStructure
+@include project-config.yml#WranglerCommands
 
 ## Essential Development Commands
-@include .claude/development-commands.yml#PreCommitValidation
-@include .claude/development-commands.yml#TroubleshootingCommands
-@include .claude/development-commands.yml#BuildSuccessCriteria
+@include development-commands.yml#PreCommitValidation
+@include development-commands.yml#TroubleshootingCommands
+@include development-commands.yml#BuildSuccessCriteria
 
 ## Debugging Lessons Learned
-@include .claude/debugging-lessons.yml#WorktreeManagement
-@include .claude/debugging-lessons.yml#CloudflareWorkersIssues
-@include .claude/debugging-lessons.yml#TypeScriptBuildFailures
-@include .claude/debugging-lessons.yml#DatabaseMigrationIssues
+@include debugging-lessons.yml#WorktreeManagement
+@include debugging-lessons.yml#CloudflareWorkersIssues
+@include debugging-lessons.yml#TypeScriptBuildFailures
+@include debugging-lessons.yml#DatabaseMigrationIssues
 
 ## Development Partnership Philosophy
 
