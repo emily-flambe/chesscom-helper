@@ -1,4 +1,22 @@
-# Development Partnership
+# Claude Code Project Configuration
+
+## Project Identity & Configuration
+@include project-config.yml#ProjectIdentity
+@include project-config.yml#ProjectStructure
+@include project-config.yml#WranglerCommands
+
+## Essential Development Commands
+@include development-commands.yml#PreCommitValidation
+@include development-commands.yml#TroubleshootingCommands
+@include development-commands.yml#BuildSuccessCriteria
+
+## Debugging Lessons Learned
+@include debugging-lessons.yml#WorktreeManagement
+@include debugging-lessons.yml#CloudflareWorkersIssues
+@include debugging-lessons.yml#TypeScriptBuildFailures
+@include debugging-lessons.yml#DatabaseMigrationIssues
+
+## Development Partnership Philosophy
 
 We're building production-quality code together. Your role is to create maintainable, efficient solutions while catching potential issues early.
 
