@@ -2,6 +2,9 @@ export interface Env {
   DB: D1Database
   JWT_SECRET: string
   ENVIRONMENT?: string
+  CHESS_COM_API_URL?: string
+  RESEND_API_KEY?: string
+  CACHE?: KVNamespace
 }
 
 import { validateEmail, validatePassword } from './utils/validation'
@@ -59,14 +62,14 @@ async function verifyJWT(token: string, secret: string): Promise<{ userId: strin
       ['verify']
     )
     
-    const signatureBuffer = Uint8Array.from(atob(signatureB64) || '', c => c.charCodeAt(0))
+    const signatureBuffer = Uint8Array.from(atob(signatureB64 || ''), c => c.charCodeAt(0))
     const isValid = await crypto.subtle.verify('HMAC', key, signatureBuffer, encoder.encode(message))
     
     if (!isValid) {
       return null
     }
     
-    const payload = JSON.parse(atob(payloadB64) || '{}')
+    const payload = JSON.parse(atob(payloadB64 || '') || '{}')
     if (payload.exp < Math.floor(Date.now() / 1000)) {
       return null
     }
@@ -329,7 +332,7 @@ export default {
       return new Response('', {
         status: 302,
         headers: {
-          'Location': `https://raw.githubusercontent.com/emily-flambe/chesscom-helper/email-notifications/public/${imageName}`,
+          'Location': `https://raw.githubusercontent.com/emily-flambe/chesscom-helper/phase-1-foundation-infrastructure/public/${imageName}`,
           'Cache-Control': 'public, max-age=86400'
         }
       })

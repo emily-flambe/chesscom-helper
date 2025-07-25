@@ -44,22 +44,37 @@ export interface SuspiciousActivityMetrics {
   lastActivity: number;
 }
 
+export interface CloudflareEnvironment {
+  RATE_LIMIT_KV?: KVNamespace;
+  SUSPICIOUS_ACTIVITY?: KVNamespace;
+  BLACKLIST_KV?: KVNamespace;
+  USER_AGENTS_KV?: KVNamespace;
+}
+
+export interface SecurityIncident {
+  timestamp: number;
+  reason: string;
+  severity: number;
+}
+
 /**
  * SECURITY MEASURE: Advanced rate limiter with multiple protection layers
  */
 export class AdvancedRateLimiter {
-  private readonly config: RateLimitConfig
+  private readonly config: Required<RateLimitConfig>
   
   constructor(config: RateLimitConfig) {
     this.config = {
-      windowMs: 900000, // 15 minutes default
-      maxRequests: 100,
-      message: 'Too many requests',
-      standardHeaders: true,
-      legacyHeaders: false,
-      exponentialBackoff: true,
-      suspiciousActivityThreshold: 5,
-      ...config
+      windowMs: config.windowMs,
+      maxRequests: config.maxRequests,
+      keyGenerator: config.keyGenerator,
+      skipSuccessfulRequests: config.skipSuccessfulRequests ?? false,
+      skipFailedRequests: config.skipFailedRequests ?? false,
+      message: config.message ?? 'Too many requests',
+      standardHeaders: config.standardHeaders ?? true,
+      legacyHeaders: config.legacyHeaders ?? false,
+      exponentialBackoff: config.exponentialBackoff ?? true,
+      suspiciousActivityThreshold: config.suspiciousActivityThreshold ?? 5
     }
   }
 
@@ -68,7 +83,7 @@ export class AdvancedRateLimiter {
    */
   async checkRateLimit(
     request: Request,
-    env: any,
+    env: CloudflareEnvironment,
     identifier?: string
   ): Promise<RateLimitResult> {
     
@@ -182,7 +197,7 @@ export class AdvancedRateLimiter {
   /**
    * SECURITY MEASURE: Get rate limit data with sliding window
    */
-  private async getRateLimitData(key: string, env: any): Promise<{
+  private async getRateLimitData(key: string, env: CloudflareEnvironment): Promise<{
     requests: number[];
     violations: number;
     suspiciousActivity: SuspiciousActivityMetrics;
@@ -210,7 +225,7 @@ export class AdvancedRateLimiter {
   /**
    * SECURITY MEASURE: Record request with timestamp
    */
-  private async recordRequest(key: string, timestamp: number, env: any): Promise<void> {
+  private async recordRequest(key: string, timestamp: number, env: CloudflareEnvironment): Promise<void> {
     if (!env.RATE_LIMIT_KV) {
       return
     }
@@ -242,7 +257,7 @@ export class AdvancedRateLimiter {
   /**
    * SECURITY MEASURE: Exponential backoff implementation
    */
-  private async getBackoffMultiplier(key: string, env: any): Promise<number> {
+  private async getBackoffMultiplier(key: string, env: CloudflareEnvironment): Promise<number> {
     const data = await this.getRateLimitData(key, env)
     
     // SECURITY: Exponential backoff based on violation count
@@ -253,7 +268,7 @@ export class AdvancedRateLimiter {
   /**
    * SECURITY MEASURE: Increment violation count for exponential backoff
    */
-  private async incrementViolationCount(key: string, env: any): Promise<void> {
+  private async incrementViolationCount(key: string, env: CloudflareEnvironment): Promise<void> {
     if (!env.RATE_LIMIT_KV) {
       return
     }
@@ -276,7 +291,7 @@ export class AdvancedRateLimiter {
   private async checkSuspiciousActivity(
     key: string,
     request: Request,
-    env: any
+    env: CloudflareEnvironment
   ): Promise<{ isSuspicious: boolean; reasons: string[] }> {
     
     const data = await this.getRateLimitData(key, env)
@@ -393,7 +408,7 @@ export class AdvancedRateLimiter {
    */
   private async flagSuspiciousActivity(
     key: string,
-    env: any,
+    env: CloudflareEnvironment,
     reason: string
   ): Promise<void> {
     
@@ -417,12 +432,12 @@ export class AdvancedRateLimiter {
       
       // SECURITY: Keep only recent incidents
       data.incidents = data.incidents.filter(
-        incident => incident.timestamp > now - 86400000 // 24 hours
+        (incident: SecurityIncident) => incident.timestamp > now - 86400000 // 24 hours
       )
       
       // SECURITY: Auto-blacklist if too many high-severity incidents
       const highSeverityIncidents = data.incidents.filter(
-        incident => incident.severity >= 8
+        (incident: SecurityIncident) => incident.severity >= 8
       ).length
       
       if (highSeverityIncidents >= 3) {
@@ -466,7 +481,7 @@ export class AdvancedRateLimiter {
   /**
    * SECURITY MEASURE: Check if key is blacklisted
    */
-  private async isBlacklisted(key: string, env: any): Promise<boolean> {
+  private async isBlacklisted(key: string, env: CloudflareEnvironment): Promise<boolean> {
     if (!env.BLACKLIST_KV) {
       return false
     }
@@ -480,7 +495,7 @@ export class AdvancedRateLimiter {
   /**
    * SECURITY MEASURE: Blacklist a key
    */
-  private async blacklistKey(key: string, env: any, reason: string): Promise<void> {
+  private async blacklistKey(key: string, env: CloudflareEnvironment, reason: string): Promise<void> {
     if (!env.BLACKLIST_KV) {
       return
     }
@@ -506,7 +521,7 @@ export class AdvancedRateLimiter {
   /**
    * SECURITY MEASURE: Track user agent changes
    */
-  private async isNewUserAgent(key: string, userAgentHash: string, env: any): Promise<boolean> {
+  private async isNewUserAgent(key: string, userAgentHash: string, env: CloudflareEnvironment): Promise<boolean> {
     if (!env.USER_AGENTS_KV) {
       return false
     }

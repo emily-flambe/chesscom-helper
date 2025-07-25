@@ -83,5 +83,9 @@ function base64urlDecode(str: string): string {
   while (str.length % 4) {
     str += '='
   }
-  return decodeURIComponent(escape(atob(str)))
+  const decoded = atob(str)
+  if (decoded === null) {
+    throw new Error('Invalid base64 string')
+  }
+  return decodeURIComponent(escape(decoded))
 }

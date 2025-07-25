@@ -16,6 +16,17 @@ export interface NotificationLog {
   notificationType: 'game_started' | 'game_ended'
   sentAt: string
   emailDelivered: boolean
+  gameDetails?: {
+    timeControl?: string
+    rated?: boolean
+    gameType?: string
+    gameUrl?: string
+    startTime?: string
+  }
+  deliveredAt?: string
+  failedAt?: string
+  failureReason?: string
+  emailProviderMessageId?: string
 }
 
 export interface QueuedNotification {
@@ -26,6 +37,32 @@ export interface QueuedNotification {
   gameUrl?: string
   result?: string
   queuedAt: string
+}
+
+export interface NotificationCooldownCheck {
+  canSend: boolean
+  cooldownUntil?: Date
+  reason?: string
+}
+
+export interface DetailedNotificationLog {
+  id: string
+  userId: string
+  chessComUsername: string
+  notificationType: 'game_started' | 'game_ended'
+  gameDetails?: {
+    timeControl?: string
+    rated?: boolean
+    gameType?: string
+    gameUrl?: string
+    startTime?: string
+  }
+  sentAt: string
+  deliveredAt?: string
+  failedAt?: string
+  failureReason?: string
+  emailProviderMessageId?: string
+  emailDelivered: boolean
 }
 
 export async function getNotificationPreferences(db: D1Database, userId: string): Promise<NotificationPreferences | null> {
@@ -220,6 +257,220 @@ export async function queueNotification(db: D1Database, notification: {
   }
 }
 
+/**
+ * Enhanced notification cooldown and preference checking
+ */
+export async function shouldSendNotificationEnhanced(
+  db: D1Database,
+  userId: string,
+  chessComUsername: string,
+  notificationType: 'game_started' | 'game_ended' = 'game_started'
+): Promise<NotificationCooldownCheck> {
+  try {
+    // Check user and player preferences in single query
+    const preferencesResult = await db.prepare(`
+      SELECT 
+        ps.notifications_enabled as player_enabled,
+        up.notifications_enabled as user_enabled,
+        nl.sent_at as last_notification
+      FROM player_subscriptions ps
+      JOIN user_preferences up ON ps.user_id = up.user_id
+      LEFT JOIN notification_log nl ON (
+        nl.user_id = ps.user_id 
+        AND nl.chess_com_username = ps.chess_com_username
+        AND nl.notification_type = ?
+        AND nl.sent_at > datetime('now', '-1 hour')
+      )
+      WHERE ps.user_id = ? AND ps.chess_com_username = ?
+      ORDER BY nl.sent_at DESC
+      LIMIT 1
+    `).bind(notificationType, userId, chessComUsername).first()
+
+    if (!preferencesResult) {
+      return {
+        canSend: false,
+        reason: 'No subscription found or user preferences not set'
+      }
+    }
+
+    // Check global user preference
+    if (!preferencesResult.user_enabled) {
+      return {
+        canSend: false,
+        reason: 'User has disabled all notifications'
+      }
+    }
+
+    // Check player-specific preference
+    if (!preferencesResult.player_enabled) {
+      return {
+        canSend: false,
+        reason: 'User has disabled notifications for this player'
+      }
+    }
+
+    // Check cooldown period (1 hour)
+    if (preferencesResult.last_notification) {
+      const lastNotificationTime = new Date(preferencesResult.last_notification as string)
+      const cooldownUntil = new Date(lastNotificationTime.getTime() + (60 * 60 * 1000)) // 1 hour
+      
+      if (cooldownUntil > new Date()) {
+        return {
+          canSend: false,
+          cooldownUntil,
+          reason: 'Notification cooldown active'
+        }
+      }
+    }
+
+    return { canSend: true }
+
+  } catch (error) {
+    console.error('Error checking notification permissions:', error)
+    return {
+      canSend: false,
+      reason: 'Error checking notification permissions'
+    }
+  }
+}
+
+/**
+ * Get users who should receive notifications for a specific player
+ */
+export async function getUsersToNotifyForPlayer(
+  db: D1Database,
+  chessComUsername: string,
+  notificationType: 'game_started' | 'game_ended' = 'game_started'
+): Promise<Array<{userId: string, email: string, chessComUsername: string}>> {
+  try {
+    const result = await db.prepare(`
+      SELECT DISTINCT
+        ps.user_id,
+        u.email,
+        ps.chess_com_username
+      FROM player_subscriptions ps
+      JOIN users u ON ps.user_id = u.id
+      JOIN user_preferences up ON ps.user_id = up.user_id
+      WHERE ps.chess_com_username = ?
+        AND ps.notifications_enabled = TRUE
+        AND up.notifications_enabled = TRUE
+        AND NOT EXISTS (
+          SELECT 1 FROM notification_log nl
+          WHERE nl.user_id = ps.user_id
+            AND nl.chess_com_username = ps.chess_com_username
+            AND nl.notification_type = ?
+            AND nl.sent_at > datetime('now', '-1 hour')
+        )
+    `).bind(chessComUsername, notificationType).all()
+
+    if (!result.results) {
+      return []
+    }
+
+    return result.results.map(row => ({
+      userId: row.user_id as string,
+      email: row.email as string,
+      chessComUsername: row.chess_com_username as string
+    }))
+
+  } catch (error) {
+    console.error('Error getting users to notify:', error)
+    throw createApiError('Failed to get users to notify', 500, 'NOTIFICATION_USERS_FETCH_FAILED', error)
+  }
+}
+
+/**
+ * Update notification preferences for a specific player subscription
+ */
+export async function updatePlayerNotificationPreference(
+  db: D1Database,
+  userId: string,
+  chessComUsername: string,
+  enabled: boolean
+): Promise<void> {
+  try {
+    const result = await db.prepare(`
+      UPDATE player_subscriptions 
+      SET notifications_enabled = ? 
+      WHERE user_id = ? AND chess_com_username = ?
+    `).bind(enabled, userId, chessComUsername).run()
+
+    if (!result.success) {
+      throw createApiError('Failed to update notification preference', 500, 'NOTIFICATION_PREFERENCE_UPDATE_FAILED')
+    }
+
+  } catch (error) {
+    console.error('Error updating player notification preference:', error)
+    throw createApiError('Failed to update notification preference', 500, 'NOTIFICATION_PREFERENCE_UPDATE_FAILED', error)
+  }
+}
+
+/**
+ * Log detailed notification with enhanced tracking
+ */
+export async function logDetailedNotification(
+  db: D1Database,
+  notification: {
+    userId: string
+    chessComUsername: string
+    notificationType: 'game_started' | 'game_ended'
+    gameDetails?: object
+    emailDelivered: boolean
+    deliveredAt?: string
+    failedAt?: string
+    failureReason?: string
+    emailProviderMessageId?: string
+  }
+): Promise<DetailedNotificationLog> {
+  const id = await generateSecureId()
+  const now = new Date().toISOString()
+
+  try {
+    const result = await db.prepare(`
+      INSERT INTO notification_log (
+        id, user_id, chess_com_username, notification_type, 
+        game_details, sent_at, delivered_at, failed_at, 
+        failure_reason, email_provider_id, email_delivered
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id,
+      notification.userId,
+      notification.chessComUsername,
+      notification.notificationType,
+      notification.gameDetails ? JSON.stringify(notification.gameDetails) : null,
+      now,
+      notification.deliveredAt || null,
+      notification.failedAt || null,
+      notification.failureReason || null,
+      notification.emailProviderMessageId || null,
+      notification.emailDelivered
+    ).run()
+
+    if (!result.success) {
+      throw createApiError('Failed to log notification', 500, 'NOTIFICATION_LOG_FAILED')
+    }
+
+    return {
+      id,
+      userId: notification.userId,
+      chessComUsername: notification.chessComUsername,
+      notificationType: notification.notificationType,
+      gameDetails: notification.gameDetails,
+      sentAt: now,
+      deliveredAt: notification.deliveredAt,
+      failedAt: notification.failedAt,
+      failureReason: notification.failureReason,
+      emailProviderMessageId: notification.emailProviderMessageId,
+      emailDelivered: notification.emailDelivered
+    }
+
+  } catch (error) {
+    console.error('Error logging detailed notification:', error)
+    throw createApiError('Failed to log notification', 500, 'NOTIFICATION_LOG_FAILED', error)
+  }
+}
+
 export async function shouldSendNotification(db: D1Database, userId: string, playerName: string, eventType: 'game_started' | 'game_ended'): Promise<boolean> {
   try {
     const preferences = await getNotificationPreferences(db, userId)
@@ -231,7 +482,7 @@ export async function shouldSendNotification(db: D1Database, userId: string, pla
     const recentNotification = await db.prepare(`
       SELECT id FROM notification_log
       WHERE user_id = ? AND chess_com_username = ? AND notification_type = ?
-      AND sent_at > datetime('now', '-5 minutes')
+      AND sent_at > datetime('now', '-1 hour')
       LIMIT 1
     `).bind(userId, playerName, eventType).first()
 

@@ -7,6 +7,10 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
+    typecheck: {
+      enabled: true,
+      tsconfig: './tsconfig.json'
+    },
     coverage: {
       reporter: ['text', 'json', 'html'],
       exclude: [

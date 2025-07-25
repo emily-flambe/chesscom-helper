@@ -78,7 +78,7 @@ export async function getPlayerInfo(username: string, baseUrl?: string): Promise
       throw createApiError(`Chess.com API error: ${response.status}`, 502, 'CHESS_COM_API_ERROR')
     }
 
-    const data = await response.json()
+    const data = await response.json() as any
     return {
       username: data.username,
       playerId: data.player_id,
@@ -116,7 +116,7 @@ export async function getPlayerCurrentGames(username: string, baseUrl?: string):
       throw createApiError(`Chess.com API error: ${response.status}`, 502, 'CHESS_COM_API_ERROR')
     }
 
-    const data = await response.json()
+    const data = await response.json() as any
     return data.games || []
   } catch (error) {
     console.error('Get player current games error:', error)

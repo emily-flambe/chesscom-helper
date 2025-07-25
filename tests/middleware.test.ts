@@ -3,9 +3,10 @@ import { authenticateUser } from '../src/middleware/auth'
 import { validateRequest } from '../src/middleware/validation'
 import { rateLimiter } from '../src/middleware/rateLimit'
 import { createTestEnv, createMockRequest } from './setup'
+import type { TestEnv, TestKVNamespace } from './types'
 
 describe('Middleware', () => {
-  let env: Env
+  let env: TestEnv
 
   beforeEach(() => {
     env = createTestEnv()
@@ -185,13 +186,26 @@ describe('Middleware', () => {
 
     it('should handle rate limit exceeded gracefully', async () => {
       // Mock KV to simulate rate limit exceeded
-      const mockKV = {
+      const mockKV: TestKVNamespace = {
         ...env.CACHE,
-        get: async (key: string) => {
+        get: async (key: string, options?: any) => {
           // Return enough requests to exceed limit
           const requests = Array(20).fill(Math.floor(Date.now() / 1000))
           return JSON.stringify(requests)
-        }
+        },
+        put: async (key: string, value: string | ArrayBuffer | ArrayBufferView | ReadableStream, options?: any) => undefined,
+        delete: async (key: string) => undefined,
+        list: async (options?: any) => ({ 
+          keys: [], 
+          list_complete: true, 
+          cursor: '',
+          cacheStatus: null
+        }),
+        getWithMetadata: async (key: string, options?: any) => ({ 
+          value: null, 
+          metadata: null,
+          cacheStatus: null
+        })
       }
       
       env.CACHE = mockKV

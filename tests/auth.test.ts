@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { authRoutes } from '../src/routes/auth'
-import { createTestEnv, createMockRequest } from './setup'
+import { createTestEnv, createMockRequest, createCustomMockD1Database } from './setup'
+import type { TestEnv } from './types'
 
 describe('Authentication Routes', () => {
-  let env: Env
+  let env: TestEnv
 
   beforeEach(() => {
     env = createTestEnv()
@@ -12,17 +13,11 @@ describe('Authentication Routes', () => {
 
   describe('POST /register', () => {
     it('should register a new user successfully', async () => {
-      const mockDB = {
-        ...env.DB,
-        prepare: (query: string) => ({
-          bind: (...params: any[]) => ({
-            first: async () => null, // No existing user
-            run: async () => ({ success: true })
-          })
-        })
-      }
-
-      env.DB = mockDB
+      // Mock DB with no existing user (first returns null) and successful run
+      env.DB = createCustomMockD1Database({
+        firstResult: null, // No existing user
+        runChanges: 1 // Successful insert
+      })
 
       const request = createMockRequest('http://localhost/api/v1/auth/register', {
         method: 'POST',
@@ -77,17 +72,11 @@ describe('Authentication Routes', () => {
     })
 
     it('should reject duplicate email registration', async () => {
-      const mockDB = {
-        ...env.DB,
-        prepare: (query: string) => ({
-          bind: (...params: any[]) => ({
-            first: async () => ({ id: 'existing-user' }), // Existing user found
-            run: async () => ({ success: true })
-          })
-        })
-      }
-
-      env.DB = mockDB
+      // Mock DB with existing user found
+      env.DB = createCustomMockD1Database({
+        firstResult: { id: 'existing-user' }, // Existing user found
+        runChanges: 0
+      })
 
       const request = createMockRequest('http://localhost/api/v1/auth/register', {
         method: 'POST',
@@ -108,21 +97,18 @@ describe('Authentication Routes', () => {
 
   describe('POST /login', () => {
     it('should login with valid credentials', async () => {
-      const mockDB = {
-        ...env.DB,
-        prepare: (query: string) => ({
-          bind: (...params: any[]) => ({
-            first: async () => ({
-              id: 'user-id',
-              email: 'test@example.com',
-              password_hash: await import('../src/utils/crypto').then(m => m.hashPassword('TestPass123!')),
-              created_at: new Date().toISOString()
-            })
-          })
-        })
+      // Mock DB with valid user data
+      const mockUser = {
+        id: 'user-id',
+        email: 'test@example.com',
+        password_hash: await import('../src/utils/crypto').then(m => m.hashPassword('TestPass123!')),
+        created_at: new Date().toISOString()
       }
-
-      env.DB = mockDB
+      
+      env.DB = createCustomMockD1Database({
+        firstResult: mockUser,
+        runChanges: 0
+      })
 
       const request = createMockRequest('http://localhost/api/v1/auth/login', {
         method: 'POST',
@@ -142,16 +128,11 @@ describe('Authentication Routes', () => {
     })
 
     it('should reject invalid credentials', async () => {
-      const mockDB = {
-        ...env.DB,
-        prepare: (query: string) => ({
-          bind: (...params: any[]) => ({
-            first: async () => null // No user found
-          })
-        })
-      }
-
-      env.DB = mockDB
+      // Mock DB with no user found
+      env.DB = createCustomMockD1Database({
+        firstResult: null, // No user found
+        runChanges: 0
+      })
 
       const request = createMockRequest('http://localhost/api/v1/auth/login', {
         method: 'POST',

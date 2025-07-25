@@ -6,6 +6,7 @@ import {
   getPlayerGameStatus,
   batchGetPlayerStatuses 
 } from '../src/services/chessComService'
+import './types'
 
 // Mock fetch globally
 global.fetch = vi.fn()
@@ -157,7 +158,10 @@ describe('Chess.com Service', () => {
     it('should return complete game status', async () => {
       const mockPlayerData = {
         username: 'hikaru',
-        last_online: Math.floor(Date.now() / 1000) - 60 // 1 minute ago
+        player_id: 15448422,
+        last_online: Math.floor(Date.now() / 1000) - 60, // 1 minute ago
+        joined: 1301420643,
+        country: 'https://api.chess.com/pub/country/US'
       }
 
       const mockGamesData = {
@@ -192,7 +196,10 @@ describe('Chess.com Service', () => {
     it('should handle offline player with no games', async () => {
       const mockPlayerData = {
         username: 'testplayer',
-        last_online: Math.floor(Date.now() / 1000) - 3600 // 1 hour ago
+        player_id: 12345,
+        last_online: Math.floor(Date.now() / 1000) - 3600, // 1 hour ago
+        joined: 1301420643,
+        country: 'https://api.chess.com/pub/country/US'
       }
 
       vi.mocked(fetch)
@@ -222,8 +229,11 @@ describe('Chess.com Service', () => {
       vi.mocked(fetch)
         .mockResolvedValueOnce(
           new Response(JSON.stringify({ 
-            username: 'hikaru', 
-            last_online: Math.floor(Date.now() / 1000) - 60 
+            username: 'hikaru',
+            player_id: 15448422,
+            last_online: Math.floor(Date.now() / 1000) - 60,
+            joined: 1301420643,
+            country: 'https://api.chess.com/pub/country/US'
           }), { status: 200 })
         )
         .mockResolvedValueOnce(
@@ -231,13 +241,21 @@ describe('Chess.com Service', () => {
         )
         .mockResolvedValueOnce(
           new Response(JSON.stringify({ 
-            username: 'magnuscarlsen', 
-            last_online: Math.floor(Date.now() / 1000) - 120 
+            username: 'magnuscarlsen',
+            player_id: 5448422,
+            last_online: Math.floor(Date.now() / 1000) - 120,
+            joined: 1301420643,
+            country: 'https://api.chess.com/pub/country/NO'
           }), { status: 200 })
         )
         .mockResolvedValueOnce(
           new Response(JSON.stringify({ 
-            games: [{ url: 'https://chess.com/game/123' }] 
+            games: [{ 
+              url: 'https://chess.com/game/123',
+              time_control: '600',
+              rated: true,
+              uuid: 'game-uuid-1'
+            }] 
           }), { status: 200 })
         )
 
@@ -256,8 +274,11 @@ describe('Chess.com Service', () => {
       vi.mocked(fetch)
         .mockResolvedValueOnce(
           new Response(JSON.stringify({ 
-            username: 'hikaru', 
-            last_online: Math.floor(Date.now() / 1000) - 60 
+            username: 'hikaru',
+            player_id: 15448422,
+            last_online: Math.floor(Date.now() / 1000) - 60,
+            joined: 1301420643,
+            country: 'https://api.chess.com/pub/country/US'
           }), { status: 200 })
         )
         .mockResolvedValueOnce(
